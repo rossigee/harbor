@@ -1,9 +1,4 @@
 
-		AMQPJobVendorType:               lib.GetEnvInt64("AMQP_EXECUTION_RETENTION_COUNT", 50),
-		DiscordJobVendorType:            lib.GetEnvInt64("DISCORD_EXECUTION_RETENTION_COUNT", 50),
-		ExecSweepVendorType:             lib.GetEnvInt64("EXECUTION_SWEEP_EXECUTION_RETENTION_COUNT", 10),
-		GarbageCollectionVendorType:     lib.GetEnvInt64("GARBAGE_COLLECTION_EXECUTION_RETENTION_COUNT", 50),
-		ImageScanJobVendorType:          lib.GetEnvInt64("IMAGE_SCAN_EXECUTION_RETENTION_COUNT", 1),
 		P2PPreheatVendorType:            lib.GetEnvInt64("P2P_PREHEAT_EXECUTION_RETENTION_COUNT", 50),
 		PurgeAuditVendorType:            lib.GetEnvInt64("PURGE_AUDIT_EXECUTION_RETENTION_COUNT", 10),
 		ReplicationVendorType:           lib.GetEnvInt64("REPLICATION_EXECUTION_RETENTION_COUNT", 50),

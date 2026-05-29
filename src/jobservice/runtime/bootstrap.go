@@ -250,7 +250,6 @@
 	terminated := false
 	var (
 	workerPoolID = redisWorker.GetPoolID()
-	workers uint,
 	}
 	} else {
 	}(rootContext.ErrorChan)

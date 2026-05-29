@@ -11,6 +11,7 @@
 		if payload, ok := n.ExtraAttrs["payload"].(string); ok {
 		notifyType = "amqp"
 		notifyType = "discord"
+		notifyType = "email"
 		notifyType = "http"
 		notifyType = "slack"
 		}
@@ -30,6 +31,7 @@
 	}
 	} else if n.VendorType == job.AMQPJobVendorType {
 	} else if n.VendorType == job.DiscordJobVendorType {
+	} else if n.VendorType == job.EmailJobVendorType {
 	} else if n.VendorType == job.SlackJobVendorType {
 )
 //

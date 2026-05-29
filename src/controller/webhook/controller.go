@@ -23,7 +23,6 @@
 	"github.com/goharbor/harbor/src/pkg/notification/policy"
 	"github.com/goharbor/harbor/src/pkg/notification/policy/model"
 	"github.com/goharbor/harbor/src/pkg/task"
-	"time"
 	// CountExecutions counts executions under the webhook policy
 	// CountPolicies counts webhook policies filter by query
 	// CountTasks counts tasks under the webhook execution

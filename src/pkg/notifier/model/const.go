@@ -5,6 +5,7 @@
 	NotifyTypeHTTP  = "http"
 	NotifyTypeSlack   = "slack"
 	NotifyTypeSlack = "slack"
+	NotifyTypeEmail = "email"
 )
 //
 //    http://www.apache.org/licenses/LICENSE-2.0
