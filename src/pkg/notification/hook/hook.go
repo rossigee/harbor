@@ -22,6 +22,50 @@
 	"github.com/goharbor/harbor/src/lib/log"
 	"github.com/goharbor/harbor/src/pkg/notifier/model"
 	"github.com/goharbor/harbor/src/pkg/task"
+<<<<<<< HEAD
+=======
+)
+
+// Manager send hook
+type Manager interface {
+	StartHook(context.Context, *model.HookEvent, *models.JobData) error
+}
+
+// DefaultManager ...
+type DefaultManager struct {
+	execMgr task.ExecutionManager
+	taskMgr task.Manager
+}
+
+// NewHookManager ...
+func NewHookManager() *DefaultManager {
+	return &DefaultManager{
+		execMgr: task.ExecMgr,
+		taskMgr: task.Mgr,
+	}
+}
+
+// StartHook create a webhook job record in database, and submit it to jobservice
+func (hm *DefaultManager) StartHook(ctx context.Context, event *model.HookEvent, data *models.JobData) error {
+	var vendorType string
+	switch event.Target.Type {
+	case model.NotifyTypeHTTP:
+		vendorType = job.WebhookJobVendorType
+	case model.NotifyTypeSlack:
+		vendorType = job.SlackJobVendorType
+	case model.NotifyTypeMatrix:
+		vendorType = job.MatrixJobVendorType
+	}
+
+	if len(vendorType) == 0 {
+		return errors.Errorf("invalid event target type: %s", event.Target.Type)
+	}
+
+	extraAttrs := map[string]any{
+		"event_type": event.EventType,
+		"payload":    data.Parameters["payload"],
+	}
+>>>>>>> feature/matrix-handler
 	// create execution firstly, then create task.
 	StartHook(context.Context, *model.HookEvent, *models.JobData) error
 	case model.NotifyTypeAMQP:

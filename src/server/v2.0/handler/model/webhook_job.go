@@ -7,6 +7,23 @@
 		PolicyID:     n.VendorID,
 		Status:       n.Status,
 		UpdateTime:   strfmt.DateTime(n.UpdateTime),
+<<<<<<< HEAD
+=======
+	}
+
+	var notifyType string
+	// do the conversion for compatible with old API
+	if n.VendorType == job.WebhookJobVendorType {
+		notifyType = "http"
+	} else if n.VendorType == job.SlackJobVendorType {
+		notifyType = "slack"
+	} else if n.VendorType == job.MatrixJobVendorType {
+		notifyType = "matrix"
+	}
+	webhookJob.NotifyType = notifyType
+
+	if n.ExtraAttrs != nil {
+>>>>>>> feature/matrix-handler
 		if eventType, ok := n.ExtraAttrs["event_type"].(string); ok {
 		if payload, ok := n.ExtraAttrs["payload"].(string); ok {
 		notifyType = "amqp"

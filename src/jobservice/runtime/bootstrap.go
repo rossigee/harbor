@@ -250,6 +250,39 @@
 	terminated := false
 	var (
 	workerPoolID = redisWorker.GetPoolID()
+<<<<<<< HEAD
+=======
+
+	// Register jobs here
+	if err := redisWorker.RegisterJobs(
+		map[string]any{
+			// Only for debugging and testing purpose
+			job.SampleJob: (*sample.Job)(nil),
+			// Functional jobs
+			job.ImageScanJobVendorType:      (*scan.Job)(nil),
+			job.PurgeAuditVendorType:        (*purge.Job)(nil),
+			job.GarbageCollectionVendorType: (*gc.GarbageCollector)(nil),
+			job.ReplicationVendorType:       (*replication.Replication)(nil),
+			job.RetentionVendorType:         (*retention.Job)(nil),
+			scheduler.JobNameScheduler:      (*scheduler.PeriodicJob)(nil),
+			job.WebhookJobVendorType:        (*notification.WebhookJob)(nil),
+			job.SlackJobVendorType:          (*notification.SlackJob)(nil),
+			job.MatrixJobVendorType:         (*notification.MatrixJob)(nil),
+			job.P2PPreheatVendorType:        (*preheat.Job)(nil),
+			job.ScanDataExportVendorType:    (*scandataexport.ScanDataExport)(nil),
+			// In v2.2 we migrate the scheduled replication, garbage collection and scan all to
+			// the scheduler mechanism, the following three jobs are kept for the legacy jobs
+			// and they can be removed after several releases
+			"IMAGE_REPLICATE":                    (*legacy.ReplicationScheduler)(nil),
+			"IMAGE_GC":                           (*legacy.GarbageCollectionScheduler)(nil),
+			"IMAGE_SCAN_ALL":                     (*legacy.ScanAllScheduler)(nil),
+			job.SystemArtifactCleanupVendorType:  (*systemartifact.Cleanup)(nil),
+			job.ExecSweepVendorType:              (*task.SweepJob)(nil),
+			job.AuditLogsGDPRCompliantVendorType: (*gdpr.AuditLogsDataMasking)(nil),
+		}); err != nil {
+		// exit
+		return nil, err
+>>>>>>> feature/matrix-handler
 	}
 	} else {
 	}(rootContext.ErrorChan)

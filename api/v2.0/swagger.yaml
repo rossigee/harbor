@@ -251,6 +251,1748 @@
           - Manual
           - None
           - Schedule
+<<<<<<< HEAD
+=======
+      cron:
+        type: string
+        description: A cron expression, a time-based job scheduler.
+      next_scheduled_time:
+        type: string
+        format: date-time
+        description: The next time to schedule to run the job.
+  Stats:
+    type: object
+    description: Stats provides the overall progress of the scan all process.
+    properties:
+      total:
+        type: integer
+        format: int
+        description: 'The total number of scan processes triggered by the scan all action'
+        example: 100
+        x-omitempty: false
+      completed:
+        type: integer
+        format: int
+        description: 'The number of the finished scan processes triggered by the scan all action'
+        example: 90
+        x-omitempty: false
+      metrics:
+        type: object
+        description: 'The metrics data for the each status'
+        additionalProperties:
+          type: integer
+          format: int
+          example: 10
+        example:
+          'Success': 5
+          'Error': 2
+          'Running': 3
+      ongoing:
+        type: boolean
+        description: A flag indicating job status of scan all.
+        x-omitempty: false
+      trigger:
+        type: string
+        description: The trigger of the scan all job.
+        enum:
+          - Manual
+          - Schedule
+          - Event
+  RetentionMetadata:
+    type: object
+    description: the tag retention metadata
+    properties:
+      templates:
+        type: array
+        description: templates
+        items:
+          $ref: '#/definitions/RetentionRuleMetadata'
+      scope_selectors:
+        type: array
+        description: supported scope selectors
+        items:
+          $ref: '#/definitions/RetentionSelectorMetadata'
+      tag_selectors:
+        type: array
+        description: supported tag selectors
+        items:
+          $ref: '#/definitions/RetentionSelectorMetadata'
+
+  RetentionRuleMetadata:
+    type: object
+    description: the tag retention rule metadata
+    properties:
+      rule_template:
+        type: string
+        description: rule id
+      display_text:
+        type: string
+        description: rule display text
+      action:
+        type: string
+        description: rule action
+      params:
+        type: array
+        description: rule params
+        items:
+          $ref: '#/definitions/RetentionRuleParamMetadata'
+
+  RetentionRuleParamMetadata:
+    type: object
+    description: rule param
+    properties:
+      type:
+        type: string
+      unit:
+        type: string
+      required:
+        type: boolean
+
+
+  RetentionSelectorMetadata:
+    type: object
+    description: retention selector
+    properties:
+      display_text:
+        type: string
+      kind:
+        type: string
+      decorations:
+        type: array
+        items:
+          type: string
+
+  RetentionPolicy:
+    type: object
+    description: retention policy
+    properties:
+      id:
+        type: integer
+        format: int64
+      algorithm:
+        type: string
+      rules:
+        type: array
+        items:
+          $ref: '#/definitions/RetentionRule'
+      trigger:
+        type: object
+        $ref: '#/definitions/RetentionRuleTrigger'
+      scope:
+        type: object
+        $ref: '#/definitions/RetentionPolicyScope'
+
+  RetentionRuleTrigger:
+    type: object
+    properties:
+      kind:
+        type: string
+      settings:
+        type: object
+      references:
+        type: object
+
+  RetentionPolicyScope:
+    type: object
+    properties:
+      level:
+        type: string
+      ref:
+        type: integer
+
+  RetentionRule:
+    type: object
+    properties:
+      id:
+        type: integer
+      priority:
+        type: integer
+      disabled:
+        type: boolean
+      action:
+        type: string
+      template:
+        type: string
+      params:
+        type: object
+        additionalProperties:
+          type: object
+      tag_selectors:
+        type: array
+        items:
+          $ref: '#/definitions/RetentionSelector'
+      scope_selectors:
+        type: object
+        additionalProperties:
+          type: array
+          items:
+            $ref: '#/definitions/RetentionSelector'
+
+  RetentionSelector:
+    type: object
+    properties:
+      kind:
+        type: string
+      decoration:
+        type: string
+      pattern:
+        type: string
+      extras:
+        type: string
+
+  RetentionExecution:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      policy_id:
+        type: integer
+        format: int64
+      start_time:
+        type: string
+      end_time:
+        type: string
+      status:
+        type: string
+      trigger:
+        type: string
+      dry_run:
+        type: boolean
+
+  RetentionExecutionTask:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      execution_id:
+        type: integer
+        format: int64
+      repository:
+        type: string
+      job_id:
+        type: string
+      status:
+        type: string
+      status_code:
+        type: integer
+        x-omitempty: false
+      status_revision:
+        type: integer
+        format: int64
+      start_time:
+        type: string
+      end_time:
+        type: string
+      total:
+        type: integer
+        x-omitempty: false
+      retained:
+        type: integer
+        x-omitempty: false
+
+  QuotaUpdateReq:
+    type: object
+    properties:
+      hard:
+        $ref: "#/definitions/ResourceList"
+        description: The new hard limits for the quota
+
+  QuotaRefObject:
+    type: object
+    additionalProperties: {}
+
+  Quota:
+    type: object
+    description: The quota object
+    properties:
+      id:
+        type: integer
+        description: ID of the quota
+      ref:
+        $ref: "#/definitions/QuotaRefObject"
+        description: The reference object of the quota
+      hard:
+        $ref: "#/definitions/ResourceList"
+        description: The hard limits of the quota
+        x-omitempty: false
+      used:
+        $ref: "#/definitions/ResourceList"
+        description: The used status of the quota
+        x-omitempty: false
+      creation_time:
+        type: string
+        format: date-time
+        description: the creation time of the quota
+      update_time:
+        type: string
+        format: date-time
+        description: the update time of the quota
+
+  ScannerRegistration:
+    type: object
+    description: |
+      Registration represents a named configuration for invoking a scanner via its adapter.
+    properties:
+      uuid:
+        type: string
+        description: The unique identifier of this registration.
+      name:
+        type: string
+        example: Trivy
+        description: The name of this registration.
+      description:
+        type: string
+        description: An optional description of this registration.
+        example: |
+          A free-to-use tool that scans container images for package vulnerabilities.
+        x-omitempty: false
+      url:
+        type: string
+        format: uri
+        description: A base URL of the scanner adapter
+        example: http://harbor-scanner-trivy:8080
+      disabled:
+        type: boolean
+        default: false
+        description: Indicate whether the registration is enabled or not
+        x-omitempty: false
+      is_default:
+        type: boolean
+        default: false
+        description: Indicate if the registration is set as the system default one
+        x-omitempty: false
+      auth:
+        type: string
+        default: ""
+        description: |
+          Specify what authentication approach is adopted for the HTTP communications.
+          Supported types Basic", "Bearer" and api key header "X-ScannerAdapter-API-Key"
+        example: "Bearer"
+        x-omitempty: false
+      access_credential:
+        type: string
+        description: |
+          An optional value of the HTTP Authorization header sent with each request to the Scanner Adapter API.
+        example: "Bearer: JWTTOKENGOESHERE"
+        x-omitempty: false
+      skip_certVerify:
+        type: boolean
+        default: false
+        description: Indicate if skip the certificate verification when sending HTTP requests
+        x-omitempty: false
+      use_internal_addr:
+        type: boolean
+        default: false
+        description: Indicate whether use internal registry addr for the scanner to pull content or not
+        x-omitempty: false
+      create_time:
+        type: string
+        format: date-time
+        description: The creation time of this registration
+      update_time:
+        type: string
+        format: date-time
+        description: The update time of this registration
+      adapter:
+        type: string
+        description: Optional property to describe the name of the scanner registration
+        example: "Trivy"
+      vendor:
+        type: string
+        description: Optional property to describe the vendor of the scanner registration
+        example: "CentOS"
+      version:
+        type: string
+        description: Optional property to describe the version of the scanner registration
+        example: "1.0.1"
+      health:
+        type: string
+        default: ""
+        description: Indicate the healthy of the registration
+        example: "healthy"
+      capabilities:
+        type: object
+        description: Indicates the capabilities of the scanner, e.g. support_vulnerability or support_sbom.
+        additionalProperties: True
+        example:  {"support_vulnerability": true, "support_sbom": true}
+
+  ScannerRegistrationReq:
+    type: object
+    required:
+      - name
+      - url
+    properties:
+      name:
+        type: string
+        description: The name of this registration
+        example: Trivy
+      description:
+        type: string
+        description: An optional description of this registration.
+        example: |
+          A free-to-use tool that scans container images for package vulnerabilities.
+      url:
+        type: string
+        format: uri
+        description: A base URL of the scanner adapter.
+        example: http://harbor-scanner-trivy:8080
+      auth:
+        type: string
+        description: |
+          Specify what authentication approach is adopted for the HTTP communications.
+          Supported types Basic", "Bearer" and api key header "X-ScannerAdapter-API-Key"
+        example: "Bearer"
+      access_credential:
+        type: string
+        description: |
+          An optional value of the HTTP Authorization header sent with each request to the Scanner Adapter API.
+
+          When updating a registration (PUT `/scanners/{registration_id}`), if this field is omitted or empty
+          and `auth` is still one of Basic, Bearer, or APIKey, the previously stored credential is kept
+          unchanged. Provide a non-empty value to set or rotate the credential. Clearing `auth` removes the
+          need for a credential; in that case an empty `access_credential` does not restore the old secret.
+        example: "Bearer: JWTTOKENGOESHERE"
+      skip_certVerify:
+        type: boolean
+        default: false
+        description: Indicate if skip the certificate verification when sending HTTP requests
+      use_internal_addr:
+        type: boolean
+        default: false
+        description: Indicate whether use internal registry addr for the scanner to pull content or not
+      disabled:
+        type: boolean
+        default: false
+        description: Indicate whether the registration is enabled or not
+
+  ScannerRegistrationSettings:
+    type: object
+    required:
+      - name
+      - url
+    properties:
+      name:
+        type: string
+        description: The name of this registration
+        example: Trivy
+      url:
+        type: string
+        format: uri
+        description: A base URL of the scanner adapter.
+        example: http://harbor-scanner-trivy:8080
+      auth:
+        type: string
+        default: ""
+        description: |
+          Specify what authentication approach is adopted for the HTTP communications.
+          Supported types Basic", "Bearer" and api key header "X-ScannerAdapter-API-Key"
+      access_credential:
+        type: string
+        description: |
+          An optional value of the HTTP Authorization header sent with each request to the Scanner Adapter API.
+        example: "Bearer: JWTTOKENGOESHERE"
+
+  IsDefault:
+    type: object
+    properties:
+      is_default:
+        type: boolean
+        description: A flag indicating whether a scanner registration is default.
+
+  ScannerCapability:
+    type: object
+    properties:
+      type:
+        type: string
+        description: |
+          Specify the type of scanner capability, like vulnerability or sbom
+        x-omitempty: false
+        example: "sbom"
+      consumes_mime_types:
+        type: array
+        items:
+          type: string
+          example: "application/vnd.docker.distribution.manifest.v2+json"
+      produces_mime_types:
+        type: array
+        items:
+          type: string
+          example: "application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0"
+
+  ScannerAdapterMetadata:
+    type: object
+    description: The metadata info of the scanner adapter
+    properties:
+      scanner:
+        $ref: '#/definitions/Scanner'
+      capabilities:
+        type: array
+        items:
+          $ref: '#/definitions/ScannerCapability'
+      properties:
+        type: object
+        additionalProperties:
+          type: string
+        example:
+          'harbor.scanner-adapter/registry-authorization-type': 'Bearer'
+
+  ImmutableRule:
+    type: object
+    properties:
+      id:
+        type: integer
+      priority:
+        type: integer
+      disabled:
+        type: boolean
+      action:
+        type: string
+      template:
+        type: string
+      params:
+        type: object
+        additionalProperties:
+          type: object
+      tag_selectors:
+        type: array
+        items:
+          $ref: '#/definitions/ImmutableSelector'
+      scope_selectors:
+        type: object
+        additionalProperties:
+          type: array
+          items:
+            $ref: '#/definitions/ImmutableSelector'
+  ImmutableSelector:
+    type: object
+    properties:
+      kind:
+        type: string
+      decoration:
+        type: string
+      pattern:
+        type: string
+      extras:
+        type: string
+  LdapConf:
+    type: object
+    description: The ldap configure properties
+    properties:
+      ldap_url:
+        type: string
+        description: The url of ldap service.
+      ldap_search_dn:
+        type: string
+        description: The search dn of ldap service.
+      ldap_search_password:
+        type: string
+        description: The search password of ldap service.
+      ldap_base_dn:
+        type: string
+        description: The base dn of ldap service.
+      ldap_filter:
+        type: string
+        description: The serach filter of ldap service.
+      ldap_uid:
+        type: string
+        description: The serach uid from ldap service attributes.
+      ldap_scope:
+        type: integer
+        format: int64
+        description: The serach scope of ldap service.
+      ldap_connection_timeout:
+        type: integer
+        format: int64
+        description: The connect timeout of ldap service(second).
+      ldap_verify_cert:
+        type: boolean
+        description: Verify Ldap server certificate.
+  LdapPingResult:
+    type: object
+    description: The ldap ping result
+    properties:
+      success:
+        type: boolean
+        description: Test success
+      message:
+        type: string
+        description: The ping operation output message.
+  LdapImportUsers:
+    type: object
+    properties:
+      ldap_uid_list:
+        type: array
+        description: selected uid list
+        items:
+          type: string
+  LdapFailedImportUser:
+    type: object
+    properties:
+      uid:
+        type: string
+        description: the uid can't add to system.
+      error:
+        type: string
+        description: fail reason.
+  LdapUser:
+    type: object
+    properties:
+      username:
+        type: string
+        description: ldap username.
+      realname:
+        type: string
+        description: The user realname from "uid" or "cn" attribute.
+      email:
+        type: string
+        description: The user email address from "mail" or "email" attribute.
+  UserGroup:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: The ID of the user group
+      group_name:
+        type: string
+        description: The name of the user group
+      group_type:
+        type: integer
+        description: 'The group type, 1 for LDAP group, 2 for HTTP group, 3 for OIDC group.'
+      ldap_group_dn:
+        type: string
+        description: The DN of the LDAP group if group type is 1 (LDAP group).
+  UserGroupSearchItem:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: The ID of the user group
+      group_name:
+        type: string
+        description: The name of the user group
+      group_type:
+        type: integer
+        description: 'The group type, 1 for LDAP group, 2 for HTTP group, 3 for OIDC group.'
+  SupportedWebhookEventTypes:
+    type: object
+    description: Supported webhook event types and notify types.
+    properties:
+      event_type:
+        type: array
+        items:
+          $ref: '#/definitions/EventType'
+      notify_type:
+        type: array
+        items:
+          $ref: '#/definitions/NotifyType'
+      payload_formats:
+        type: array
+        items:
+          $ref: '#/definitions/PayloadFormat'
+  EventType:
+    type: string
+    description: Webhook supported event type.
+    example: 'PULL_ARTIFACT'
+  NotifyType:
+    type: string
+    description: Webhook supported notify type.
+    enum:
+      - http
+      - slack
+      - matrix
+    example: 'http'
+  PayloadFormatType:
+    type: string
+    description: The type of webhook paylod format.
+    example: 'CloudEvents'
+  PayloadFormat:
+    type: object
+    description: Webhook supported payload format type collections.
+    properties:
+      notify_type:
+        $ref: '#/definitions/NotifyType'
+      formats:
+        type: array
+        description: The supported payload formats for this notify type.
+        items:
+          $ref: '#/definitions/PayloadFormatType'
+
+  WebhookTargetObject:
+    type: object
+    description: The webhook policy target object.
+    properties:
+      type:
+        type: string
+        description: The webhook target notify type.
+      address:
+        type: string
+        description: The webhook target address.
+      auth_header:
+        type: string
+        description: The webhook auth header.
+      skip_cert_verify:
+        type: boolean
+        description: Whether or not to skip cert verify.
+      payload_format:
+        $ref: '#/definitions/PayloadFormatType'
+        description: The payload format of webhook, by default is Default for http type.
+  WebhookPolicy:
+    type: object
+    description: The webhook policy object
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: The webhook policy ID.
+      name:
+        type: string
+        description: The name of webhook policy.
+      description:
+        type: string
+        description: The description of webhook policy.
+      project_id:
+        type: integer
+        description: The project ID of webhook policy.
+      targets:
+        type: array
+        items:
+          $ref: '#/definitions/WebhookTargetObject'
+      event_types:
+        type: array
+        items:
+          type: string
+      creator:
+        type: string
+        description: The creator of the webhook policy.
+      creation_time:
+        type: string
+        description: The create time of the webhook policy.
+        format: date-time
+      update_time:
+        type: string
+        description: The update time of the webhook policy.
+        format: date-time
+      enabled:
+        type: boolean
+        description: Whether the webhook policy is enabled or not.
+        x-omitempty: false
+  WebhookLastTrigger:
+    type: object
+    description: The webhook policy and last trigger time group by event type.
+    properties:
+      policy_name:
+        type: string
+        description: The webhook policy name.
+      event_type:
+        type: string
+        description: The webhook event type.
+      enabled:
+        type: boolean
+        description: Whether or not the webhook policy enabled.
+      creation_time:
+        type: string
+        description: The creation time of webhook policy.
+        format: date-time
+      last_trigger_time:
+        type: string
+        description: The last trigger time of webhook policy.
+        format: date-time
+  WebhookJob:
+    type: object
+    description: The webhook job.
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: The webhook job ID.
+      policy_id:
+        type: integer
+        format: int64
+        description: The webhook policy ID.
+      event_type:
+        type: string
+        description: The webhook job event type.
+      notify_type:
+        type: string
+        description: The webhook job notify type.
+      status:
+        type: string
+        description: The webhook job status.
+      job_detail:
+        type: string
+        description: The webhook job notify detailed data.
+      creation_time:
+        type: string
+        description: The webhook job creation time.
+        format: date-time
+      update_time:
+        type: string
+        description: The webhook job update time.
+        format: date-time
+  InternalConfigurationsResponse:
+    type: object
+    additionalProperties:
+      $ref: '#/definitions/InternalConfigurationValue'
+  InternalConfigurationValue:
+    type: object
+    properties:
+      value:
+        type: object
+        description: The value of current config item
+      editable:
+        type: boolean
+        x-omitempty: false
+        description: The configure item can be updated or not
+  ConfigurationsResponse:
+    type: object
+    properties:
+      auth_mode:
+        $ref: '#/definitions/StringConfigItem'
+        description: The auth mode of current system, such as "db_auth", "ldap_auth", "oidc_auth"
+      primary_auth_mode:
+        $ref: '#/definitions/BoolConfigItem'
+        description: The flag to indicate whether the current auth mode should consider as a primary one.
+      ldap_base_dn:
+        $ref: '#/definitions/StringConfigItem'
+        description: The Base DN for LDAP binding.
+      ldap_filter:
+        $ref: '#/definitions/StringConfigItem'
+        description: The filter for LDAP search
+      ldap_group_base_dn:
+        $ref: '#/definitions/StringConfigItem'
+        description: The base DN to search LDAP group.
+      ldap_group_admin_dn:
+        $ref: '#/definitions/StringConfigItem'
+        description: Specify the ldap group which have the same privilege with Harbor admin
+      ldap_group_attribute_name:
+        $ref: '#/definitions/StringConfigItem'
+        description: The attribute which is used as identity of the LDAP group, default is cn.'
+      ldap_group_search_filter:
+        $ref: '#/definitions/StringConfigItem'
+        description: The filter to search the ldap group
+      ldap_group_search_scope:
+        $ref: '#/definitions/IntegerConfigItem'
+        description: The scope to search ldap group. ''0-LDAP_SCOPE_BASE, 1-LDAP_SCOPE_ONELEVEL, 2-LDAP_SCOPE_SUBTREE''
+      ldap_group_attach_parallel:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Attach LDAP user group information in parallel.
+      ldap_scope:
+        $ref: '#/definitions/IntegerConfigItem'
+        description: The scope to search ldap users,'0-LDAP_SCOPE_BASE, 1-LDAP_SCOPE_ONELEVEL, 2-LDAP_SCOPE_SUBTREE'
+      ldap_search_dn:
+        $ref: '#/definitions/StringConfigItem'
+        description: The DN of the user to do the search.
+      ldap_timeout:
+        $ref: '#/definitions/IntegerConfigItem'
+        description: Timeout in seconds for connection to LDAP server
+      ldap_uid:
+        $ref: '#/definitions/StringConfigItem'
+        description: The attribute which is used as identity for the LDAP binding, such as "CN" or "SAMAccountname"
+      ldap_url:
+        $ref: '#/definitions/StringConfigItem'
+        description: The URL of LDAP server
+      ldap_verify_cert:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Whether verify your OIDC server certificate, disable it if your OIDC server is hosted via self-hosted certificate.
+      ldap_group_membership_attribute:
+        $ref: '#/definitions/StringConfigItem'
+        description: The user attribute to identify the group membership
+      project_creation_restriction:
+        $ref: '#/definitions/StringConfigItem'
+        description: Indicate who can create projects, it could be ''adminonly'' or ''everyone''.
+      read_only:
+        $ref: '#/definitions/BoolConfigItem'
+        description: The flag to indicate whether Harbor is in readonly mode.
+      self_registration:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Whether the Harbor instance supports self-registration.  If it''s set to false, admin need to add user to the instance.
+      token_expiration:
+        $ref: '#/definitions/IntegerConfigItem'
+        description: The expiration time of the token for internal Registry, in minutes.
+      uaa_client_id:
+        $ref: '#/definitions/StringConfigItem'
+        description: The client id of UAA
+      uaa_client_secret:
+        $ref: '#/definitions/StringConfigItem'
+        description: The client secret of the UAA
+      uaa_endpoint:
+        $ref: '#/definitions/StringConfigItem'
+        description: The endpoint of the UAA
+      uaa_verify_cert:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Verify the certificate in UAA server
+      http_authproxy_endpoint:
+        $ref: '#/definitions/StringConfigItem'
+        description: The endpoint of the HTTP auth
+      http_authproxy_tokenreview_endpoint:
+        $ref: '#/definitions/StringConfigItem'
+        description: The token review endpoint
+      http_authproxy_admin_groups:
+        $ref: '#/definitions/StringConfigItem'
+        description: The group which has the harbor admin privileges
+      http_authproxy_admin_usernames:
+        $ref: '#/definitions/StringConfigItem'
+        description: The usernames which has the harbor admin privileges
+      http_authproxy_verify_cert:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Verify the HTTP auth provider's certificate
+      http_authproxy_skip_search:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Search user before onboard
+      http_authproxy_server_certificate:
+        $ref: '#/definitions/StringConfigItem'
+        description: The certificate of the HTTP auth provider
+      oidc_name:
+        $ref: '#/definitions/StringConfigItem'
+        description: The OIDC provider name
+      oidc_endpoint:
+        $ref: '#/definitions/StringConfigItem'
+        description: The endpoint of the OIDC provider
+      oidc_client_id:
+        $ref: '#/definitions/StringConfigItem'
+        description: The client ID of the OIDC provider
+      oidc_groups_claim:
+        $ref: '#/definitions/StringConfigItem'
+        description: The attribute claims the group name
+      oidc_admin_group:
+        $ref: '#/definitions/StringConfigItem'
+        description: The OIDC group which has the harbor admin privileges
+      oidc_group_filter:
+        $ref: '#/definitions/StringConfigItem'
+        description: The OIDC group filter which filters out the group doesn't match the regular expression
+      oidc_scope:
+        $ref: '#/definitions/StringConfigItem'
+        description: The scope of the OIDC provider
+      oidc_user_claim:
+        $ref: '#/definitions/StringConfigItem'
+        description: The attribute claims the username
+      oidc_verify_cert:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Verify the OIDC provider's certificate'
+      oidc_auto_onboard:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Auto onboard the OIDC user
+      oidc_extra_redirect_parms:
+        $ref: '#/definitions/StringConfigItem'
+        description: Extra parameters to add when redirect request to OIDC provider
+      oidc_logout:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Extra parameters to logout user session from the OIDC provider
+      robot_token_duration:
+        $ref: '#/definitions/IntegerConfigItem'
+        description: The robot account token duration in days
+      robot_name_prefix:
+        $ref: '#/definitions/StringConfigItem'
+        description: The rebot account name prefix
+      notification_enable:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Enable notification
+      quota_per_project_enable:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Enable quota per project
+      storage_per_project:
+        $ref: '#/definitions/IntegerConfigItem'
+        description: The storage quota per project
+      audit_log_forward_endpoint:
+        $ref: '#/definitions/StringConfigItem'
+        description: The endpoint of the audit log forwarder
+      skip_audit_log_database:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Whether skip the audit log in database
+      scanner_skip_update_pulltime:
+        $ref: '#/definitions/BoolConfigItem'
+        description: Whether or not to skip update the pull time for scanner
+      scan_all_policy:
+        type: object
+        properties:
+          type:
+            type: string
+            description: 'The type of scan all policy, currently the valid values are "none" and "daily"'
+          parameter:
+            type: object
+            properties:
+              daily_time:
+                type: integer
+                description: 'The offset in seconds of UTC 0 o''clock, only valid when the policy type is "daily"'
+            description: 'The parameters of the policy, the values are dependent on the type of the policy.'
+      session_timeout:
+        $ref: '#/definitions/IntegerConfigItem'
+        description: The session timeout in minutes
+      banner_message:
+        $ref: '#/definitions/StringConfigItem'
+        description: The banner message for the UI.It is the stringified result of the banner message object
+      disabled_audit_log_event_types:
+        $ref: '#/definitions/StringConfigItem'
+        description: The audit log event types to skip to log in database
+  Configurations:
+    type: object
+    properties:
+      auth_mode:
+        type: string
+        description: The auth mode of current system, such as "db_auth", "ldap_auth", "oidc_auth"
+        x-omitempty: true
+        x-isnullable: true
+      primary_auth_mode:
+        type: boolean
+        x-nullable: true
+        x-omitempty: true
+        description: The flag to indicate whether the current auth mode should consider as a primary one.
+      ldap_base_dn:
+        type: string
+        description: The Base DN for LDAP binding.
+        x-omitempty: true
+        x-isnullable: true
+      ldap_filter:
+        type: string
+        description: The filter for LDAP search
+        x-omitempty: true
+        x-isnullable: true
+      ldap_group_base_dn:
+        type: string
+        description: The base DN to search LDAP group.
+        x-omitempty: true
+        x-isnullable: true
+      ldap_group_admin_dn:
+        type: string
+        description: Specify the ldap group which have the same privilege with Harbor admin
+        x-omitempty: true
+        x-isnullable: true
+      ldap_group_attribute_name:
+        type: string
+        description: The attribute which is used as identity of the LDAP group, default is cn.'
+        x-omitempty: true
+        x-isnullable: true
+      ldap_group_search_filter:
+        type: string
+        description: The filter to search the ldap group
+        x-omitempty: true
+        x-isnullable: true
+      ldap_group_search_scope:
+        type: integer
+        description: The scope to search ldap group. ''0-LDAP_SCOPE_BASE, 1-LDAP_SCOPE_ONELEVEL, 2-LDAP_SCOPE_SUBTREE''
+        x-omitempty: true
+        x-isnullable: true
+      ldap_group_attach_parallel:
+        type: boolean
+        description: Attach LDAP user group information in parallel, the parallel worker count is 5
+        x-omitempty: true
+        x-isnullable: true
+      ldap_scope:
+        type: integer
+        description: The scope to search ldap users,'0-LDAP_SCOPE_BASE, 1-LDAP_SCOPE_ONELEVEL, 2-LDAP_SCOPE_SUBTREE'
+        x-omitempty: true
+        x-isnullable: true
+      ldap_search_dn:
+        type: string
+        description: The DN of the user to do the search.
+        x-omitempty: true
+        x-isnullable: true
+      ldap_search_password:
+        type: string
+        description: The password of the ldap search dn
+        x-omitempty: true
+        x-isnullable: true
+      ldap_timeout:
+        type: integer
+        description: Timeout in seconds for connection to LDAP server
+        x-omitempty: true
+        x-isnullable: true
+      ldap_uid:
+        type: string
+        description: The attribute which is used as identity for the LDAP binding, such as "CN" or "SAMAccountname"
+        x-omitempty: true
+        x-isnullable: true
+      ldap_url:
+        type: string
+        description: The URL of LDAP server
+        x-omitempty: true
+        x-isnullable: true
+      ldap_verify_cert:
+        type: boolean
+        description: Whether verify your OIDC server certificate, disable it if your OIDC server is hosted via self-hosted certificate.
+        x-omitempty: true
+        x-isnullable: true
+      ldap_group_membership_attribute:
+        type: string
+        description: The user attribute to identify the group membership
+        x-omitempty: true
+        x-isnullable: true
+      project_creation_restriction:
+        type: string
+        description: Indicate who can create projects, it could be ''adminonly'' or ''everyone''.
+        x-omitempty: true
+        x-isnullable: true
+      read_only:
+        type: boolean
+        description: The flag to indicate whether Harbor is in readonly mode.
+        x-omitempty: true
+        x-isnullable: true
+      self_registration:
+        type: boolean
+        description: Whether the Harbor instance supports self-registration.  If it''s set to false, admin need to add user to the instance.
+        x-omitempty: true
+        x-isnullable: true
+      token_expiration:
+        type: integer
+        description: The expiration time of the token for internal Registry, in minutes.
+        x-omitempty: true
+        x-isnullable: true
+      uaa_client_id:
+        type: string
+        description: The client id of UAA
+        x-omitempty: true
+        x-isnullable: true
+      uaa_client_secret:
+        type: string
+        description: The client secret of the UAA
+        x-omitempty: true
+        x-isnullable: true
+      uaa_endpoint:
+        type: string
+        description: The endpoint of the UAA
+        x-omitempty: true
+        x-isnullable: true
+      uaa_verify_cert:
+        type: boolean
+        description: Verify the certificate in UAA server
+        x-omitempty: true
+        x-isnullable: true
+      http_authproxy_endpoint:
+        type: string
+        description: The endpoint of the HTTP auth
+        x-omitempty: true
+        x-isnullable: true
+      http_authproxy_tokenreview_endpoint:
+        type: string
+        description: The token review endpoint
+        x-omitempty: true
+        x-isnullable: true
+      http_authproxy_admin_groups:
+        type: string
+        description: The group which has the harbor admin privileges
+        x-omitempty: true
+        x-isnullable: true
+      http_authproxy_admin_usernames:
+        type: string
+        description: The username which has the harbor admin privileges
+        x-omitempty: true
+        x-isnullable: true
+      http_authproxy_verify_cert:
+        type: boolean
+        description: Verify the HTTP auth provider's certificate
+        x-omitempty: true
+        x-isnullable: true
+      http_authproxy_skip_search:
+        type: boolean
+        description: Search user before onboard
+        x-omitempty: true
+        x-isnullable: true
+      http_authproxy_server_certificate:
+        type: string
+        description: The certificate of the HTTP auth provider
+        x-omitempty: true
+        x-isnullable: true
+      oidc_name:
+        type: string
+        description: The OIDC provider name
+        x-omitempty: true
+        x-isnullable: true
+      oidc_endpoint:
+        type: string
+        description: The endpoint of the OIDC provider
+        x-omitempty: true
+        x-isnullable: true
+      oidc_client_id:
+        type: string
+        description: The client ID of the OIDC provider
+        x-omitempty: true
+        x-isnullable: true
+      oidc_client_secret:
+        type: string
+        description: The OIDC provider secret
+        x-omitempty: true
+        x-isnullable: true
+      oidc_groups_claim:
+        type: string
+        description: The attribute claims the group name
+        x-omitempty: true
+        x-isnullable: true
+      oidc_admin_group:
+        type: string
+        description: The OIDC group which has the harbor admin privileges
+        x-omitempty: true
+        x-isnullable: true
+      oidc_group_filter:
+        type: string
+        description: The OIDC group filter which filters out the group name doesn't match the regular expression
+        x-omitempty: true
+        x-isnullable: true
+      oidc_scope:
+        type: string
+        description: The scope of the OIDC provider
+        x-omitempty: true
+        x-isnullable: true
+      oidc_user_claim:
+        type: string
+        description: The attribute claims the username
+        x-omitempty: true
+        x-isnullable: true
+      oidc_verify_cert:
+        type: boolean
+        description: Verify the OIDC provider's certificate'
+        x-omitempty: true
+        x-isnullable: true
+      oidc_auto_onboard:
+        type: boolean
+        description: Auto onboard the OIDC user
+        x-omitempty: true
+        x-isnullable: true
+      oidc_extra_redirect_parms:
+        type: string
+        description: Extra parameters to add when redirect request to OIDC provider
+        x-omitempty: true
+        x-isnullable: true
+      oidc_logout:
+        type: boolean
+        description: Logout OIDC user session
+        x-omitempty: true
+        x-isnullable: true
+      robot_token_duration:
+        type: integer
+        description: The robot account token duration in days
+        x-omitempty: true
+        x-isnullable: true
+      robot_name_prefix:
+        type: string
+        description: The rebot account name prefix
+        x-omitempty: true
+        x-isnullable: true
+      notification_enable:
+        type: boolean
+        description: Enable notification
+        x-omitempty: true
+        x-isnullable: true
+      quota_per_project_enable:
+        type: boolean
+        description: Enable quota per project
+        x-omitempty: true
+        x-isnullable: true
+      storage_per_project:
+        type: integer
+        description: The storage quota per project
+        x-omitempty: true
+        x-isnullable: true
+      audit_log_forward_endpoint:
+        type: string
+        description: The audit log forward endpoint
+        x-omitempty: true
+        x-isnullable: true
+      skip_audit_log_database:
+        type: boolean
+        description: Skip audit log database
+        x-omitempty: true
+        x-isnullable: true
+      session_timeout:
+        type: integer
+        description: The session timeout for harbor, in minutes.
+        x-omitempty: true
+        x-isnullable: true
+      scanner_skip_update_pulltime:
+        type: boolean
+        description: Whether or not to skip update pull time for scanner
+        x-omitempty: true
+        x-isnullable: true
+      banner_message:
+        type: string
+        description: The banner message for the UI.It is the stringified result of the banner message object
+        x-omitempty: true
+        x-isnullable: true
+      disabled_audit_log_event_types:
+        type: string
+        description: the list to disable log audit event types. 
+        x-omitempty: true
+        x-isnullable: true
+  StringConfigItem:
+    type: object
+    properties:
+      value:
+        type: string
+        x-omitempty: false
+        description: The string value of current config item
+      editable:
+        type: boolean
+        x-omitempty: false
+        description: The configure item can be updated or not
+  BoolConfigItem:
+    type: object
+    properties:
+      value:
+        type: boolean
+        x-omitempty: false
+        description: The boolean value of current config item
+      editable:
+        type: boolean
+        x-omitempty: false
+        description: The configure item can be updated or not
+  IntegerConfigItem:
+    type: object
+    properties:
+      value:
+        type: integer
+        x-omitempty: false
+        description: The integer value of current config item
+      editable:
+        type: boolean
+        x-omitempty: false
+        description: The configure item can be updated or not
+  ProjectMemberEntity:
+    type: object
+    properties:
+      id:
+        type: integer
+        description: the project member id
+      project_id:
+        type: integer
+        description: the project id
+      entity_name:
+        type: string
+        description: the name of the group member.
+      role_name:
+        type: string
+        description: the name of the role
+      role_id:
+        type: integer
+        description: the role id
+      entity_id:
+        type: integer
+        description: 'the id of entity, if the member is a user, it is user_id in user table. if the member is a user group, it is the user group''s ID in user_group table.'
+      entity_type:
+        type: string
+        description: 'the entity''s type, u for user entity, g for group entity.'
+  ProjectMember:
+    type: object
+    properties:
+      role_id:
+        type: integer
+        description: 'The role id 1 for projectAdmin, 2 for developer, 3 for guest, 4 for maintainer'
+      member_user:
+        $ref: '#/definitions/UserEntity'
+      member_group:
+        $ref: '#/definitions/UserGroup'
+  RoleRequest:
+    type: object
+    properties:
+      role_id:
+        type: integer
+        description: 'The role id 1 for projectAdmin, 2 for developer, 3 for guest, 4 for maintainer'
+  UserEntity:
+    type: object
+    properties:
+      user_id:
+        type: integer
+        description: The ID of the user.
+      username:
+        type: string
+        description: The name of the user.
+  UserProfile:
+    type: object
+    properties:
+      email:
+        type: string
+      realname:
+        type: string
+      comment:
+        type: string
+  UserCreationReq:
+    type: object
+    properties:
+      email:
+        type: string
+        maxLength: 255
+      realname:
+        type: string
+      comment:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+        maxLength: 255
+  OIDCUserInfo:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int
+        description: the ID of the OIDC info record
+      user_id:
+        type: integer
+        format: int
+        description: the ID of the user
+      subiss:
+        type: string
+        description: the concatenation of sub and issuer in the ID token
+      secret:
+        type: string
+        description: the secret of the OIDC user that can be used for CLI to push/pull artifacts
+      creation_time:
+        type: string
+        format: date-time
+        description: The creation time of the OIDC user info record.
+      update_time:
+        type: string
+        format: date-time
+        description: The update time of the OIDC user info record.
+  UserResp:
+    type: object
+    properties:
+      email:
+        type: string
+      realname:
+        type: string
+      comment:
+        type: string
+      user_id:
+        type: integer
+        format: int
+      username:
+        type: string
+      sysadmin_flag:
+        type: boolean
+        x-omitempty: false
+      admin_role_in_auth:
+        type: boolean
+        x-omitempty: false
+        description: indicate the admin privilege is grant by authenticator (LDAP), is always false unless it is the current login user
+      oidc_user_meta:
+        $ref: '#/definitions/OIDCUserInfo'
+      creation_time:
+        type: string
+        format: date-time
+        description: The creation time of the user.
+      update_time:
+        type: string
+        format: date-time
+        description: The update time of the user.
+  UserSysAdminFlag:
+    type: object
+    properties:
+      sysadmin_flag:
+        type: boolean
+        description: 'true-admin, false-not admin.'
+  UserSearch:
+    type: object
+    properties:
+      user_id:
+        type: integer
+        format: int
+        description: The ID of the user.
+      username:
+        type: string
+  PasswordReq:
+    type: object
+    properties:
+      old_password:
+        type: string
+        description: The user's existing password.
+      new_password:
+        type: string
+        description: New password for marking as to be updated.
+  UserSearchRespItem:
+    type: object
+    properties:
+      user_id:
+        type: integer
+        format: int
+        description: The ID of the user.
+      username:
+        type: string
+  Permission:
+    type: object
+    properties:
+      resource:
+        type: string
+        description: The permission resoruce
+      action:
+        type: string
+        description: The permission action
+  Permissions:
+    type: object
+    properties:
+      system:
+        type: array
+        description: The system level permissions
+        items:
+          $ref: '#/definitions/Permission'
+      project:
+        type: array
+        description: The project level permissions
+        items:
+          $ref: '#/definitions/Permission'
+  OIDCCliSecretReq:
+    type: object
+    properties:
+      secret:
+        type: string
+        description: The new secret
+  OverallHealthStatus:
+    type: object
+    description: The system health status
+    properties:
+      status:
+        type: string
+        description: The overall health status. It is "healthy" only when all the components' status are "healthy"
+      components:
+        type: array
+        items:
+          $ref: '#/definitions/ComponentHealthStatus'
+  ComponentHealthStatus:
+    type: object
+    description: The health status of component
+    properties:
+      name:
+        type: string
+        description: The component name
+      status:
+        type: string
+        description: The health status of component. Is either "healthy" or "unhealthy".
+      error:
+        type: string
+        description: (optional) The error message when the status is "unhealthy"
+  Statistic:
+    type: object
+    properties:
+      private_project_count:
+        type: integer
+        format: int64
+        description: The count of the private projects
+        x-omitempty: false
+      private_repo_count:
+        type: integer
+        format: int64
+        description: The count of the private repositories
+        x-omitempty: false
+      public_project_count:
+        type: integer
+        format: int64
+        description: The count of the public projects
+        x-omitempty: false
+      public_repo_count:
+        type: integer
+        format: int64
+        description: The count of the public repositories
+        x-omitempty: false
+      total_project_count:
+        type: integer
+        format: int64
+        description: The count of the total projects, only be seen by the system admin
+        x-omitempty: false
+      total_repo_count:
+        type: integer
+        format: int64
+        description: The count of the total repositories, only be seen by the system admin
+        x-omitempty: false
+      total_storage_consumption:
+        type: integer
+        format: int64
+        description: The total storage consumption of blobs, only be seen by the system admin
+        x-omitempty: false
+  Accessory:
+    type: object
+    description: 'The accessory of the artifact'
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: The ID of the accessory
+      artifact_id:
+        type: integer
+        format: int64
+        description: The artifact id of the accessory
+        x-omitempty: false
+      subject_artifact_id:
+        type: integer
+        format: int64
+        description: Going to be deprecated, use repo and digest for insteand. The subject artifact id of the accessory.
+      subject_artifact_digest:
+        type: string
+        description: The subject artifact digest of the accessory
+        x-omitempty: false
+      subject_artifact_repo:
+        type: string
+        description: The subject artifact repository name of the accessory
+        x-omitempty: false
+      size:
+        type: integer
+        format: int64
+        description: The artifact size of the accessory
+        x-omitempty: false
+      digest:
+        type: string
+        description: The artifact digest of the accessory
+        x-omitempty: false
+      type:
+        type: string
+        description: The artifact size of the accessory
+        x-omitempty: false
+      icon:
+        type: string
+        description: The icon of the accessory
+        x-omitempty: false
+      creation_time:
+        type: string
+        format: date-time
+        description: The creation time of the accessory
+
+  ScanDataExportRequest:
+    type: object
+    description: The criteria to select the scan data to export.
+    properties:
+      job_name:
+        type: string
+        description: Name of the scan data export job
+      projects:
+        type: array
+        items:
+          type: integer
+          format: int64
+        description: A list of one or more projects for which to export the scan data, currently only one project is supported due to performance concerns, but define as array for extension in the future.
+      labels:
+        type: array
+        items:
+          type: integer
+          format: int64
+        description: A list of one or more labels for which to export the scan data, defaults to all if empty
+      repositories:
+        type: string
+        description: A list of repositories for which to export the scan data, defaults to all if empty
+      cveIds:
+        type: string
+        description: CVE-IDs for which to export data. Multiple CVE-IDs can be specified by separating using ',' and enclosed between '{}'. Defaults to all if empty
+      tags:
+        type: string
+        description: A list of tags enclosed within '{}'. Defaults to all if empty
+  ScanDataExportJob:
+    type: object
+    description: The metadata associated with the scan data export job
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: The id of the scan data export job
+  ScanDataExportExecution:
+    type: object
+    description: The replication execution
+    properties:
+      id:
+        type: integer
+        description: The ID of the execution
+      user_id:
+        type: integer
+        description: The ID if the user triggering the export job
+      status:
+        type: string
+        description: The status of the execution
+      trigger:
+        type: string
+        description: The trigger mode
+      start_time:
+        type: string
+        format: date-time
+        description: The start time
+      end_time:
+        type: string
+        format: date-time
+        description: The end time
+      status_text:
+        type: string
+        x-omitempty: false
+        description: The status text
+      user_name:
+        type: string
+        x-omitempty: false
+        description: The name of the user triggering the job
+      file_present:
+        type: boolean
+        x-omitempty: false
+        description: Indicates whether the export artifact is present in registry
+  ScanDataExportExecutionList:
+    type: object
+    description: The list of scan data export executions
+    properties:
+      items:
+        type: array
+        items:
+          $ref: '#/definitions/ScanDataExportExecution'
+        description: The list of scan data export executions
+
+  WorkerPool:
+    type: object
+    description: the worker pool of job service
+    properties:
+      pid:
+        type: integer
+        description: the process id of jobservice
+      worker_pool_id:
+        type: string
+        description: the id of the worker pool
+      start_at:
+        type: string
+        format: date-time
+        description: The start time of the work pool
+      heartbeat_at:
+        type: string
+        format: date-time
+        description: The heartbeat time of the work pool
+      concurrency:
+        type: integer
+        description: The concurrency of the work pool
+      host:
+        type: string
+        description: The host of the work pool
+  Worker:
+    type: object
+    description: worker in the pool
+    properties:
+      id:
+        type: string
+        description: the id of the worker
+      pool_id:
+        type: string
+        description: the id of the worker pool
+      job_name:
+        type: string
+        description: the name of the running job in the worker
+      job_id:
+        type: string
+        description: the id of the running job in the worker
+      start_at:
+        type: string
+        format: date-time
+        description: The start time of the worker
+        x-nullable: true
+        x-omitempty: true
+      check_in:
+        type: string
+        description: the checkin of the running job in the worker
+      checkin_at:
+        type: string
+        format: date-time
+        description: The checkin time of the worker
+        x-nullable: true
+        x-omitempty: true
+  ActionRequest:
+    type: object
+    description: The request to stop, pause or resume
+    properties:
+      action:
+        type: string
+        description: The action of the request, should be stop, pause or resume
+        enum:
+          - stop
+>>>>>>> feature/matrix-handler
           - pause
           - resume
           - stop

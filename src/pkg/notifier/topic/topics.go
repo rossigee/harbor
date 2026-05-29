@@ -16,6 +16,19 @@
 	"github.com/goharbor/harbor/src/pkg/notifier"
 	"github.com/goharbor/harbor/src/pkg/notifier/handler/notification"
 	"github.com/goharbor/harbor/src/pkg/notifier/model"
+<<<<<<< HEAD
+=======
+)
+
+// Subscribe topics
+func init() {
+	handlersMap := map[string][]notifier.NotificationHandler{
+		model.WebhookTopic: {&notification.HTTPHandler{}},
+		model.SlackTopic:   {&notification.SlackHandler{}},
+		model.MatrixTopic:  {&notification.MatrixHandler{}},
+	}
+
+>>>>>>> feature/matrix-handler
 	for t, handlers := range handlersMap {
 	handlersMap := map[string][]notifier.NotificationHandler{
 	}

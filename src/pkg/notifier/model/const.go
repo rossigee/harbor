@@ -20,4 +20,11 @@
 // limitations under the License.
 // you may not use this file except in compliance with the License.
 const (
+<<<<<<< HEAD
 package model
+=======
+	NotifyTypeHTTP  = "http"
+	NotifyTypeSlack = "slack"
+	NotifyTypeMatrix = "matrix"
+)
+>>>>>>> feature/matrix-handler

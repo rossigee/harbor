@@ -23,6 +23,35 @@
 	"github.com/goharbor/harbor/src/pkg/notification/policy"
 	"github.com/goharbor/harbor/src/pkg/notification/policy/model"
 	"github.com/goharbor/harbor/src/pkg/task"
+<<<<<<< HEAD
+=======
+)
+
+var (
+	// Ctl is a global webhook controller instance
+	Ctl = NewController()
+
+	// webhookJobVendors represents webhook(http), slack, or matrix.
+	webhookJobVendors = q.NewOrList([]any{job.WebhookJobVendorType, job.SlackJobVendorType, job.MatrixJobVendorType})
+)
+
+type Controller interface {
+	// CreatePolicy creates webhook policy
+	CreatePolicy(ctx context.Context, policy *model.Policy) (int64, error)
+	// ListPolicies lists webhook policies filter by query
+	ListPolicies(ctx context.Context, query *q.Query) ([]*model.Policy, error)
+	// CountPolicies counts webhook policies filter by query
+	CountPolicies(ctx context.Context, query *q.Query) (int64, error)
+	// GetPolicy gets webhook policy by specified ID
+	GetPolicy(ctx context.Context, id int64) (*model.Policy, error)
+	// UpdatePolicy updates webhook policy
+	UpdatePolicy(ctx context.Context, policy *model.Policy) error
+	// DeletePolicy deletes webhook policy by specified ID
+	DeletePolicy(ctx context.Context, policyID int64) error
+	// GetRelatedPolices gets related policies by the input project id and event type
+	GetRelatedPolices(ctx context.Context, projectID int64, eventType string) ([]*model.Policy, error)
+
+>>>>>>> feature/matrix-handler
 	// CountExecutions counts executions under the webhook policy
 	// CountPolicies counts webhook policies filter by query
 	// CountTasks counts tasks under the webhook execution
@@ -39,6 +68,61 @@
 	// ListTasks lists tasks under the webhook execution
 	// UpdatePolicy updates webhook policy
 	// delete executions under the webhook policy,
+<<<<<<< HEAD
+=======
+	// there are three vendor types(webhook, slack & matrix) needs to be deleted.
+	if err := c.execMgr.DeleteByVendor(ctx, job.WebhookJobVendorType, policyID); err != nil {
+		return errors.Wrapf(err, "failed to delete executions for webhook of policy %d", policyID)
+	}
+	if err := c.execMgr.DeleteByVendor(ctx, job.SlackJobVendorType, policyID); err != nil {
+		return errors.Wrapf(err, "failed to delete executions for slack of policy %d", policyID)
+	}
+	if err := c.execMgr.DeleteByVendor(ctx, job.MatrixJobVendorType, policyID); err != nil {
+		return errors.Wrapf(err, "failed to delete executions for matrix of policy %d", policyID)
+	}
+
+	return c.policyMgr.Delete(ctx, policyID)
+}
+
+func (c *controller) GetRelatedPolices(ctx context.Context, projectID int64, eventType string) ([]*model.Policy, error) {
+	return c.policyMgr.GetRelatedPolices(ctx, projectID, eventType)
+}
+
+func (c *controller) CountExecutions(ctx context.Context, policyID int64, query *q.Query) (int64, error) {
+	return c.execMgr.Count(ctx, buildExecutionQuery(policyID, query))
+}
+
+func (c *controller) ListExecutions(ctx context.Context, policyID int64, query *q.Query) ([]*task.Execution, error) {
+	return c.execMgr.List(ctx, buildExecutionQuery(policyID, query))
+}
+
+func (c *controller) CountTasks(ctx context.Context, execID int64, query *q.Query) (int64, error) {
+	return c.taskMgr.Count(ctx, buildTaskQuery(execID, query))
+}
+
+func (c *controller) ListTasks(ctx context.Context, execID int64, query *q.Query) ([]*task.Task, error) {
+	return c.taskMgr.List(ctx, buildTaskQuery(execID, query))
+}
+
+func (c *controller) GetTask(ctx context.Context, taskID int64) (*task.Task, error) {
+	query := q.New(q.KeyWords{
+		"id":          taskID,
+		"vendor_type": webhookJobVendors,
+	})
+	tasks, err := c.taskMgr.List(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(tasks) == 0 {
+		return nil, errors.New(nil).WithCode(errors.NotFoundCode).
+			WithMessagef("webhook task %d not found", taskID)
+	}
+	return tasks[0], nil
+}
+
+func (c *controller) GetTaskLog(ctx context.Context, taskID int64) ([]byte, error) {
+>>>>>>> feature/matrix-handler
 	// ensure the webhook task exist
 	// fetch the latest execution sort by start_time
 	// there are three vendor types(webhook, slack & amqp) needs to be deleted.
