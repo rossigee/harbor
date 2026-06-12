@@ -29,6 +29,7 @@ import (
 	"github.com/goharbor/harbor/src/common/security"
 	"github.com/goharbor/harbor/src/common/security/local"
 	"github.com/goharbor/harbor/src/common/utils"
+	"github.com/goharbor/harbor/src/controller/pat"
 	"github.com/goharbor/harbor/src/controller/user"
 	"github.com/goharbor/harbor/src/lib"
 	"github.com/goharbor/harbor/src/lib/config"
@@ -36,6 +37,7 @@ import (
 	"github.com/goharbor/harbor/src/lib/log"
 	"github.com/goharbor/harbor/src/lib/q"
 	"github.com/goharbor/harbor/src/lib/retry"
+	patmodel "github.com/goharbor/harbor/src/pkg/pat/model"
 	"github.com/goharbor/harbor/src/pkg/permission/types"
 	"github.com/goharbor/harbor/src/server/v2.0/handler/model"
 	"github.com/goharbor/harbor/src/server/v2.0/models"
@@ -44,17 +46,180 @@ import (
 
 type usersAPI struct {
 	BaseAPI
-	ctl            user.Controller
-	getPrimaryAuth func(ctx context.Context) (string, error) // For testing
+	ctl     user.Controller
+	patCtl  pat.Controller
+	getAuth func(ctx context.Context) (string, error)
 }
 
 func newUsersAPI() *usersAPI {
 	return &usersAPI{
-		ctl: user.Ctl,
-		getAuth: func(ctx context.Context) (string, error) {
-			return config.DetectAuthMode(ctx), nil
-		},
+		ctl:     user.Ctl,
+		patCtl:  pat.Ctl,
+		getAuth: config.AuthMode,
 	}
+}
+
+func (u *usersAPI) CreatePersonalAccessToken(ctx context.Context, params operation.CreatePersonalAccessTokenParams) middleware.Responder {
+	if err := u.RequireAuthenticated(ctx); err != nil {
+		return u.SendError(ctx, err)
+	}
+	userID := int(params.UserID)
+	if err := u.requireForPAT(ctx, userID, false); err != nil {
+		return u.SendError(ctx, err)
+	}
+	patModel := &patmodel.PersonalAccessToken{
+		UserID:      userID,
+		Name:        *params.Request.Name,
+		Description: params.Request.Description,
+	}
+	if params.Request.ExpiresInDays > 0 {
+		patModel.ExpiresAt = time.Now().AddDate(0, 0, int(params.Request.ExpiresInDays)).Unix()
+	}
+	id, secret, err := u.patCtl.Create(ctx, patModel)
+	if err != nil {
+		return u.SendError(ctx, err)
+	}
+	return operation.NewCreatePersonalAccessTokenCreated().WithPayload(&models.PersonalAccessTokenCreatedResponse{
+		ID:        id,
+		Name:      *params.Request.Name,
+		Secret:    secret,
+		ExpiresAt: patModel.ExpiresAt,
+	})
+}
+
+func (u *usersAPI) DeletePersonalAccessToken(ctx context.Context, params operation.DeletePersonalAccessTokenParams) middleware.Responder {
+	if err := u.RequireAuthenticated(ctx); err != nil {
+		return u.SendError(ctx, err)
+	}
+	userID := int(params.UserID)
+	if err := u.requireForPAT(ctx, userID, false); err != nil {
+		return u.SendError(ctx, err)
+	}
+	if err := u.patCtl.Delete(ctx, params.TokenID); err != nil {
+		return u.SendError(ctx, err)
+	}
+	return operation.NewDeletePersonalAccessTokenNoContent()
+}
+
+func (u *usersAPI) GetPersonalAccessToken(ctx context.Context, params operation.GetPersonalAccessTokenParams) middleware.Responder {
+	if err := u.RequireAuthenticated(ctx); err != nil {
+		return u.SendError(ctx, err)
+	}
+	userID := int(params.UserID)
+	if err := u.requireForPAT(ctx, userID, false); err != nil {
+		return u.SendError(ctx, err)
+	}
+	pat, err := u.patCtl.Get(ctx, params.TokenID)
+	if err != nil {
+		return u.SendError(ctx, err)
+	}
+	return operation.NewGetPersonalAccessTokenOK().WithPayload(&models.PersonalAccessToken{
+		ID:          pat.ID,
+		Name:        pat.Name,
+		Description: pat.Description,
+		UserID:      int64(pat.UserID),
+		ExpiresAt:   pat.ExpiresAt,
+		Disabled:    pat.Disabled,
+		IsLegacy:    pat.IsLegacy,
+		LastUsedAt:  pat.LastUsedAt,
+	})
+}
+
+func (u *usersAPI) ListPersonalAccessTokens(ctx context.Context, params operation.ListPersonalAccessTokensParams) middleware.Responder {
+	if err := u.RequireAuthenticated(ctx); err != nil {
+		return u.SendError(ctx, err)
+	}
+	userID := int(params.UserID)
+	if err := u.requireForPAT(ctx, userID, true); err != nil {
+		return u.SendError(ctx, err)
+	}
+	query := &q.Query{
+		PageNumber: *params.Page,
+		PageSize:   *params.PageSize,
+		Keywords:   map[string]interface{}{"user_id": userID},
+	}
+	total, err := u.patCtl.Count(ctx, query)
+	if err != nil {
+		return u.SendError(ctx, err)
+	}
+	payload := make([]*models.PersonalAccessToken, 0)
+	if total > 0 {
+		pats, err := u.patCtl.List(ctx, query)
+		if err != nil {
+			return u.SendError(ctx, err)
+		}
+		payload = make([]*models.PersonalAccessToken, len(pats))
+		for i, pat := range pats {
+			payload[i] = &models.PersonalAccessToken{
+				ID:          pat.ID,
+				Name:        pat.Name,
+				Description: pat.Description,
+				UserID:      int64(pat.UserID),
+				ExpiresAt:   pat.ExpiresAt,
+				Disabled:    pat.Disabled,
+				IsLegacy:    pat.IsLegacy,
+				LastUsedAt:  pat.LastUsedAt,
+			}
+		}
+	}
+	return operation.NewListPersonalAccessTokensOK().
+		WithPayload(payload).
+		WithXTotalCount(total)
+}
+
+func (u *usersAPI) RefreshPersonalAccessTokenSecret(ctx context.Context, params operation.RefreshPersonalAccessTokenSecretParams) middleware.Responder {
+	if err := u.RequireAuthenticated(ctx); err != nil {
+		return u.SendError(ctx, err)
+	}
+	userID := int(params.UserID)
+	if err := u.requireForPAT(ctx, userID, false); err != nil {
+		return u.SendError(ctx, err)
+	}
+	secret, err := u.patCtl.RefreshSecret(ctx, params.TokenID, params.Request.Secret)
+	if err != nil {
+		return u.SendError(ctx, err)
+	}
+	return operation.NewRefreshPersonalAccessTokenSecretOK().WithPayload(&models.PersonalAccessTokenCreatedResponse{
+		ID:     params.TokenID,
+		Secret: secret,
+	})
+}
+
+func (u *usersAPI) UpdatePersonalAccessToken(ctx context.Context, params operation.UpdatePersonalAccessTokenParams) middleware.Responder {
+	if err := u.RequireAuthenticated(ctx); err != nil {
+		return u.SendError(ctx, err)
+	}
+	userID := int(params.UserID)
+	if err := u.requireForPAT(ctx, userID, false); err != nil {
+		return u.SendError(ctx, err)
+	}
+	pat, err := u.patCtl.Get(ctx, params.TokenID)
+	if err != nil {
+		return u.SendError(ctx, err)
+	}
+	if params.Request.Name != "" {
+		pat.Name = params.Request.Name
+	}
+	if params.Request.Description != "" {
+		pat.Description = params.Request.Description
+	}
+	if params.Request.Disabled {
+		pat.Disabled = params.Request.Disabled
+	}
+	if err := u.patCtl.Update(ctx, pat); err != nil {
+		return u.SendError(ctx, err)
+	}
+	return operation.NewUpdatePersonalAccessTokenOK()
+}
+
+func (u *usersAPI) requireForPAT(ctx context.Context, userID int, listOrGetSelf bool) error {
+	sctx, _ := security.FromContext(ctx)
+	if localSCtx, ok := sctx.(*local.SecurityContext); ok {
+		if listOrGetSelf && localSCtx.User().UserID == userID {
+			return nil
+		}
+	}
+	return u.RequireSystemAccess(ctx, rbac.ActionRead, rbac.ResourceUser)
 }
 
 func (u *usersAPI) SetCliSecret(ctx context.Context, params operation.SetCliSecretParams) middleware.Responder {
@@ -224,13 +389,13 @@ func (u *usersAPI) GetUser(ctx context.Context, params operation.GetUserParams) 
 }
 
 func (u *usersAPI) getUserByID(ctx context.Context, id int) (*models.UserResp, error) {
-	primary, err := u.getPrimaryAuth(ctx)
+	auth, err := u.getAuth(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	opt := &user.Option{
-		WithOIDCInfo: primary == common.OIDCAuth && id > 1, // Super user is authenticated via DB
+		WithOIDCInfo: auth == common.OIDCAuth && id > 1, // Super user is authenticated via DB
 	}
 
 	us, err := u.ctl.Get(ctx, id, opt)
@@ -348,13 +513,13 @@ func (u *usersAPI) SetUserSysAdmin(ctx context.Context, params operation.SetUser
 }
 
 func (u *usersAPI) requireForCLISecret(ctx context.Context, id int) error {
-	primary, err := u.getPrimaryAuth(ctx)
+	a, err := u.getAuth(ctx)
 	if err != nil {
-		log.G(ctx).Errorf("Failed to get primary auth method, error: %v", err)
+		log.G(ctx).Errorf("Failed to get authmode, error: %v", err)
 		return err
 	}
-	if primary != common.OIDCAuth {
-		return errors.PreconditionFailedError(nil).WithMessagef("unable to update CLI secret under current auth method: %s", primary)
+	if a != common.OIDCAuth {
+		return errors.PreconditionFailedError(nil).WithMessagef("unable to update CLI secret under authmode: %s", a)
 	}
 	if matchUserID(ctx, id) {
 		return nil
@@ -363,13 +528,13 @@ func (u *usersAPI) requireForCLISecret(ctx context.Context, id int) error {
 }
 
 func (u *usersAPI) requireCreatable(ctx context.Context) error {
-	primary, err := u.getPrimaryAuth(ctx)
+	a, err := u.getAuth(ctx)
 	if err != nil {
-		log.G(ctx).Errorf("Failed to get primary auth method, error: %v", err)
+		log.G(ctx).Errorf("Failed to get authmode, error: %v", err)
 		return err
 	}
-	if primary != common.DBAuth {
-		return errors.ForbiddenError(nil).WithMessagef("creating local user is not allowed under current auth method: %s", primary)
+	if a != common.DBAuth {
+		return errors.ForbiddenError(nil).WithMessagef("creating local user is not allowed under auth mode: %s", a)
 	}
 	sr, err := config.SelfRegistration(ctx)
 	if err != nil {
@@ -404,18 +569,18 @@ func (u *usersAPI) requireDeletable(ctx context.Context, id int) error {
 }
 
 func (u *usersAPI) requireModifiable(ctx context.Context, id int) error {
-	primary, err := u.getPrimaryAuth(ctx)
+	a, err := u.getAuth(ctx)
 	if err != nil {
 		return err
 	}
-	if primary == common.DBAuth {
-		// With DB auth, admin can update anyone's info, and regular user can update his own
+	if a == common.DBAuth {
+		// In db auth, admin can update anyone's info, and regular user can update his own
 		if matchUserID(ctx, id) {
 			return nil
 		}
 		return u.RequireSystemAccess(ctx, rbac.ActionUpdate, rbac.ResourceUser)
 	}
-	// With external auth, only the local admin's password can be updated.
+	// In none db auth, only the local admin's password can be updated.
 	if id != 1 {
 		return errors.ForbiddenError(nil).WithMessagef("User with ID %d can't be updated", id)
 	}
