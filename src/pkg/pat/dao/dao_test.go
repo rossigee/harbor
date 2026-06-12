@@ -15,6 +15,7 @@
 package dao
 
 import (
+<<<<<<< HEAD
 	"fmt"
 	"testing"
 	"time"
@@ -24,6 +25,14 @@ import (
 
 	"github.com/goharbor/harbor/src/common/models"
 	"github.com/goharbor/harbor/src/controller/user"
+=======
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/suite"
+	htesting "github.com/goharbor/harbor/src/testing"
+
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	"github.com/goharbor/harbor/src/lib/errors"
 	"github.com/goharbor/harbor/src/lib/q"
 	"github.com/goharbor/harbor/src/pkg/pat/model"
@@ -31,12 +40,17 @@ import (
 
 type DAOTestSuite struct {
 	htesting.Suite
+<<<<<<< HEAD
 	dao    DAO
 	userCtl user.Controller
+=======
+	dao DAO
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 }
 
 func (suite *DAOTestSuite) SetupSuite() {
 	suite.Suite.SetupSuite()
+<<<<<<< HEAD
 	suite.ClearTables = []string{"personal_access_token", "harbor_user"}
 	suite.dao = New()
 	suite.userCtl = user.Ctl
@@ -58,6 +72,15 @@ func (suite *DAOTestSuite) TestCreate() {
 	userID := suite.createTestUser("testuser1")
 	pat := &model.PersonalAccessToken{
 		UserID:      userID,
+=======
+	suite.ClearTables = []string{"personal_access_token"}
+	suite.dao = New()
+}
+
+func (suite *DAOTestSuite) TestCreate() {
+	pat := &model.PersonalAccessToken{
+		UserID:      1,
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 		Name:        "test-token",
 		Secret:      "hashed_secret",
 		Salt:        "salt_value",
@@ -71,6 +94,7 @@ func (suite *DAOTestSuite) TestCreate() {
 }
 
 func (suite *DAOTestSuite) TestCreateDuplicate() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser2")
 	pat1 := &model.PersonalAccessToken{
 		UserID: userID,
@@ -84,6 +108,20 @@ func (suite *DAOTestSuite) TestCreateDuplicate() {
 		Name:   "duplicate-token",
 		Secret: "secret2",
 		Salt:   "salt2",
+=======
+	pat1 := &model.PersonalAccessToken{
+		UserID:      2,
+		Name:        "duplicate-token",
+		Secret:      "secret1",
+		Salt:        "salt1",
+	}
+
+	pat2 := &model.PersonalAccessToken{
+		UserID:      2,
+		Name:        "duplicate-token",
+		Secret:      "secret2",
+		Salt:        "salt2",
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	}
 
 	// First create should succeed
@@ -98,20 +136,34 @@ func (suite *DAOTestSuite) TestCreateDuplicate() {
 }
 
 func (suite *DAOTestSuite) TestGet() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser3")
 	pat := &model.PersonalAccessToken{
 		UserID: userID,
+=======
+	pat := &model.PersonalAccessToken{
+		ID:     1,
+		UserID: 3,
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 		Name:   "get-test",
 		Secret: "secret",
 		Salt:   "salt",
 	}
 
 	// Create first
+<<<<<<< HEAD
 	id, err := suite.dao.Create(suite.Context(), pat)
 	suite.NoError(err)
 
 	// Get
 	retrieved, err := suite.dao.Get(suite.Context(), id)
+=======
+	_, err := suite.dao.Create(suite.Context(), pat)
+	suite.NoError(err)
+
+	// Get
+	retrieved, err := suite.dao.Get(suite.Context(), pat.ID)
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	suite.NoError(err)
 	suite.Equal(pat.UserID, retrieved.UserID)
 	suite.Equal(pat.Name, retrieved.Name)
@@ -124,9 +176,14 @@ func (suite *DAOTestSuite) TestGetNotFound() {
 }
 
 func (suite *DAOTestSuite) TestUpdate() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser4")
 	pat := &model.PersonalAccessToken{
 		UserID:      userID,
+=======
+	pat := &model.PersonalAccessToken{
+		UserID:      4,
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 		Name:        "update-test",
 		Secret:      "secret",
 		Salt:        "salt",
@@ -154,12 +211,20 @@ func (suite *DAOTestSuite) TestUpdate() {
 }
 
 func (suite *DAOTestSuite) TestDelete() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser5")
 	pat := &model.PersonalAccessToken{
 		UserID: userID,
 		Name:   "delete-test",
 		Secret: "secret",
 		Salt:   "salt",
+=======
+	pat := &model.PersonalAccessToken{
+		UserID:      5,
+		Name:        "delete-test",
+		Secret:      "secret",
+		Salt:        "salt",
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	}
 
 	// Create
@@ -177,7 +242,11 @@ func (suite *DAOTestSuite) TestDelete() {
 }
 
 func (suite *DAOTestSuite) TestList() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser6")
+=======
+	userID := 6
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	for i := 1; i <= 3; i++ {
 		pat := &model.PersonalAccessToken{
 			UserID: userID,
@@ -197,7 +266,11 @@ func (suite *DAOTestSuite) TestList() {
 }
 
 func (suite *DAOTestSuite) TestCount() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser7")
+=======
+	userID := 7
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	for i := 1; i <= 2; i++ {
 		pat := &model.PersonalAccessToken{
 			UserID: userID,

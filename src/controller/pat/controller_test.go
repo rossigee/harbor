@@ -15,6 +15,7 @@
 package pat
 
 import (
+<<<<<<< HEAD
 	"fmt"
 	"testing"
 	"time"
@@ -24,18 +25,31 @@ import (
 
 	"github.com/goharbor/harbor/src/common/models"
 	"github.com/goharbor/harbor/src/controller/user"
+=======
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/suite"
+	htesting "github.com/goharbor/harbor/src/testing"
+
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	"github.com/goharbor/harbor/src/lib/q"
 	"github.com/goharbor/harbor/src/pkg/pat/model"
 )
 
 type ControllerTestSuite struct {
 	htesting.Suite
+<<<<<<< HEAD
 	ctl     Controller
 	userCtl user.Controller
+=======
+	ctl Controller
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 }
 
 func (suite *ControllerTestSuite) SetupSuite() {
 	suite.Suite.SetupSuite()
+<<<<<<< HEAD
 	suite.ClearTables = []string{"personal_access_token", "harbor_user"}
 	suite.ctl = NewController()
 	suite.userCtl = user.Ctl
@@ -57,6 +71,15 @@ func (suite *ControllerTestSuite) TestCreateGeneratesSecretWithPrefix() {
 	userID := suite.createTestUser("testuser1")
 	pat := &model.PersonalAccessToken{
 		UserID:      userID,
+=======
+	suite.ClearTables = []string{"personal_access_token"}
+	suite.ctl = NewController()
+}
+
+func (suite *ControllerTestSuite) TestCreateGeneratesSecretWithPrefix() {
+	pat := &model.PersonalAccessToken{
+		UserID:      1,
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 		Name:        "test-token",
 		Description: "Test token",
 		ExpiresAt:   time.Now().AddDate(0, 0, 30).Unix(),
@@ -72,9 +95,14 @@ func (suite *ControllerTestSuite) TestCreateGeneratesSecretWithPrefix() {
 }
 
 func (suite *ControllerTestSuite) TestCreateValidatesSecretFormat() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser2")
 	pat := &model.PersonalAccessToken{
 		UserID:      userID,
+=======
+	pat := &model.PersonalAccessToken{
+		UserID:      2,
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 		Name:        "test-token",
 		Description: "Test",
 		ExpiresAt:   -1, // Never expires
@@ -92,12 +120,20 @@ func (suite *ControllerTestSuite) TestCreateValidatesSecretFormat() {
 }
 
 func (suite *ControllerTestSuite) TestCreateWithExpiry() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser3")
 	expiryTime := time.Now().AddDate(0, 0, 90).Unix()
 	pat := &model.PersonalAccessToken{
 		UserID:    userID,
 		Name:      "expiring-token",
 		ExpiresAt: expiryTime,
+=======
+	expiryTime := time.Now().AddDate(0, 0, 90).Unix()
+	pat := &model.PersonalAccessToken{
+		UserID:      3,
+		Name:        "expiring-token",
+		ExpiresAt:   expiryTime,
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	}
 
 	id, _, err := suite.ctl.Create(suite.Context(), pat)
@@ -110,11 +146,18 @@ func (suite *ControllerTestSuite) TestCreateWithExpiry() {
 }
 
 func (suite *ControllerTestSuite) TestCreateNeverExpiresToken() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser4")
 	pat := &model.PersonalAccessToken{
 		UserID:    userID,
 		Name:      "never-expire",
 		ExpiresAt: -1, // -1 means never
+=======
+	pat := &model.PersonalAccessToken{
+		UserID:      4,
+		Name:        "never-expire",
+		ExpiresAt:   -1, // -1 means never
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	}
 
 	id, _, err := suite.ctl.Create(suite.Context(), pat)
@@ -126,9 +169,14 @@ func (suite *ControllerTestSuite) TestCreateNeverExpiresToken() {
 }
 
 func (suite *ControllerTestSuite) TestGetReturnsToken() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser5")
 	pat := &model.PersonalAccessToken{
 		UserID:      userID,
+=======
+	pat := &model.PersonalAccessToken{
+		UserID:      5,
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 		Name:        "get-test",
 		Description: "Get test",
 	}
@@ -144,7 +192,11 @@ func (suite *ControllerTestSuite) TestGetReturnsToken() {
 }
 
 func (suite *ControllerTestSuite) TestListTokensForUser() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser6")
+=======
+	userID := 6
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	for i := 1; i <= 3; i++ {
 		pat := &model.PersonalAccessToken{
 			UserID: userID,
@@ -165,9 +217,14 @@ func (suite *ControllerTestSuite) TestListTokensForUser() {
 }
 
 func (suite *ControllerTestSuite) TestUpdateTokenMetadata() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser7")
 	pat := &model.PersonalAccessToken{
 		UserID:      userID,
+=======
+	pat := &model.PersonalAccessToken{
+		UserID:      7,
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 		Name:        "update-test",
 		Description: "Original",
 		Disabled:    false,
@@ -192,10 +249,16 @@ func (suite *ControllerTestSuite) TestUpdateTokenMetadata() {
 }
 
 func (suite *ControllerTestSuite) TestDeleteToken() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser8")
 	pat := &model.PersonalAccessToken{
 		UserID: userID,
 		Name:   "delete-test",
+=======
+	pat := &model.PersonalAccessToken{
+		UserID:      8,
+		Name:        "delete-test",
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	}
 
 	id, _, err := suite.ctl.Create(suite.Context(), pat)
@@ -210,10 +273,16 @@ func (suite *ControllerTestSuite) TestDeleteToken() {
 }
 
 func (suite *ControllerTestSuite) TestRefreshSecretGeneratesNewSecret() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser9")
 	pat := &model.PersonalAccessToken{
 		UserID: userID,
 		Name:   "refresh-test",
+=======
+	pat := &model.PersonalAccessToken{
+		UserID:      9,
+		Name:        "refresh-test",
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	}
 
 	id, originalSecret, err := suite.ctl.Create(suite.Context(), pat)
@@ -229,10 +298,16 @@ func (suite *ControllerTestSuite) TestRefreshSecretGeneratesNewSecret() {
 }
 
 func (suite *ControllerTestSuite) TestRefreshSecretWithProvidedSecret() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser10")
 	pat := &model.PersonalAccessToken{
 		UserID: userID,
 		Name:   "refresh-provided",
+=======
+	pat := &model.PersonalAccessToken{
+		UserID:      10,
+		Name:        "refresh-provided",
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	}
 
 	id, _, err := suite.ctl.Create(suite.Context(), pat)
@@ -249,10 +324,16 @@ func (suite *ControllerTestSuite) TestRefreshSecretWithProvidedSecret() {
 }
 
 func (suite *ControllerTestSuite) TestRefreshSecretInvalidFormat() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser11")
 	pat := &model.PersonalAccessToken{
 		UserID: userID,
 		Name:   "invalid-refresh",
+=======
+	pat := &model.PersonalAccessToken{
+		UserID:      11,
+		Name:        "invalid-refresh",
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	}
 
 	id, _, err := suite.ctl.Create(suite.Context(), pat)
@@ -264,7 +345,11 @@ func (suite *ControllerTestSuite) TestRefreshSecretInvalidFormat() {
 }
 
 func (suite *ControllerTestSuite) TestCountTokens() {
+<<<<<<< HEAD
 	userID := suite.createTestUser("testuser12")
+=======
+	userID := 12
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	expectedCount := 2
 
 	for i := 0; i < expectedCount; i++ {

@@ -27,6 +27,7 @@ import (
 	pat_model "github.com/goharbor/harbor/src/pkg/pat/model"
 )
 
+<<<<<<< HEAD
 // oidcUserRow holds OIDC user data for migration
 type oidcUserRow struct {
 	ID     int64  `orm:"column(id)"`
@@ -34,6 +35,8 @@ type oidcUserRow struct {
 	Secret string `orm:"column(secret)"`
 }
 
+=======
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 // MigrateCliSecretsToLegacyPATs converts existing OIDC CLI secrets to legacy PAT records.
 // Safe to run multiple times — skips users already having a PAT named "cli-secret".
 func MigrateCliSecretsToLegacyPATs(ctx context.Context) error {
@@ -48,7 +51,11 @@ func MigrateCliSecretsToLegacyPATs(ctx context.Context) error {
 	}
 
 	// Fetch all OIDC users with non-empty secrets
+<<<<<<< HEAD
 	var oidcUsers []oidcUserRow
+=======
+	var oidcUsers []map[string]interface{}
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	_, err = ormer.Raw("SELECT id, user_id, secret FROM oidc_user WHERE secret IS NOT NULL AND secret != ''").QueryRows(&oidcUsers)
 	if err != nil {
 		logger.Errorf("failed to query oidc_user table: %v", err)
@@ -74,8 +81,24 @@ func MigrateCliSecretsToLegacyPATs(ctx context.Context) error {
 	}
 
 	for _, row := range oidcUsers {
+<<<<<<< HEAD
 		userID := int(row.UserID)
 		encryptedSecret := row.Secret
+=======
+		userID, ok := row["user_id"].(int)
+		if !ok {
+			logger.Warningf("invalid user_id type: %T", row["user_id"])
+			errorCount++
+			continue
+		}
+
+		encryptedSecret, ok := row["secret"].(string)
+		if !ok {
+			logger.Warningf("invalid secret type for user %d: %T", userID, row["secret"])
+			errorCount++
+			continue
+		}
+>>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 
 		// Check if a PAT named "cli-secret" already exists for this user
 		existing, err := patMgr.List(ctx, q.New(q.KeyWords{"user_id": userID, "name": "cli-secret"}))
