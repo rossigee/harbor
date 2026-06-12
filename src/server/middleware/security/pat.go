@@ -23,8 +23,8 @@ import (
 	"github.com/goharbor/harbor/src/common/security"
 	"github.com/goharbor/harbor/src/common/security/local"
 	"github.com/goharbor/harbor/src/common/utils"
-	pat_ctl "github.com/goharbor/harbor/src/controller/pat"
 	"github.com/goharbor/harbor/src/controller/user"
+	pat_ctl "github.com/goharbor/harbor/src/controller/pat"
 	"github.com/goharbor/harbor/src/lib/config"
 	"github.com/goharbor/harbor/src/lib/log"
 	"github.com/goharbor/harbor/src/lib/q"
@@ -50,14 +50,17 @@ func (p *pat) Generate(req *http.Request) security.Context {
 	}
 
 	// Check if this is a PAT (new tokens have the prefix, legacy tokens don't but are handled separately)
-	if !strings.HasPrefix(secret, patPrefix) {
+	isNewPAT := strings.HasPrefix(secret, patPrefix)
+	if !isNewPAT {
+		// For legacy PATs (migrated CLI secrets), we could handle them here
+		// For now, skip and let oidcCli or other handlers deal with it
 		return nil
 	}
 
 	// Lookup the user
 	u, err := user.Ctl.GetByName(ctx, username)
 	if err != nil {
-		log.Errorf("failed to get user %s for PAT verification: %v", username, err)
+		log.Debugf("failed to get user %s for PAT verification: %v", username, err)
 		return nil
 	}
 
@@ -67,7 +70,7 @@ func (p *pat) Generate(req *http.Request) security.Context {
 	// Query all non-disabled, non-legacy PATs for this user
 	pats, err := pat_ctl.Ctl.List(ctx, q.New(q.KeyWords{"user_id": u.UserID, "disabled": false, "is_legacy": false}))
 	if err != nil {
-		log.Errorf("failed to list PATs for user %d: %v", u.UserID, err)
+		log.Debugf("failed to list PATs for user %d: %v", u.UserID, err)
 		return nil
 	}
 
@@ -93,6 +96,7 @@ func (p *pat) Generate(req *http.Request) security.Context {
 			_ = pat_ctl.Ctl.Update(bgCtx, t, "last_used_at")
 		}(token)
 
+		log.Debugf("PAT authentication successful for user %s", username)
 		return local.NewSecurityContext(u)
 	}
 
