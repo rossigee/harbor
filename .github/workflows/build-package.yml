@@ -155,21 +155,24 @@ jobs:
             echo "image_tag=${version}" >> $GITHUB_OUTPUT
           fi
       - name: Login to Docker Hub
-        if: secrets.DOCKER_HUB_USERNAME != ''
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-      - name: Create multi-arch manifests
-        if: secrets.DOCKER_HUB_USERNAME != ''
         run: |
-          set -euo pipefail
-          image_tag="${{ steps.tag.outputs.image_tag }}"
-          cat _repos_*.txt | sort -u | while IFS= read -r repo; do
-            [ -z "$repo" ] && continue
-            echo "Creating manifest ${repo}:${image_tag}"
-            docker buildx imagetools create -t "${repo}:${image_tag}" \
-              "${repo}:${image_tag}-amd64" \
-              "${repo}:${image_tag}-arm64"
-          done
-          docker logout
+          if [ -n "${{ secrets.DOCKER_HUB_USERNAME }}" ]; then
+            echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+          fi
+      - name: Create multi-arch manifests
+        run: |
+          if [ -n "${{ secrets.DOCKER_HUB_USERNAME }}" ]; then
+            set -euo pipefail
+            image_tag="${{ steps.tag.outputs.image_tag }}"
+            cat _repos_*.txt | sort -u | while IFS= read -r repo; do
+              [ -z "$repo" ] && continue
+              echo "Creating manifest ${repo}:${image_tag}"
+              docker buildx imagetools create -t "${repo}:${image_tag}" \
+                "${repo}:${image_tag}-amd64" \
+                "${repo}:${image_tag}-arm64"
+            done
+            docker logout
+          fi
       - name: Login to ghcr.io
         run: printf '%s\n' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.repository_owner }}" --password-stdin
       - name: Create ghcr.io multi-arch manifests
