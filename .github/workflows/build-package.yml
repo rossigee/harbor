@@ -7,7 +7,8 @@ on:
     branches:
       - develop
       - release-*
-jobs:
+  workflow_dispatch:
+  jobs:
   BUILD_PACKAGE:
     strategy:
       fail-fast: false
