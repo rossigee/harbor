@@ -22,7 +22,6 @@ import (
 	"time"
 
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/strfmt"
 
 	"github.com/goharbor/harbor/src/common"
 	commonmodels "github.com/goharbor/harbor/src/common/models"
@@ -151,19 +150,15 @@ func (u *usersAPI) ListPersonalAccessTokens(ctx context.Context, params operatio
 		}
 		payload = make([]*models.PersonalAccessToken, len(pats))
 		for i, pat := range pats {
-			expired := pat.ExpiresAt > 0 && pat.ExpiresAt <= time.Now().Unix()
 			payload[i] = &models.PersonalAccessToken{
-				ID:           pat.ID,
-				Name:         pat.Name,
-				Description:  pat.Description,
-				UserID:       int64(pat.UserID),
-				ExpiresAt:    pat.ExpiresAt,
-				Disabled:     pat.Disabled,
-				IsLegacy:     pat.IsLegacy,
-				LastUsedAt:   pat.LastUsedAt,
-				CreationTime: strfmt.DateTime(pat.CreationTime),
-				UpdateTime:   strfmt.DateTime(pat.UpdateTime),
-				Expired:      expired,
+				ID:          pat.ID,
+				Name:        pat.Name,
+				Description: pat.Description,
+				UserID:      int64(pat.UserID),
+				ExpiresAt:   pat.ExpiresAt,
+				Disabled:    pat.Disabled,
+				IsLegacy:    pat.IsLegacy,
+				LastUsedAt:  pat.LastUsedAt,
 			}
 		}
 	}
@@ -208,7 +203,9 @@ func (u *usersAPI) UpdatePersonalAccessToken(ctx context.Context, params operati
 	if params.Request.Description != "" {
 		pat.Description = params.Request.Description
 	}
-	pat.Disabled = params.Request.Disabled
+	if params.Request.Disabled {
+		pat.Disabled = params.Request.Disabled
+	}
 	if err := u.patCtl.Update(ctx, pat); err != nil {
 		return u.SendError(ctx, err)
 	}
