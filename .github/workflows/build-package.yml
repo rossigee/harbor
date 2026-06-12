@@ -8,7 +8,7 @@ on:
       - develop
       - release-*
   workflow_dispatch:
-  jobs:
+jobs:
   BUILD_PACKAGE:
     strategy:
       fail-fast: false
