@@ -89,13 +89,6 @@ type endpointParser struct {
 }
 
 func (e endpointParser) parse(s string) (*image, error) {
-	// Handle wildcard scope: repository:*:pull,push
-	if strings.HasPrefix(s, "repository:*") {
-		return &image{
-			namespace: "*",
-			repo:      "*",
-		}, nil
-	}
 	repo := strings.SplitN(s, "/", 2)
 	if len(repo) < 2 {
 		return nil, fmt.Errorf("unable to parse image from string: %s", s)
@@ -160,12 +153,6 @@ func (rep repositoryFilter) filter(ctx context.Context, ctl project.Controller,
 	}
 	projectName := img.namespace
 
-	// Handle wildcard scope - grant all actions
-	if projectName == "*" {
-		a.Actions = []string{"push", "pull"}
-		return nil
-	}
-
 	project, err := ctl.GetByName(ctx, projectName)
 	if err != nil {
 		if errors.IsNotFoundErr(err) {
@@ -215,7 +202,7 @@ func (g generalCreator) Create(r *http.Request) (*models.Token, error) {
 
 	ctx, ok := security.FromContext(r.Context())
 	if !ok {
-		return nil, fmt.Errorf("failed to  get security context from request")
+		return nil, fmt.Errorf("failed to get security context from request")
 	}
 
 	// for docker login

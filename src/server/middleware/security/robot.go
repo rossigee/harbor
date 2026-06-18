@@ -40,8 +40,9 @@ func (r *robot) Generate(req *http.Request) security.Context {
 		return nil
 	}
 	// The robot name can be used as the unique identifier to locate robot as it contains the project name.
+	strippedName := strings.TrimPrefix(name, config.RobotPrefix(req.Context()))
 	robots, err := robot_ctl.Ctl.List(req.Context(), q.New(q.KeyWords{
-		"name": strings.TrimPrefix(name, config.RobotPrefix(req.Context())),
+		"name": strippedName,
 	}), &robot_ctl.Option{
 		WithPermission: true,
 	})

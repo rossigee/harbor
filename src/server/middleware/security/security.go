@@ -27,11 +27,12 @@ import (
 var (
 	generators = []generator{
 		&secret{},
+		&pat{},
 		&oidcCli{},
+		&robot{},
 		&v2Token{},
 		&idToken{},
 		&authProxy{},
-		&robot{},
 		&basicAuth{},
 		&session{},
 		&proxyCacheSecret{},
@@ -54,11 +55,11 @@ func Middleware(skippers ...middleware.Skipper) func(http.Handler) http.Handler 
 			log.Warningf("failed to get auth mode: %v", err)
 		}
 		for _, generator := range generators {
-			if ctx := generator.Generate(r); ctx != nil {
-				r = r.WithContext(security.NewContext(r.Context(), ctx))
-				break
-			}
+		if ctx := generator.Generate(r); ctx != nil {
+			r = r.WithContext(security.NewContext(r.Context(), ctx))
+			break
 		}
+	}
 		next.ServeHTTP(w, r)
 	}, skippers...)
 }
