@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/goharbor/harbor/src/common"
@@ -147,6 +148,11 @@ func Register(name string, h AuthenticateHelper) {
 // priority order.  Every backend whose Match() returns true is attempted;
 // the first successful authentication wins.
 func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
+	// Use DB auth for robot accounts - they are stored in Harbor DB regardless of auth mode
+	if strings.HasPrefix(m.Principal, config.RobotPrefix(ctx)) {
+		return authenticateWithLock(ctx, m, registry[common.DBAuth])
+	}
+
 	// Superuser always authenticates via DB.
 	if IsSuperUser(ctx, m.Principal) {
 		return authenticateWithLock(ctx, m, registry[common.DBAuth])
