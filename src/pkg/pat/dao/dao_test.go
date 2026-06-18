@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
 	htesting "github.com/goharbor/harbor/src/testing"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/goharbor/harbor/src/lib/errors"
 	"github.com/goharbor/harbor/src/lib/q"
@@ -54,17 +54,17 @@ func (suite *DAOTestSuite) TestCreate() {
 
 func (suite *DAOTestSuite) TestCreateDuplicate() {
 	pat1 := &model.PersonalAccessToken{
-		UserID:      2,
-		Name:        "duplicate-token",
-		Secret:      "secret1",
-		Salt:        "salt1",
+		UserID: 2,
+		Name:   "duplicate-token",
+		Secret: "secret1",
+		Salt:   "salt1",
 	}
 
 	pat2 := &model.PersonalAccessToken{
-		UserID:      2,
-		Name:        "duplicate-token",
-		Secret:      "secret2",
-		Salt:        "salt2",
+		UserID: 2,
+		Name:   "duplicate-token",
+		Secret: "secret2",
+		Salt:   "salt2",
 	}
 
 	// First create should succeed
@@ -135,10 +135,10 @@ func (suite *DAOTestSuite) TestUpdate() {
 
 func (suite *DAOTestSuite) TestDelete() {
 	pat := &model.PersonalAccessToken{
-		UserID:      5,
-		Name:        "delete-test",
-		Secret:      "secret",
-		Salt:        "salt",
+		UserID: 5,
+		Name:   "delete-test",
+		Secret: "secret",
+		Salt:   "salt",
 	}
 
 	// Create

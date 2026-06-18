@@ -17,16 +17,16 @@ package migration
 import (
 	"testing"
 
-	"github.com/stretchr/testify/suite"
 	htesting "github.com/goharbor/harbor/src/testing"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/goharbor/harbor/src/common/models"
 	"github.com/goharbor/harbor/src/common/utils"
 	"github.com/goharbor/harbor/src/controller/user"
 	"github.com/goharbor/harbor/src/lib/config"
 	"github.com/goharbor/harbor/src/lib/q"
-	pat "github.com/goharbor/harbor/src/pkg/pat"
 	oidcdao "github.com/goharbor/harbor/src/pkg/oidc/dao"
+	pat "github.com/goharbor/harbor/src/pkg/pat"
 )
 
 type MigrateCliSecretsTestSuite struct {
@@ -64,10 +64,10 @@ func (suite *MigrateCliSecretsTestSuite) TestMigrateCliSecretsBasic() {
 	// Create OIDC user record with encrypted secret directly in DB
 	oidcDAO := oidcdao.NewMetaDao()
 	oidcU := &models.OIDCUser{
-		UserID:  int(uid),
-		Secret:  encryptedSecret,
-		SubIss:  "test-sub|test-issuer",
-		Token:   "test-token",
+		UserID: int(uid),
+		Secret: encryptedSecret,
+		SubIss: "test-sub|test-issuer",
+		Token:  "test-token",
 	}
 	_, err = oidcDAO.Create(ctx, oidcU)
 	suite.NoError(err)
@@ -112,10 +112,10 @@ func (suite *MigrateCliSecretsTestSuite) TestMigrateCliSecretsIdempotent() {
 
 	oidcDAO := oidcdao.NewMetaDao()
 	oidcU := &models.OIDCUser{
-		UserID:  int(uid),
-		Secret:  encryptedSecret,
-		SubIss:  "idempotent-sub|idempotent-issuer",
-		Token:   "idempotent-token",
+		UserID: int(uid),
+		Secret: encryptedSecret,
+		SubIss: "idempotent-sub|idempotent-issuer",
+		Token:  "idempotent-token",
 	}
 	_, err = oidcDAO.Create(ctx, oidcU)
 	suite.NoError(err)
@@ -163,10 +163,10 @@ func (suite *MigrateCliSecretsTestSuite) TestMigrateCliSecretsMultipleUsers() {
 
 		oidcDAO := oidcdao.NewMetaDao()
 		oidcU := &models.OIDCUser{
-			UserID:  int(uid),
-			Secret:  encryptedSecret,
-			SubIss:  "sub" + string(rune(48+i)) + "|issuer",
-			Token:   "token" + string(rune(48+i)),
+			UserID: int(uid),
+			Secret: encryptedSecret,
+			SubIss: "sub" + string(rune(48+i)) + "|issuer",
+			Token:  "token" + string(rune(48+i)),
 		}
 		_, err = oidcDAO.Create(ctx, oidcU)
 		suite.NoError(err)

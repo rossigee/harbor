@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
 	htesting "github.com/goharbor/harbor/src/testing"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/goharbor/harbor/src/common/models"
 	patctl "github.com/goharbor/harbor/src/controller/pat"

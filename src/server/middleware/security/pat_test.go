@@ -21,8 +21,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
 	htesting "github.com/goharbor/harbor/src/testing"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/goharbor/harbor/src/common/models"
 	patctl "github.com/goharbor/harbor/src/controller/pat"
@@ -58,9 +58,9 @@ func (suite *PATSecurityTestSuite) TestGenerateWithValidPAT() {
 
 	// Create a PAT
 	token := &patmodel.PersonalAccessToken{
-		UserID:      int(uid),
-		Name:        "test-token",
-		ExpiresAt:   time.Now().AddDate(0, 0, 30).Unix(),
+		UserID:    int(uid),
+		Name:      "test-token",
+		ExpiresAt: time.Now().AddDate(0, 0, 30).Unix(),
 	}
 	patID, plainSecret, err := suite.patCtl.Create(ctx, token)
 	suite.NoError(err)

@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/suite"
 	htesting "github.com/goharbor/harbor/src/testing"
+	"github.com/stretchr/testify/suite"
 
 	"github.com/goharbor/harbor/src/lib/q"
 	"github.com/goharbor/harbor/src/pkg/pat/model"
@@ -75,9 +75,9 @@ func (suite *ControllerTestSuite) TestCreateValidatesSecretFormat() {
 func (suite *ControllerTestSuite) TestCreateWithExpiry() {
 	expiryTime := time.Now().AddDate(0, 0, 90).Unix()
 	pat := &model.PersonalAccessToken{
-		UserID:      3,
-		Name:        "expiring-token",
-		ExpiresAt:   expiryTime,
+		UserID:    3,
+		Name:      "expiring-token",
+		ExpiresAt: expiryTime,
 	}
 
 	id, _, err := suite.ctl.Create(suite.Context(), pat)
@@ -91,9 +91,9 @@ func (suite *ControllerTestSuite) TestCreateWithExpiry() {
 
 func (suite *ControllerTestSuite) TestCreateNeverExpiresToken() {
 	pat := &model.PersonalAccessToken{
-		UserID:      4,
-		Name:        "never-expire",
-		ExpiresAt:   -1, // -1 means never
+		UserID:    4,
+		Name:      "never-expire",
+		ExpiresAt: -1, // -1 means never
 	}
 
 	id, _, err := suite.ctl.Create(suite.Context(), pat)
@@ -170,8 +170,8 @@ func (suite *ControllerTestSuite) TestUpdateTokenMetadata() {
 
 func (suite *ControllerTestSuite) TestDeleteToken() {
 	pat := &model.PersonalAccessToken{
-		UserID:      8,
-		Name:        "delete-test",
+		UserID: 8,
+		Name:   "delete-test",
 	}
 
 	id, _, err := suite.ctl.Create(suite.Context(), pat)
@@ -187,8 +187,8 @@ func (suite *ControllerTestSuite) TestDeleteToken() {
 
 func (suite *ControllerTestSuite) TestRefreshSecretGeneratesNewSecret() {
 	pat := &model.PersonalAccessToken{
-		UserID:      9,
-		Name:        "refresh-test",
+		UserID: 9,
+		Name:   "refresh-test",
 	}
 
 	id, originalSecret, err := suite.ctl.Create(suite.Context(), pat)
@@ -205,8 +205,8 @@ func (suite *ControllerTestSuite) TestRefreshSecretGeneratesNewSecret() {
 
 func (suite *ControllerTestSuite) TestRefreshSecretWithProvidedSecret() {
 	pat := &model.PersonalAccessToken{
-		UserID:      10,
-		Name:        "refresh-provided",
+		UserID: 10,
+		Name:   "refresh-provided",
 	}
 
 	id, _, err := suite.ctl.Create(suite.Context(), pat)
@@ -224,8 +224,8 @@ func (suite *ControllerTestSuite) TestRefreshSecretWithProvidedSecret() {
 
 func (suite *ControllerTestSuite) TestRefreshSecretInvalidFormat() {
 	pat := &model.PersonalAccessToken{
-		UserID:      11,
-		Name:        "invalid-refresh",
+		UserID: 11,
+		Name:   "invalid-refresh",
 	}
 
 	id, _, err := suite.ctl.Create(suite.Context(), pat)

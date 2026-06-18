@@ -29,16 +29,16 @@ func TestPersonalAccessTokenTableName(t *testing.T) {
 func TestPersonalAccessTokenCreation(t *testing.T) {
 	now := time.Now()
 	pat := &PersonalAccessToken{
-		ID:          1,
-		UserID:      10,
-		Name:        "test-token",
-		Secret:      "hashed_secret",
-		Salt:        "salt_value",
-		Description: "Test token",
-		ExpiresAt:   now.AddDate(0, 0, 30).Unix(),
-		LastUsedAt:  now.Unix(),
-		Disabled:    false,
-		IsLegacy:    false,
+		ID:           1,
+		UserID:       10,
+		Name:         "test-token",
+		Secret:       "hashed_secret",
+		Salt:         "salt_value",
+		Description:  "Test token",
+		ExpiresAt:    now.AddDate(0, 0, 30).Unix(),
+		LastUsedAt:   now.Unix(),
+		Disabled:     false,
+		IsLegacy:     false,
 		CreationTime: now,
 		UpdateTime:   now,
 	}
@@ -54,10 +54,10 @@ func TestPersonalAccessTokenCreation(t *testing.T) {
 
 func TestPersonalAccessTokenLegacy(t *testing.T) {
 	pat := &PersonalAccessToken{
-		ID:       2,
-		UserID:   20,
-		Name:     "cli-secret",
-		IsLegacy: true,
+		ID:        2,
+		UserID:    20,
+		Name:      "cli-secret",
+		IsLegacy:  true,
 		ExpiresAt: -1,
 	}
 
