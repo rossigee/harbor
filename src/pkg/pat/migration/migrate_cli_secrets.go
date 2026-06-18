@@ -29,9 +29,9 @@ import (
 
 // oidcUserRow holds OIDC user data for migration
 type oidcUserRow struct {
-	ID     int64
-	UserID int64
-	Secret string
+	ID     int64  `orm:"column(id)"`
+	UserID int64  `orm:"column(user_id)"`
+	Secret string `orm:"column(secret)"`
 }
 
 // MigrateCliSecretsToLegacyPATs converts existing OIDC CLI secrets to legacy PAT records.
