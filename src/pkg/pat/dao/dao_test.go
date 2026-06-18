@@ -15,12 +15,15 @@
 package dao
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	htesting "github.com/goharbor/harbor/src/testing"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/goharbor/harbor/src/common/models"
+	"github.com/goharbor/harbor/src/controller/user"
 	"github.com/goharbor/harbor/src/lib/errors"
 	"github.com/goharbor/harbor/src/lib/q"
 	"github.com/goharbor/harbor/src/pkg/pat/model"
@@ -28,18 +31,33 @@ import (
 
 type DAOTestSuite struct {
 	htesting.Suite
-	dao DAO
+	dao    DAO
+	userCtl user.Controller
 }
 
 func (suite *DAOTestSuite) SetupSuite() {
 	suite.Suite.SetupSuite()
-	suite.ClearTables = []string{"personal_access_token"}
+	suite.ClearTables = []string{"personal_access_token", "harbor_user"}
 	suite.dao = New()
+	suite.userCtl = user.Ctl
+}
+
+func (suite *DAOTestSuite) createTestUser(username string) int {
+	ctx := suite.Context()
+	u := &models.User{
+		Username: username,
+		Email:    fmt.Sprintf("%s@example.com", username),
+		Realname: username,
+	}
+	uid, err := suite.userCtl.Create(ctx, u)
+	suite.NoError(err)
+	return int(uid)
 }
 
 func (suite *DAOTestSuite) TestCreate() {
+	userID := suite.createTestUser("testuser1")
 	pat := &model.PersonalAccessToken{
-		UserID:      1,
+		UserID:      userID,
 		Name:        "test-token",
 		Secret:      "hashed_secret",
 		Salt:        "salt_value",
@@ -53,15 +71,16 @@ func (suite *DAOTestSuite) TestCreate() {
 }
 
 func (suite *DAOTestSuite) TestCreateDuplicate() {
+	userID := suite.createTestUser("testuser2")
 	pat1 := &model.PersonalAccessToken{
-		UserID: 2,
+		UserID: userID,
 		Name:   "duplicate-token",
 		Secret: "secret1",
 		Salt:   "salt1",
 	}
 
 	pat2 := &model.PersonalAccessToken{
-		UserID: 2,
+		UserID: userID,
 		Name:   "duplicate-token",
 		Secret: "secret2",
 		Salt:   "salt2",
@@ -79,20 +98,20 @@ func (suite *DAOTestSuite) TestCreateDuplicate() {
 }
 
 func (suite *DAOTestSuite) TestGet() {
+	userID := suite.createTestUser("testuser3")
 	pat := &model.PersonalAccessToken{
-		ID:     1,
-		UserID: 3,
+		UserID: userID,
 		Name:   "get-test",
 		Secret: "secret",
 		Salt:   "salt",
 	}
 
 	// Create first
-	_, err := suite.dao.Create(suite.Context(), pat)
+	id, err := suite.dao.Create(suite.Context(), pat)
 	suite.NoError(err)
 
 	// Get
-	retrieved, err := suite.dao.Get(suite.Context(), pat.ID)
+	retrieved, err := suite.dao.Get(suite.Context(), id)
 	suite.NoError(err)
 	suite.Equal(pat.UserID, retrieved.UserID)
 	suite.Equal(pat.Name, retrieved.Name)
@@ -105,8 +124,9 @@ func (suite *DAOTestSuite) TestGetNotFound() {
 }
 
 func (suite *DAOTestSuite) TestUpdate() {
+	userID := suite.createTestUser("testuser4")
 	pat := &model.PersonalAccessToken{
-		UserID:      4,
+		UserID:      userID,
 		Name:        "update-test",
 		Secret:      "secret",
 		Salt:        "salt",
@@ -134,8 +154,9 @@ func (suite *DAOTestSuite) TestUpdate() {
 }
 
 func (suite *DAOTestSuite) TestDelete() {
+	userID := suite.createTestUser("testuser5")
 	pat := &model.PersonalAccessToken{
-		UserID: 5,
+		UserID: userID,
 		Name:   "delete-test",
 		Secret: "secret",
 		Salt:   "salt",
@@ -156,7 +177,7 @@ func (suite *DAOTestSuite) TestDelete() {
 }
 
 func (suite *DAOTestSuite) TestList() {
-	userID := 6
+	userID := suite.createTestUser("testuser6")
 	for i := 1; i <= 3; i++ {
 		pat := &model.PersonalAccessToken{
 			UserID: userID,
@@ -176,7 +197,7 @@ func (suite *DAOTestSuite) TestList() {
 }
 
 func (suite *DAOTestSuite) TestCount() {
-	userID := 7
+	userID := suite.createTestUser("testuser7")
 	for i := 1; i <= 2; i++ {
 		pat := &model.PersonalAccessToken{
 			UserID: userID,

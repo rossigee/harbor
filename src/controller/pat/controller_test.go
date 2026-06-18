@@ -15,30 +15,48 @@
 package pat
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	htesting "github.com/goharbor/harbor/src/testing"
 	"github.com/stretchr/testify/suite"
 
+	"github.com/goharbor/harbor/src/common/models"
+	"github.com/goharbor/harbor/src/controller/user"
 	"github.com/goharbor/harbor/src/lib/q"
 	"github.com/goharbor/harbor/src/pkg/pat/model"
 )
 
 type ControllerTestSuite struct {
 	htesting.Suite
-	ctl Controller
+	ctl     Controller
+	userCtl user.Controller
 }
 
 func (suite *ControllerTestSuite) SetupSuite() {
 	suite.Suite.SetupSuite()
-	suite.ClearTables = []string{"personal_access_token"}
+	suite.ClearTables = []string{"personal_access_token", "harbor_user"}
 	suite.ctl = NewController()
+	suite.userCtl = user.Ctl
+}
+
+func (suite *ControllerTestSuite) createTestUser(username string) int {
+	ctx := suite.Context()
+	u := &models.User{
+		Username: username,
+		Email:    fmt.Sprintf("%s@example.com", username),
+		Realname: username,
+	}
+	uid, err := suite.userCtl.Create(ctx, u)
+	suite.NoError(err)
+	return int(uid)
 }
 
 func (suite *ControllerTestSuite) TestCreateGeneratesSecretWithPrefix() {
+	userID := suite.createTestUser("testuser1")
 	pat := &model.PersonalAccessToken{
-		UserID:      1,
+		UserID:      userID,
 		Name:        "test-token",
 		Description: "Test token",
 		ExpiresAt:   time.Now().AddDate(0, 0, 30).Unix(),
@@ -54,8 +72,9 @@ func (suite *ControllerTestSuite) TestCreateGeneratesSecretWithPrefix() {
 }
 
 func (suite *ControllerTestSuite) TestCreateValidatesSecretFormat() {
+	userID := suite.createTestUser("testuser2")
 	pat := &model.PersonalAccessToken{
-		UserID:      2,
+		UserID:      userID,
 		Name:        "test-token",
 		Description: "Test",
 		ExpiresAt:   -1, // Never expires
@@ -73,9 +92,10 @@ func (suite *ControllerTestSuite) TestCreateValidatesSecretFormat() {
 }
 
 func (suite *ControllerTestSuite) TestCreateWithExpiry() {
+	userID := suite.createTestUser("testuser3")
 	expiryTime := time.Now().AddDate(0, 0, 90).Unix()
 	pat := &model.PersonalAccessToken{
-		UserID:    3,
+		UserID:    userID,
 		Name:      "expiring-token",
 		ExpiresAt: expiryTime,
 	}
@@ -90,8 +110,9 @@ func (suite *ControllerTestSuite) TestCreateWithExpiry() {
 }
 
 func (suite *ControllerTestSuite) TestCreateNeverExpiresToken() {
+	userID := suite.createTestUser("testuser4")
 	pat := &model.PersonalAccessToken{
-		UserID:    4,
+		UserID:    userID,
 		Name:      "never-expire",
 		ExpiresAt: -1, // -1 means never
 	}
@@ -105,8 +126,9 @@ func (suite *ControllerTestSuite) TestCreateNeverExpiresToken() {
 }
 
 func (suite *ControllerTestSuite) TestGetReturnsToken() {
+	userID := suite.createTestUser("testuser5")
 	pat := &model.PersonalAccessToken{
-		UserID:      5,
+		UserID:      userID,
 		Name:        "get-test",
 		Description: "Get test",
 	}
@@ -122,7 +144,7 @@ func (suite *ControllerTestSuite) TestGetReturnsToken() {
 }
 
 func (suite *ControllerTestSuite) TestListTokensForUser() {
-	userID := 6
+	userID := suite.createTestUser("testuser6")
 	for i := 1; i <= 3; i++ {
 		pat := &model.PersonalAccessToken{
 			UserID: userID,
@@ -143,8 +165,9 @@ func (suite *ControllerTestSuite) TestListTokensForUser() {
 }
 
 func (suite *ControllerTestSuite) TestUpdateTokenMetadata() {
+	userID := suite.createTestUser("testuser7")
 	pat := &model.PersonalAccessToken{
-		UserID:      7,
+		UserID:      userID,
 		Name:        "update-test",
 		Description: "Original",
 		Disabled:    false,
@@ -169,8 +192,9 @@ func (suite *ControllerTestSuite) TestUpdateTokenMetadata() {
 }
 
 func (suite *ControllerTestSuite) TestDeleteToken() {
+	userID := suite.createTestUser("testuser8")
 	pat := &model.PersonalAccessToken{
-		UserID: 8,
+		UserID: userID,
 		Name:   "delete-test",
 	}
 
@@ -186,8 +210,9 @@ func (suite *ControllerTestSuite) TestDeleteToken() {
 }
 
 func (suite *ControllerTestSuite) TestRefreshSecretGeneratesNewSecret() {
+	userID := suite.createTestUser("testuser9")
 	pat := &model.PersonalAccessToken{
-		UserID: 9,
+		UserID: userID,
 		Name:   "refresh-test",
 	}
 
@@ -204,8 +229,9 @@ func (suite *ControllerTestSuite) TestRefreshSecretGeneratesNewSecret() {
 }
 
 func (suite *ControllerTestSuite) TestRefreshSecretWithProvidedSecret() {
+	userID := suite.createTestUser("testuser10")
 	pat := &model.PersonalAccessToken{
-		UserID: 10,
+		UserID: userID,
 		Name:   "refresh-provided",
 	}
 
@@ -223,8 +249,9 @@ func (suite *ControllerTestSuite) TestRefreshSecretWithProvidedSecret() {
 }
 
 func (suite *ControllerTestSuite) TestRefreshSecretInvalidFormat() {
+	userID := suite.createTestUser("testuser11")
 	pat := &model.PersonalAccessToken{
-		UserID: 11,
+		UserID: userID,
 		Name:   "invalid-refresh",
 	}
 
@@ -237,7 +264,7 @@ func (suite *ControllerTestSuite) TestRefreshSecretInvalidFormat() {
 }
 
 func (suite *ControllerTestSuite) TestCountTokens() {
-	userID := 12
+	userID := suite.createTestUser("testuser12")
 	expectedCount := 2
 
 	for i := 0; i < expectedCount; i++ {
