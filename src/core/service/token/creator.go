@@ -101,6 +101,10 @@ func (e endpointParser) parse(s string) (*image, error) {
 
 // build Image accepts a string like library/ubuntu:14.04 and build a image struct
 func parseImg(s string) (*image, error) {
+	// Handle wildcard scope - return nil and let repositoryFilter handle it
+	if s == "*" {
+		return nil, nil
+	}
 	repo := strings.SplitN(s, "/", 2)
 	if len(repo) < 2 {
 		return nil, fmt.Errorf("unable to parse image from string: %s", s)
@@ -150,6 +154,11 @@ func (rep repositoryFilter) filter(ctx context.Context, ctl project.Controller,
 	img, err := rep.parser.parse(a.Name)
 	if err != nil {
 		return err
+	}
+	// Wildcard scope - grant all actions the user has permission for
+	if img == nil {
+		a.Actions = []string{"pull", "push"}
+		return nil
 	}
 	projectName := img.namespace
 
