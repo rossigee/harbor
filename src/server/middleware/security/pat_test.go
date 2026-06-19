@@ -281,3 +281,68 @@ func (suite *PATSecurityTestSuite) TestGenerateWithBasicAuthHeaderFormat() {
 func TestPATSecurityTestSuite(t *testing.T) {
 	suite.Run(t, new(PATSecurityTestSuite))
 }
+
+func (suite *PATSecurityTestSuite) TestPATSecurityContextWithScope() {
+	ctx := suite.Context()
+
+	u := &models.User{
+		Username: "scopeuser",
+		Email:    "scope@example.com",
+		Realname: "Scope User",
+	}
+	uid, err := suite.userCtl.Create(ctx, u)
+	suite.NoError(err)
+
+	scopeJSON := `[{"project_id":1,"project_name":"test-project","access":[{"resource":"repository","actions":["pull","push"]}]}]`
+	token := &patmodel.PersonalAccessToken{
+		UserID:    int(uid),
+		Name:      "scoped-token",
+		ExpiresAt: -1,
+		Scope:     scopeJSON,
+	}
+	patID, plainSecret, err := suite.patCtl.Create(ctx, token)
+	suite.NoError(err)
+	_ = patID
+
+	req, err := http.NewRequest("GET", "http://localhost", nil)
+	suite.NoError(err)
+	req.SetBasicAuth("scopeuser", plainSecret)
+
+	generator := &pat{}
+	secCtx := generator.Generate(req)
+	suite.NotNil(secCtx, "should generate security context")
+
+	_ = secCtx.GetUsername()
+	_ = secCtx.IsAuthenticated()
+	_ = secCtx.IsSysAdmin()
+	_ = secCtx.IsSolutionUser()
+	_ = secCtx.Name()
+}
+
+func (suite *PATSecurityTestSuite) TestPATSecurityContextEmptyScope() {
+	u := &models.User{
+		Username: "emptyscope",
+		Email:    "emptyscope@example.com",
+		Realname: "Empty Scope User",
+	}
+	uid, err := suite.userCtl.Create(suite.Context(), u)
+	suite.NoError(err)
+
+	token := &patmodel.PersonalAccessToken{
+		UserID:    int(uid),
+		Name:      "empty-scope-token",
+		ExpiresAt: -1,
+		Scope:     "[]",
+	}
+	patID, plainSecret, err := suite.patCtl.Create(suite.Context(), token)
+	suite.NoError(err)
+	_ = patID
+
+	req, err := http.NewRequest("GET", "http://localhost", nil)
+	suite.NoError(err)
+	req.SetBasicAuth("emptyscope", plainSecret)
+
+	generator := &pat{}
+	secCtx := generator.Generate(req)
+	suite.NotNil(secCtx, "should generate security context with empty scope")
+}

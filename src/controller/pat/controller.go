@@ -16,14 +16,20 @@ package pat
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
+	"github.com/goharbor/harbor/src/common"
+	"github.com/goharbor/harbor/src/common/rbac"
 	"github.com/goharbor/harbor/src/common/utils"
+	"github.com/goharbor/harbor/src/controller/project"
 	"github.com/goharbor/harbor/src/controller/robot"
+	"github.com/goharbor/harbor/src/controller/user"
 	"github.com/goharbor/harbor/src/lib/log"
 	"github.com/goharbor/harbor/src/lib/q"
-	pat "github.com/goharbor/harbor/src/pkg/pat"
+	"github.com/goharbor/harbor/src/pkg/pat"
 	"github.com/goharbor/harbor/src/pkg/pat/model"
+	"github.com/goharbor/harbor/src/pkg/project/models"
 )
 
 var (
@@ -57,13 +63,17 @@ type Controller interface {
 
 // controller implements the Controller interface
 type controller struct {
-	patMgr pat.Manager
+	patMgr     pat.Manager
+	projectCtl project.Controller
+	userCtl    user.Controller
 }
 
 // NewController returns a new PAT controller
 func NewController() Controller {
 	return &controller{
-		patMgr: pat.NewManager(),
+		patMgr:     pat.NewManager(),
+		projectCtl: project.Ctl,
+		userCtl:    user.Ctl,
 	}
 }
 
@@ -84,6 +94,13 @@ func (c *controller) Create(ctx context.Context, pat *model.PersonalAccessToken)
 	// Prefix the plaintext secret with "hbr_pat_" for new tokens
 	fullPlaintextSecret := fmt.Sprintf("hbr_pat_%s", plaintextSecret)
 
+	// Generate scope based on user's project permissions
+	scope, err := c.computeScope(ctx, pat.UserID)
+	if err != nil {
+		log.Warningf("failed to compute scope for user %d: %v", pat.UserID, err)
+		scope = "[]"
+	}
+
 	patToCreate := &model.PersonalAccessToken{
 		UserID:      pat.UserID,
 		Name:        pat.Name,
@@ -93,6 +110,7 @@ func (c *controller) Create(ctx context.Context, pat *model.PersonalAccessToken)
 		ExpiresAt:   expiresAt,
 		Disabled:    false,
 		IsLegacy:    false,
+		Scope:       scope,
 	}
 
 	id, err := c.patMgr.Create(ctx, patToCreate)
@@ -102,6 +120,90 @@ func (c *controller) Create(ctx context.Context, pat *model.PersonalAccessToken)
 
 	log.Debugf("created personal access token %d for user %d", id, pat.UserID)
 	return id, fullPlaintextSecret, nil
+}
+
+// computeScope generates the scope for a PAT based on the user's project permissions
+func (c *controller) computeScope(ctx context.Context, userID int) (string, error) {
+	// Get the user
+	u, err := c.userCtl.Get(ctx, userID, nil)
+	if err != nil {
+		return "[]", err
+	}
+
+	// List all projects the user has access to (including public projects)
+	query := q.New(q.KeyWords{"member": &models.MemberQuery{UserID: userID}})
+	query.PageSize = 1000
+	projects, err := c.projectCtl.List(ctx, query, project.Metadata(false))
+	if err != nil {
+		return "[]", err
+	}
+
+	// Also get public projects
+	publicQuery := q.New(q.KeyWords{"public": true})
+	publicQuery.PageSize = 1000
+	publicProjects, err := c.projectCtl.List(ctx, publicQuery, project.Metadata(false))
+	if err != nil {
+		return "[]", err
+	}
+
+	// Combine and deduplicate projects
+	projectMap := make(map[int64]*models.Project)
+	for _, p := range projects {
+		projectMap[p.ProjectID] = p
+	}
+	for _, p := range publicProjects {
+		projectMap[p.ProjectID] = p
+	}
+
+	var projectScopes []model.ProjectScope
+
+	// For each project, determine push/pull permissions
+	for _, p := range projectMap {
+		roles, err := c.projectCtl.ListRoles(ctx, p.ProjectID, u)
+		if err != nil {
+			continue
+		}
+
+		// Determine access level based on roles
+		hasPush := false
+		hasPull := true // All project members can pull
+
+		for _, role := range roles {
+			if role == common.RoleProjectAdmin || role == common.RoleMaintainer || role == common.RoleDeveloper {
+				hasPush = true
+				break
+			}
+		}
+
+		access := []model.AccessLevel{}
+		if hasPull {
+			access = append(access, model.AccessLevel{
+				Resource: rbac.ResourceRepository.String(),
+				Actions:  []string{"pull"},
+			})
+		}
+		if hasPush {
+			access = append(access, model.AccessLevel{
+				Resource: rbac.ResourceRepository.String(),
+				Actions:  []string{"push"},
+			})
+		}
+
+		if len(access) > 0 {
+			projectScopes = append(projectScopes, model.ProjectScope{
+				ProjectID:   p.ProjectID,
+				ProjectName: p.Name,
+				Access:      access,
+			})
+		}
+	}
+
+	scopeJSON, err := json.Marshal(projectScopes)
+	if err != nil {
+		return "[]", err
+	}
+
+	return string(scopeJSON), nil
 }
 
 // Get returns a personal access token by ID

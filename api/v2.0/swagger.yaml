@@ -10419,6 +10419,9 @@ definitions:
         type: string
         format: date-time
         description: The last update time of the token
+      scope:
+        type: string
+        description: The scope of the token, containing project permissions in JSON format
   PersonalAccessTokenCreateRequest:
     type: object
     description: Request for creating a personal access token

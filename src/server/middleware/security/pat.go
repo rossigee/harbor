@@ -23,13 +23,8 @@ import (
 	"github.com/goharbor/harbor/src/common/security"
 	"github.com/goharbor/harbor/src/common/security/local"
 	"github.com/goharbor/harbor/src/common/utils"
-<<<<<<< HEAD
 	pat_ctl "github.com/goharbor/harbor/src/controller/pat"
 	"github.com/goharbor/harbor/src/controller/user"
-=======
-	"github.com/goharbor/harbor/src/controller/user"
-	pat_ctl "github.com/goharbor/harbor/src/controller/pat"
->>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	"github.com/goharbor/harbor/src/lib/config"
 	"github.com/goharbor/harbor/src/lib/log"
 	"github.com/goharbor/harbor/src/lib/q"
@@ -102,7 +97,7 @@ func (p *pat) Generate(req *http.Request) security.Context {
 		}(token)
 
 		log.Debugf("PAT authentication successful for user %s", username)
-		return local.NewSecurityContext(u)
+		return local.NewPATSecurityContext(u, token.Scope)
 	}
 
 	log.Debugf("failed to authenticate with PAT for user %s", username)

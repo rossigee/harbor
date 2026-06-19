@@ -24,6 +24,19 @@ func init() {
 	orm.RegisterModel(&PersonalAccessToken{})
 }
 
+// AccessLevel defines the access level for PAT scope
+type AccessLevel struct {
+	Resource string   `json:"resource"`
+	Actions  []string `json:"actions"`
+}
+
+// ProjectScope defines the scope for a specific project
+type ProjectScope struct {
+	ProjectID   int64        `json:"project_id"`
+	ProjectName string       `json:"project_name"`
+	Access      []AccessLevel `json:"access"`
+}
+
 // PersonalAccessToken represents a personal access token for user authentication
 type PersonalAccessToken struct {
 	ID           int64     `orm:"pk;auto;column(id)" json:"id"`
@@ -36,6 +49,7 @@ type PersonalAccessToken struct {
 	LastUsedAt   int64     `orm:"column(last_used_at)" json:"last_used_at"`
 	Disabled     bool      `orm:"column(disabled)" json:"disabled"`
 	IsLegacy     bool      `orm:"column(is_legacy)" json:"is_legacy"`
+	Scope        string    `orm:"column(scope)" json:"scope"`
 	CreationTime time.Time `orm:"column(creation_time);auto_now_add" json:"creation_time"`
 	UpdateTime   time.Time `orm:"column(update_time);auto_now" json:"update_time"`
 }

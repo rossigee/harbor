@@ -122,6 +122,7 @@ func (u *usersAPI) GetPersonalAccessToken(ctx context.Context, params operation.
 		Disabled:    pat.Disabled,
 		IsLegacy:    pat.IsLegacy,
 		LastUsedAt:  pat.LastUsedAt,
+		Scope:       pat.Scope,
 	})
 }
 
@@ -159,6 +160,7 @@ func (u *usersAPI) ListPersonalAccessTokens(ctx context.Context, params operatio
 				Disabled:    pat.Disabled,
 				IsLegacy:    pat.IsLegacy,
 				LastUsedAt:  pat.LastUsedAt,
+				Scope:       pat.Scope,
 			}
 		}
 	}

@@ -73,7 +73,7 @@ func (d *dao) Update(ctx context.Context, pat *model.PersonalAccessToken, props 
 		return err
 	}
 	if len(props) == 0 {
-		props = []string{"name", "description", "expires_at", "disabled"}
+		props = []string{"name", "description", "expires_at", "disabled", "scope"}
 	}
 	n, err := ormer.Update(pat, props...)
 	if err != nil {
