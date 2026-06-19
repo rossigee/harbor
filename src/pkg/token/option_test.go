@@ -57,7 +57,7 @@ func writeECKeyFile(t *testing.T, curve elliptic.Curve, pemType string) string {
 	f, err := os.CreateTemp("", "harbor-ec-key-*.pem")
 	require.NoError(t, err)
 	require.NoError(t, pem.Encode(f, &pem.Block{Type: pemType, Bytes: der}))
-	f.Close()
+	require.NoError(t, f.Close())
 	return f.Name()
 }
 
