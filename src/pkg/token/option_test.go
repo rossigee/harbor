@@ -413,6 +413,9 @@ func TestNewOptionsRSAPKCS8(t *testing.T) {
 	opt, err := NewOptions("", "test-issuer", f.Name())
 	require.NoError(t, err)
 	assert.Equal(t, jwt.SigningMethodRS256, opt.SignMethod)
+	gotKey, err := opt.GetKey()
+	require.NoError(t, err)
+	assert.IsType(t, &rsa.PrivateKey{}, gotKey)
 }
 
 func TestGetKeyErrors(t *testing.T) {

@@ -30,8 +30,7 @@ import (
 )
 
 const (
-	defaultIssuer       = "harbor-token-defaultIssuer"
-	defaultSignedMethod = "RS256"
+	defaultIssuer = "harbor-token-defaultIssuer"
 )
 
 // Options ...
@@ -106,7 +105,7 @@ func (o *Options) GetKey() (any, error) {
 
 // DefaultTokenOptions ...
 func DefaultTokenOptions() *Options {
-	opt, _ := NewOptions(defaultSignedMethod, defaultIssuer, config.TokenPrivateKeyPath())
+	opt, _ := NewOptions("", defaultIssuer, config.TokenPrivateKeyPath())
 	return opt
 }
 
