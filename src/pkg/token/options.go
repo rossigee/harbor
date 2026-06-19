@@ -15,6 +15,7 @@
 package jwttoken
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/rsa"
 	"crypto/x509"
@@ -149,6 +150,12 @@ func NewOptions(_, iss, keyPath string) (*Options, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse private key: %w", err)
 	}
+	// Re-encode only the matched PEM block so GetKey() sees the correct block
+	var buf bytes.Buffer
+	if err := pem.Encode(&buf, &pem.Block{Type: block.Type, Bytes: block.Bytes}); err != nil {
+		return nil, err
+	}
+	pkBytes = buf.Bytes()
 	var signMethod jwt.SigningMethod
 	switch k := privateKey.(type) {
 	case *rsa.PrivateKey:
