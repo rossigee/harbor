@@ -150,7 +150,7 @@ func TestGetKeyECDSA(t *testing.T) {
 		key, err := opt.GetKey()
 		assert.Error(t, err)
 		assert.Nil(t, key)
-		assert.Contains(t, err.Error(), "the public key and private key are not match")
+		assert.Contains(t, err.Error(), "public key and private key do not match")
 	})
 
 	t.Run("matching public private keys", func(t *testing.T) {
@@ -276,20 +276,20 @@ func TestGetKeyRSA(t *testing.T) {
 		priv1, _ := genRSAPEM(t)
 		_, pub2 := genRSAPEM(t)
 		opt := &Options{
-			SignMethod:  jwt.SigningMethodRS256,
+			SignMethod: jwt.SigningMethodRS256,
 			PrivateKey: priv1,
 			PublicKey:  pub2,
 		}
 		key, err := opt.GetKey()
 		assert.Error(t, err)
 		assert.Nil(t, key)
-		assert.Contains(t, err.Error(), "the public key and private key are not match")
+		assert.Contains(t, err.Error(), "public key and private key do not match")
 	})
 
 	t.Run("matching public private keys", func(t *testing.T) {
 		privPEM, pubPEM := genRSAPEM(t)
 		opt := &Options{
-			SignMethod:  jwt.SigningMethodRS256,
+			SignMethod: jwt.SigningMethodRS256,
 			PrivateKey: privPEM,
 			PublicKey:  pubPEM,
 		}
@@ -302,7 +302,7 @@ func TestGetKeyRSA(t *testing.T) {
 		privPEM, _ := genRSAPEM(t)
 		corruptPubPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: []byte("not-valid-der")})
 		opt := &Options{
-			SignMethod:  jwt.SigningMethodRS256,
+			SignMethod: jwt.SigningMethodRS256,
 			PrivateKey: privPEM,
 			PublicKey:  corruptPubPEM,
 		}

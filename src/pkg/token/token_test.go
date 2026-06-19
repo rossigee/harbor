@@ -31,15 +31,21 @@ func TestMain(m *testing.M) {
 		Type:  "RSA PRIVATE KEY",
 		Bytes: x509.MarshalPKCS1PrivateKey(key),
 	}); err != nil {
+		f.Close()
+		os.Remove(f.Name())
 		panic(err)
 	}
-	f.Close()
+	if err := f.Close(); err != nil {
+		os.Remove(f.Name())
+		panic(err)
+	}
+
 	os.Setenv("TOKEN_PRIVATE_KEY_PATH", f.Name())
 
 	config.Init()
 
 	result := m.Run()
-	os.Remove(f.Name()) // ensure cleanup before exit
+	os.Remove(f.Name())
 	if result != 0 {
 		os.Exit(result)
 	}

@@ -68,7 +68,7 @@ func (o *Options) GetKey() (any, error) {
 			return nil, fmt.Errorf("no key provided")
 		}
 		if publicKey != nil && (publicKey.E != privateKey.E || publicKey.N.Cmp(privateKey.N) != 0) {
-			return nil, fmt.Errorf("the public key and private key are not match")
+			return nil, fmt.Errorf("public key and private key do not match")
 		}
 		return privateKey, nil
 	case *jwt.SigningMethodECDSA:
@@ -95,7 +95,7 @@ func (o *Options) GetKey() (any, error) {
 			return nil, fmt.Errorf("no key provided")
 		}
 		if publicKey != nil && !publicKey.Equal(&privateKey.PublicKey) {
-			return nil, fmt.Errorf("the public key and private key are not match")
+			return nil, fmt.Errorf("public key and private key do not match")
 		}
 		return privateKey, nil
 	default:
