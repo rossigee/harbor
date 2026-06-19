@@ -115,8 +115,8 @@ func DefaultTokenOptions() *Options {
 func NewOptions(_, iss, keyPath string) (*Options, error) {
 	pkBytes, err := os.ReadFile(keyPath)
 	if err != nil {
-		log.Errorf("failed to read private key %v", err)
-		return nil, err
+		log.Errorf("failed to read private key %s: %v", keyPath, err)
+		return nil, fmt.Errorf("failed to read private key %s: %w", keyPath, err)
 	}
 	var (
 		block      *pem.Block
@@ -126,7 +126,7 @@ func NewOptions(_, iss, keyPath string) (*Options, error) {
 	for {
 		block, rest = pem.Decode(rest)
 		if block == nil {
-			return nil, fmt.Errorf("failed to decode PEM")
+			return nil, fmt.Errorf("failed to decode PEM in %s", keyPath)
 		}
 		switch block.Type {
 		case "RSA PRIVATE KEY":
