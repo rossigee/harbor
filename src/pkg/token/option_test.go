@@ -2,6 +2,7 @@ package jwttoken
 
 import (
 	"crypto/ecdsa"
+	"crypto/ed25519"
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/rsa"
@@ -412,4 +413,91 @@ func TestNewOptionsRSAPKCS8(t *testing.T) {
 	opt, err := NewOptions("", "test-issuer", f.Name())
 	require.NoError(t, err)
 	assert.Equal(t, jwt.SigningMethodRS256, opt.SignMethod)
+}
+
+func TestGetKeyErrors(t *testing.T) {
+	t.Run("RSA private key parse error", func(t *testing.T) {
+		opt := &Options{
+			SignMethod: jwt.SigningMethodRS256,
+			PrivateKey: pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: []byte("invalid-der")}),
+		}
+		key, err := opt.GetKey()
+		assert.Error(t, err)
+		assert.Nil(t, key)
+	})
+
+	t.Run("ECDSA private key parse error", func(t *testing.T) {
+		opt := &Options{
+			SignMethod: jwt.SigningMethodES256,
+			PrivateKey: pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: []byte("invalid-der")}),
+		}
+		key, err := opt.GetKey()
+		assert.Error(t, err)
+		assert.Nil(t, key)
+	})
+
+	t.Run("ECDSA public key parse error", func(t *testing.T) {
+		ecKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		require.NoError(t, err)
+		privPEM := pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: mustMarshalECPrivateKey(t, ecKey)})
+		opt := &Options{
+			SignMethod: jwt.SigningMethodES256,
+			PrivateKey: privPEM,
+			PublicKey:  pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: []byte("invalid-der")}),
+		}
+		k, err := opt.GetKey()
+		assert.Error(t, err)
+		assert.Nil(t, k)
+	})
+
+	t.Run("unsupported sign method", func(t *testing.T) {
+		opt := &Options{SignMethod: jwt.SigningMethodHS256}
+		key, err := opt.GetKey()
+		assert.Error(t, err)
+		assert.Nil(t, key)
+		assert.Contains(t, err.Error(), "unsupported sign method")
+	})
+}
+
+func mustMarshalECPrivateKey(t *testing.T, key *ecdsa.PrivateKey) []byte {
+	t.Helper()
+	der, err := x509.MarshalECPrivateKey(key)
+	require.NoError(t, err)
+	return der
+}
+
+func TestNewOptionsUnsupportedCurve(t *testing.T) {
+	key, err := ecdsa.GenerateKey(elliptic.P224(), rand.Reader)
+	require.NoError(t, err)
+
+	der, err := x509.MarshalECPrivateKey(key)
+	require.NoError(t, err)
+
+	f, err := os.CreateTemp("", "harbor-p224-*.pem")
+	require.NoError(t, err)
+	defer os.Remove(f.Name())
+	require.NoError(t, pem.Encode(f, &pem.Block{Type: "EC PRIVATE KEY", Bytes: der}))
+	f.Close()
+
+	_, err = NewOptions("", "test-issuer", f.Name())
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unsupported ECDSA curve")
+}
+
+func TestNewOptionsEd25519(t *testing.T) {
+	_, priv, err := ed25519.GenerateKey(rand.Reader)
+	require.NoError(t, err)
+
+	der, err := x509.MarshalPKCS8PrivateKey(priv)
+	require.NoError(t, err)
+
+	f, err := os.CreateTemp("", "harbor-ed25519-*.pem")
+	require.NoError(t, err)
+	defer os.Remove(f.Name())
+	require.NoError(t, pem.Encode(f, &pem.Block{Type: "PRIVATE KEY", Bytes: der}))
+	f.Close()
+
+	_, err = NewOptions("", "test-issuer", f.Name())
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "unsupported private key type")
 }
