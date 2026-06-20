@@ -187,13 +187,33 @@ func (oc *OIDCController) Callback() {
 					oidcSettings.UserClaim))
 				return
 			}
-			userRec, onboarded := userOnboard(ctx, oc, info, username, tokenBytes)
-			if !onboarded {
-				log.Error("User not onboarded\n")
-				return
+			// Check if user already exists in harbor_user but not linked to OIDC
+			existingUser, err := ctluser.Ctl.GetByName(ctx, username)
+			if err == nil && existingUser != nil {
+				// User exists - link to OIDC instead of creating new user
+				log.Debugf("Linking existing user %s to OIDC\n", username)
+				s, t, err := secretAndToken(tokenBytes)
+				if err != nil {
+					oc.SendInternalServerError(err)
+					return
+				}
+				if err := ctluser.Ctl.LinkExistingUserToOIDC(ctx, existingUser.UserID, info.Subject, info.Issuer, s, t); err != nil {
+					log.Errorf("failed to link existing user to OIDC: %v\n", err)
+					oc.SendInternalServerError(err)
+					return
+				}
+				oidc.InjectGroupsToUser(info, existingUser)
+				u = existingUser
+			} else {
+				// User doesn't exist - create new user
+				userRec, onboarded := userOnboard(ctx, oc, info, username, tokenBytes)
+				if !onboarded {
+					log.Error("User not onboarded\n")
+					return
+				}
+				log.Debug("User automatically onboarded\n")
+				u = userRec
 			}
-			log.Debug("User automatically onboarded\n")
-			u = userRec
 		} else {
 			if err := oc.SetSession(userInfoKey, string(ouDataStr)); err != nil {
 				log.Errorf("failed to set session for key: %s, error: %v", userInfoKey, err)

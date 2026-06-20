@@ -71,6 +71,8 @@ type Controller interface {
 	// OnboardOIDCUser inserts the record for basic user info and the oidc metadata
 	// if the onboard process is successful the input parm of user model will be populated with user id
 	OnboardOIDCUser(ctx context.Context, u *commonmodels.User) error
+	// LinkExistingUserToOIDC links an existing user to OIDC by creating the OIDC metadata record
+	LinkExistingUserToOIDC(ctx context.Context, userID int, sub, iss, secret, token string) error
 	// SearchByName search user by name with fuzzy search
 	SearchByName(ctx context.Context, name string, limitSize int) ([]*commonmodels.User, error)
 }
@@ -126,6 +128,26 @@ func (c *controller) OnboardOIDCUser(ctx context.Context, u *commonmodels.User) 
 		return errors.Wrap(err2, "failed to create OIDC metadata record")
 	}
 	u.OIDCUserMeta.ID = int64(mid)
+	return nil
+}
+
+// LinkExistingUserToOIDC links an existing user to OIDC by creating the OIDC metadata record.
+// This handles the case where a user exists in harbor_user but not in oidc_user.
+func (c *controller) LinkExistingUserToOIDC(ctx context.Context, userID int, sub, iss, secret, token string) error {
+	oidcUser := &commonmodels.OIDCUser{
+		UserID: userID,
+		SubIss: sub + iss,
+		Secret: secret,
+		Token:  token,
+	}
+	_, err := c.oidcMetaMgr.Create(ctx, oidcUser)
+	if err != nil {
+		if errors.IsConflictErr(err) {
+			oidcUser.SubIss = sub + iss
+			return c.oidcMetaMgr.Update(ctx, oidcUser)
+		}
+		return errors.Wrap(err, "failed to create OIDC metadata record")
+	}
 	return nil
 }
 

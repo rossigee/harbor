@@ -109,7 +109,7 @@ func getChallenge(req *http.Request, accessList []access) string {
 			}
 			scope += a.scopeStr(req.Context())
 		}
-		challenge := fmt.Sprintf(`Bearer realm="%s",service="%s"`, tokenSvc, token.Registry)
+		challenge := fmt.Sprintf(`Bearer realm="%s",service="%s"`, tokenSvc, tokensvc.Registry)
 		if len(scope) > 0 {
 			challenge = fmt.Sprintf(`%s,scope="%s"`, challenge, scope)
 		}
