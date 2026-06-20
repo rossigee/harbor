@@ -78,12 +78,19 @@ function publishImageGhcr {
     set +x
     printf '%s\n' "$token" | docker login ghcr.io -u "$owner" --password-stdin
     set -x
-    docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedAt}}\t{{.Size}}" | grep "ghcr.io/$owner" | grep -v "\-base" | while read -r repo tag rest; do
+
+    # Find goharbor/* images with the version tag and push to GHCR
+    docker images --format "{{.Repository}}:{{.Tag}}" | grep "^goharbor/" | grep -v "\-base" | while read -r image; do
+      # Extract repo name and tag
+      repo="${image%:*}"
+      tag="${image##*:}"
       if [[ "$tag" == *"$version"* ]]; then
+        # Create ghcr.io image name
+        ghcr_image="ghcr.io/$owner/${repo#goharbor/}"
         new_tag="${tag%%-*}$image_tag$arch_suffix"
-        echo "Tagging and pushing $repo:$tag -> $repo:$new_tag"
-        docker tag "$repo:$tag" "$repo:$new_tag"
-        docker push "$repo:$new_tag"
+        echo "Tagging and pushing $repo:$tag -> $ghcr_image:$new_tag"
+        docker tag "$repo:$tag" "$ghcr_image:$new_tag"
+        docker push "$ghcr_image:$new_tag"
       fi
     done
     echo "Images published successfully"
