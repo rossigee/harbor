@@ -107,7 +107,9 @@ jobs:
         run: |
           set -euo pipefail
           cur=${{ env.CUR_TAG }}
-          printf '%s\n' "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+          if [ -n "${{ secrets.DOCKER_HUB_USERNAME }}" ] && [ -n "${{ secrets.DOCKER_HUB_PASSWORD }}" ]; then
+            printf '%s\n' "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+          fi
           printf '%s\n' "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
           sort -u "$GITHUB_WORKSPACE/_images_all.txt" | while IFS= read -r repo; do
             [ -z "$repo" ] && continue
@@ -119,7 +121,9 @@ jobs:
               "ghcr.io/${repo}:${cur}-arm64"
           done
           docker logout ghcr.io
-          docker logout
+          if [ -n "${{ secrets.DOCKER_HUB_USERNAME }}" ]; then
+            docker logout
+          fi
       - name: Generate release notes
         run: |
           release_notes_path=$(pwd)/release-notes.txt
