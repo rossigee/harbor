@@ -47,7 +47,44 @@ function publishImage {
     printf '%s\n' "$4" | docker login --username "$3" --password-stdin
     set -x
     # format the output to be compatible with both old and new Docker versions.
-    docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedAt}}\t{{.Size}}"| grep goharbor | grep -v "\-base" | sed -n "s|\(goharbor/[-._a-z0-9]*\)\s*\(.*$2\).*|docker tag \1:\2 \1:${image_tag}${arch_suffix};docker push \1:${image_tag}${arch_suffix}|p" | bash
+    docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedAt}}\t{{.Size}}"| grep goharbor | grep -v "\-base" | sed -n "s|\(goharbor/[-._a0-9]*\)\s*\(.*$2\).*|docker tag \1:\2 \1:${image_tag}${arch_suffix};docker push \1:${image_tag}${arch_suffix}|p" | bash
     echo "Images are published successfully"
     docker images
+}
+
+function publishImageGhcr {
+    echo "Publishing images to GHCR..."
+    echo "The images on the host:"
+    local target_branch=$1
+    local version=$2
+    local owner=$3
+    local token=$4
+    local arch=$5
+
+    if [[ $target_branch == "main" ]]; then
+      image_tag=dev
+    elif [[ $target_branch == "release-"* ]]; then
+      image_tag=${version}-dev
+    else
+      image_tag=${version}
+    fi
+
+    local arch_suffix=""
+    if [ -n "$arch" ]; then
+      arch_suffix="-$arch"
+    fi
+
+    docker images
+    set +x
+    printf '%s\n' "$token" | docker login ghcr.io -u "$owner" --password-stdin
+    set -x
+    docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.ID}}\t{{.CreatedAt}}\t{{.Size}}" | grep "ghcr.io/$owner" | grep -v "\-base" | while read -r repo tag rest; do
+      if [[ "$tag" == *"$version"* ]]; then
+        new_tag="${tag%%-*}$image_tag$arch_suffix"
+        echo "Tagging and pushing $repo:$tag -> $repo:$new_tag"
+        docker tag "$repo:$tag" "$repo:$new_tag"
+        docker push "$repo:$new_tag"
+      fi
+    done
+    echo "Images published successfully"
 }
