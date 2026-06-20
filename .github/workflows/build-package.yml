@@ -112,22 +112,14 @@ jobs:
             publishImage $target_branch $Harbor_Assets_Version "$DOCKER_HUB_USERNAME" "$DOCKER_HUB_PASSWORD" ${ARCH} || true
           fi
           publishImageGhcr $target_branch $Harbor_Assets_Version "${{ github.repository_owner }}" "${{ secrets.GITHUB_TOKEN }}" ${ARCH}
-      - name: Save repo list
-        run: |
-          docker images --format '{{.Repository}}' | grep '^goharbor/' | grep -v '\-base' | sort -u > "$GITHUB_WORKSPACE/_repos_${ARCH}.txt"
-      - name: Upload repo list
-        uses: actions/upload-artifact@v4
-        with:
-          name: repos-${{ matrix.arch }}
-          path: ${{ github.workspace }}/_repos_${{ matrix.arch }}.txt
-      - name: Save ghcr.io repo list
+- name: Save ghcr.io repo list
         run: |
           docker images --format '{{.Repository}}' | grep "^ghcr.io/${{ github.repository_owner }}/" | sort -u > "$GITHUB_WORKSPACE/_ghcr_repos_${ARCH}.txt"
       - name: Upload ghcr.io repo list
         uses: actions/upload-artifact@v4
         with:
           name: ghcr-repos-${{ matrix.arch }}
-          path: ${{ github.workspace }}/_ghcr_repos_${{ matrix.arch }}.txt
+          path: $GITHUB_WORKSPACE/_ghcr_repos_${{ matrix.arch }}.txt
 
   CREATE_MANIFEST:
     needs: [BUILD_PACKAGE]
@@ -137,10 +129,6 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: repos-*
-          merge-multiple: true
       - uses: actions/download-artifact@v4
         with:
           pattern: ghcr-repos-*
@@ -159,29 +147,12 @@ jobs:
           else
             echo "image_tag=${version}" >> $GITHUB_OUTPUT
           fi
-      - name: Login to Docker Hub
-        run: |
-          if [ -n "${{ secrets.DOCKER_HUB_USERNAME }}" ]; then
-            echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-          fi
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create multi-arch manifests
-        run: |
-          set -euo pipefail
-          image_tag="${{ steps.tag.outputs.image_tag }}"
-          cat _repos_*.txt | sort -u | while IFS= read -r repo; do
-            [ -z "$repo" ] && continue
-            echo "Creating manifest ${repo}:${image_tag}"
-            docker buildx imagetools create -t "${repo}:${image_tag}" \
-              "${repo}:${image_tag}-amd64" \
-              "${repo}:${image_tag}-arm64"
-          done
-          docker logout
       - name: Create ghcr.io multi-arch manifests
         run: |
           set -euo pipefail
