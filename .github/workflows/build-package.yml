@@ -80,12 +80,6 @@ jobs:
         BUILD_BASE: ${{ needs.BUILD_BASE_IMAGE.outputs.build_base }}
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     steps:
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5.1.1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -113,6 +107,8 @@ jobs:
           harbor_builds_bucket="harbor-builds"
           harbor_releases_bucket="harbor-releases"
           harbor_ci_pipeline_store_bucket="harbor-ci-pipeline-store/latest"
+          # Disable S3 uploads - not needed for GHCR build
+          harbor_target_bucket=""
           # the target release version is the version of next release(RC or GA). It needs to be updated on creating new release branch.
           target_release_version=$(cat ./VERSION)
           Harbor_Package_Version=$target_release_version-'build.'$GITHUB_RUN_NUMBER
@@ -183,9 +179,7 @@ jobs:
             uploader "harbor-online-installer-latest.tgz"              $harbor_target_bucket
           fi
           echo "BUILD_BUNDLE=${harbor_offline_build_bundle}" >> $GITHUB_ENV
-          echo "harbor_target_bucket=$harbor_target_bucket" >> $GITHUB_ENV
-
-          publishImage $target_branch $Harbor_Assets_Version "${{ secrets.DOCKER_HUB_USERNAME }}" "${{ secrets.DOCKER_HUB_PASSWORD }}" ${ARCH}
+          # publishImage disabled - images already pushed via make commands to GHCR
       - name: Save repo list
         run: |
           { docker images --format '{{.Repository}}' | grep 'ghcr.io/${{ github.repository_owner }}/' | grep -v '\-base' | grep -v 'ghcr.io/${{ github.repository_owner }}/photon$' | grep -v 'ghcr.io/${{ github.repository_owner }}/spectral$' | grep -v 'ghcr.io/${{ github.repository_owner }}/swagger$' | grep -v 'ghcr.io/${{ github.repository_owner }}/mockery$' || true; } | sort -u > "$GITHUB_WORKSPACE/_repos_${ARCH}.txt"
