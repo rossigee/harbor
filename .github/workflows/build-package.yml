@@ -92,6 +92,7 @@ jobs:
             PULL_BASE_FROM_DOCKERHUB=true \
             PUSHBASEIMAGE=false \
             BUILD_BASE=false \
+            NPM_REGISTRY=https://registry.npmjs.org \
             VERSIONTAG=${Harbor_Assets_Version} \
             BASEIMAGETAG=${Harbor_Build_Base_Tag}
 
