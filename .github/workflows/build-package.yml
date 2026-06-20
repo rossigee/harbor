@@ -90,6 +90,12 @@ jobs:
         with:
           docker_version: 20.10
           docker_channel: stable
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v6
       - uses: actions/checkout@v6
         with:
@@ -127,12 +133,13 @@ jobs:
             Harbor_Build_Base_Tag=dev
           fi
 
-          build_base_params=" BUILD_BASE=false"
+          # Force base image build for GHCR (images don't exist yet)
+          build_base_params=" BUILD_BASE=true PULL_BASE_FROM_DOCKERHUB=false PUSHBASEIMAGE=true REGISTRYUSER=\"${{ github.actor }}\" REGISTRYPASSWORD=\"${{ secrets.GITHUB_TOKEN }}\""
           cd src/github.com/goharbor/harbor
           # Override image namespace to use GHCR
           IMAGENAMESPACE=ghcr.io/${{ github.repository_owner }}
           BASEIMAGENAMESPACE=ghcr.io/${{ github.repository_owner }}
-          if [ -z "$BUILD_BASE"  ] || [ "$BUILD_BASE" != "true"  ]; then
+          if [ -z "$BUILD_BASE" ] || [ "$BUILD_BASE" != "true" ]; then
             echo "Do not need to build base images!"
           else
             # Use the locally built per-arch base, not the remote ":<tag>" manifest,
