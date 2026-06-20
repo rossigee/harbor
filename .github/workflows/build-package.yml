@@ -21,6 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: write
     outputs:
       build_base: ${{ steps.decide.outputs.build_base || 'false' }}
     steps:
@@ -53,18 +54,19 @@ jobs:
       - name: Set up Docker Buildx
         if: steps.decide.outputs.build_base == 'true'
         uses: docker/setup-buildx-action@v3
-      - name: Build and push goharbor/photon:5.0 multi-arch manifest
+      - name: Login to GHCR
+        if: steps.decide.outputs.build_base == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push ghcr.io/rossigee/photon:5.0 multi-arch manifest
         if: steps.decide.outputs.build_base == 'true'
         run: |
           set -x
-          if [ -n "${{ secrets.DOCKER_HUB_USERNAME }}" ] && [ -n "${{ secrets.DOCKER_HUB_PASSWORD }}" ]; then
-            echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
-          fi
           docker buildx build --platform linux/amd64,linux/arm64 \
-            -f make/photon/common/Dockerfile -t goharbor/photon:5.0 --push .
-          if [ -n "${{ secrets.DOCKER_HUB_USERNAME }}" ]; then
-            docker logout
-          fi
+            -f make/photon/common/Dockerfile -t ghcr.io/${{ github.repository_owner }}/photon:5.0 --push .
 
   BUILD_PACKAGE:
     needs: [BUILD_BASE_IMAGE]
@@ -131,6 +133,9 @@ jobs:
 
           build_base_params=" BUILD_BASE=false"
           cd src/github.com/goharbor/harbor
+          # Override image namespace to use GHCR
+          IMAGENAMESPACE=ghcr.io/${{ github.repository_owner }}
+          BASEIMAGENAMESPACE=ghcr.io/${{ github.repository_owner }}
           if [ -z "$BUILD_BASE"  ] || [ "$BUILD_BASE" != "true"  ]; then
             echo "Do not need to build base images!"
           else
@@ -139,14 +144,14 @@ jobs:
             build_base_params=" BUILD_BASE=true PULL_BASE_FROM_DOCKERHUB=false PUSHBASEIMAGE=true REGISTRYUSER=\"${{ secrets.DOCKER_HUB_USERNAME }}\" REGISTRYPASSWORD=\"${{ secrets.DOCKER_HUB_PASSWORD }}\""
           fi
 
-          sudo make package_offline ARCH=${ARCH} GOBUILDTAGS="include_oss include_gcs" BASEIMAGETAG=${Harbor_Build_Base_Tag} VERSIONTAG=${Harbor_Assets_Version} PKGVERSIONTAG=${Harbor_Package_Version} TRIVYFLAG=true EXPORTERFLAG=true HTTPPROXY= ${build_base_params}
-          sudo make package_online ARCH=${ARCH} GOBUILDTAGS="include_oss include_gcs" BASEIMAGETAG=${Harbor_Build_Base_Tag} VERSIONTAG=${Harbor_Assets_Version} PKGVERSIONTAG=${Harbor_Package_Version} TRIVYFLAG=true EXPORTERFLAG=true HTTPPROXY= ${build_base_params}
+          sudo make package_offline ARCH=${ARCH} GOBUILDTAGS="include_oss include_gcs" BASEIMAGETAG=${Harbor_Build_Base_Tag} VERSIONTAG=${Harbor_Assets_Version} PKGVERSIONTAG=${Harbor_Package_Version} TRIVYFLAG=true EXPORTERFLAG=true HTTPPROXY= ${build_base_params} IMAGENAMESPACE=${IMAGENAMESPACE} BASEIMAGENAMESPACE=${BASEIMAGENAMESPACE}
+          sudo make package_online ARCH=${ARCH} GOBUILDTAGS="include_oss include_gcs" BASEIMAGETAG=${Harbor_Build_Base_Tag} VERSIONTAG=${Harbor_Assets_Version} PKGVERSIONTAG=${Harbor_Package_Version} TRIVYFLAG=true EXPORTERFLAG=true HTTPPROXY= ${build_base_params} IMAGENAMESPACE=${IMAGENAMESPACE} BASEIMAGENAMESPACE=${BASEIMAGENAMESPACE}
 
           # fail before publishing if any image was built on a wrong-arch
           # base (e.g. a stale base pulled from Docker Hub), which produces an
           # image labeled ${ARCH} but containing binaries of another arch.
           expected_base_arch=$([ "${ARCH}" = "arm64" ] && echo "aarch64" || echo "x86_64")
-          for img in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep '^goharbor/' | grep -- "${Harbor_Assets_Version}" | grep -v '\-base'); do
+          for img in $(docker images --format '{{.Repository}}:{{.Tag}}' | grep 'ghcr.io/${{ github.repository_owner }}/' | grep -- "${Harbor_Assets_Version}" | grep -v '\-base'); do
             base_label=$(docker inspect --format '{{index .Config.Labels "name"}}' "$img")
             if [ -n "$base_label" ] && [[ "$base_label" != *"$expected_base_arch"* ]]; then
               echo "ERROR: $img is built on a wrong-arch base: '$base_label' (expected *$expected_base_arch*)"
@@ -183,7 +188,7 @@ jobs:
           publishImage $target_branch $Harbor_Assets_Version "${{ secrets.DOCKER_HUB_USERNAME }}" "${{ secrets.DOCKER_HUB_PASSWORD }}" ${ARCH}
       - name: Save repo list
         run: |
-          { docker images --format '{{.Repository}}' | grep '^goharbor/' | grep -v '\-base' | grep -v '^goharbor/photon$' | grep -v '^goharbor/spectral$' | grep -v '^goharbor/swagger$' | grep -v '^goharbor/mockery$' || true; } | sort -u > "$GITHUB_WORKSPACE/_repos_${ARCH}.txt"
+          { docker images --format '{{.Repository}}' | grep 'ghcr.io/${{ github.repository_owner }}/' | grep -v '\-base' | grep -v 'ghcr.io/${{ github.repository_owner }}/photon$' | grep -v 'ghcr.io/${{ github.repository_owner }}/spectral$' | grep -v 'ghcr.io/${{ github.repository_owner }}/swagger$' | grep -v 'ghcr.io/${{ github.repository_owner }}/mockery$' || true; } | sort -u > "$GITHUB_WORKSPACE/_repos_${ARCH}.txt"
           # base images are pushed arch-suffixed by the _build_base make macro
           # and combined into multi-arch manifests by CREATE_MANIFEST. Derive the
           # list from the Dockerfile.base directories (the source of truth) so it
@@ -191,7 +196,7 @@ jobs:
           if [ "$BUILD_BASE" = "true" ]; then
             for d in make/photon/*/Dockerfile.base; do
               component=$(basename "$(dirname "$d")")
-              echo "goharbor/harbor-${component}-base"
+              echo "ghcr.io/${{ github.repository_owner }}/harbor-${component}-base"
             done | sort -u > "$GITHUB_WORKSPACE/_base_repos_${ARCH}.txt"
           else
             : > "$GITHUB_WORKSPACE/_base_repos_${ARCH}.txt"
@@ -209,6 +214,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v6
       - uses: actions/download-artifact@v4
@@ -236,9 +242,12 @@ jobs:
           else
             echo "base_tag=dev" >> $GITHUB_OUTPUT
           fi
-      - name: Login to Docker Hub
-        if: secrets.DOCKER_HUB_USERNAME != '' && secrets.DOCKER_HUB_PASSWORD != ''
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_HUB_USERNAME }}" --password-stdin
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Create multi-arch manifests
         run: |
           set -euo pipefail
@@ -250,17 +259,6 @@ jobs:
               "${repo}:${image_tag}-amd64" \
               "${repo}:${image_tag}-arm64"
           done
-          # The harbor-*-base images are only (re)built and pushed (arch-suffixed)
-          # when BUILD_BASE_IMAGE decided to rebuild the base; otherwise the
-          # suffixed tags from this run don't exist and there is nothing to combine.
-          if [ "${{ needs.BUILD_BASE_IMAGE.outputs.build_base }}" = "true" ]; then
-            base_tag="${{ steps.tag.outputs.base_tag }}"
-            cat _base_repos_*.txt | sort -u | while IFS= read -r repo; do
-              [ -z "$repo" ] && continue
-              echo "Creating manifest ${repo}:${base_tag}"
-              docker buildx imagetools create -t "${repo}:${base_tag}" \
-                "${repo}:${base_tag}-amd64" \
-                "${repo}:${base_tag}-arm64"
-            done
-          fi
-          docker logout
+      - name: Logout from GHCR
+        if: always()
+        run: docker logout ghcr.io
