@@ -112,7 +112,7 @@ jobs:
             publishImage $target_branch $Harbor_Assets_Version "$DOCKER_HUB_USERNAME" "$DOCKER_HUB_PASSWORD" ${ARCH} || true
           fi
           publishImageGhcr $target_branch $Harbor_Assets_Version "${{ github.repository_owner }}" "${{ secrets.GITHUB_TOKEN }}" ${ARCH}
-- name: Save ghcr.io repo list
+      - name: Save ghcr.io repo list
         run: |
           docker images --format '{{.Repository}}' | grep "^ghcr.io/${{ github.repository_owner }}/" | sort -u > "$GITHUB_WORKSPACE/_ghcr_repos_${ARCH}.txt"
       - name: Upload ghcr.io repo list
