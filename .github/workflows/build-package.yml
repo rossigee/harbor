@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - develop
       - release-*
 
 # Serialize runs per branch so concurrent pushes don't race when pushing the
