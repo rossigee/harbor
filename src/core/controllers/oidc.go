@@ -180,6 +180,11 @@ func (oc *OIDCController) Callback() {
 		return
 	}
 	oidcUser := um.OIDCUserMeta
+	if oidcUser == nil {
+		log.Errorf("OIDC user metadata is nil for user ID %d after retrieval; user may not have been properly linked or onboarded", u.UserID)
+		oc.SendInternalServerError(errors.New("OIDC user metadata is missing; please contact your administrator"))
+		return
+	}
 	oidcUser.Token = t
 	if err := ctluser.Ctl.UpdateOIDCMeta(ctx, oidcUser); err != nil {
 		oc.SendError(err)

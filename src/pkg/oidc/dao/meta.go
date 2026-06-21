@@ -75,6 +75,12 @@ func (md *metaDAO) GetByUsername(ctx context.Context, username string) (*models.
 }
 
 func (md *metaDAO) Update(ctx context.Context, oidcUser *models.OIDCUser, props ...string) error {
+	if oidcUser == nil {
+		return errors.BadRequestError(nil).WithMessage("oidc user is nil")
+	}
+	if oidcUser.ID == 0 {
+		return errors.BadRequestError(nil).WithMessage("cannot update oidc user with id 0; the record does not exist or was not properly initialized")
+	}
 	ormer, err := orm.FromContext(ctx)
 	if err != nil {
 		return err

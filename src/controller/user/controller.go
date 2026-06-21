@@ -105,6 +105,12 @@ type controller struct {
 }
 
 func (c *controller) UpdateOIDCMeta(ctx context.Context, ou *commonmodels.OIDCUser, cols ...string) error {
+	if ou == nil {
+		return errors.BadRequestError(nil).WithMessage("OIDC user meta is nil")
+	}
+	if ou.ID == 0 {
+		return errors.BadRequestError(nil).WithMessage("OIDC user meta ID is not set; cannot update a record without an ID")
+	}
 	defaultCols := []string{"secret", "token"}
 	if len(cols) == 0 {
 		cols = defaultCols
@@ -219,6 +225,12 @@ func (c *controller) Get(ctx context.Context, id int, opt *Option) (*commonmodel
 		oidcMeta, err := c.oidcMetaMgr.GetByUserID(ctx, id)
 		if err != nil {
 			return nil, errors.UnknownError(err)
+		}
+		if oidcMeta == nil {
+			return nil, errors.UnknownError(nil).WithMessagef("OIDC metadata for user %d is nil; this should not happen", id)
+		}
+		if oidcMeta.ID == 0 {
+			return nil, errors.UnknownError(nil).WithMessagef("OIDC metadata for user %d has invalid ID (0); the database may be corrupted", id)
 		}
 		u.OIDCUserMeta = oidcMeta
 	}
