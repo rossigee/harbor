@@ -26,6 +26,7 @@ import (
 	"github.com/goharbor/harbor/src/lib"
 	"github.com/goharbor/harbor/src/lib/config"
 	"github.com/goharbor/harbor/src/lib/errors"
+	"github.com/goharbor/harbor/src/lib/log"
 	"github.com/goharbor/harbor/src/lib/q"
 	"github.com/goharbor/harbor/src/pkg/member"
 	"github.com/goharbor/harbor/src/pkg/oidc"
@@ -136,16 +137,17 @@ func (c *controller) OnboardOIDCUser(ctx context.Context, u *commonmodels.User) 
 // LinkExistingUserToOIDC links an existing user to OIDC by creating the OIDC metadata record.
 // This handles the case where a user exists in harbor_user but not in oidc_user.
 func (c *controller) LinkExistingUserToOIDC(ctx context.Context, userID int, sub, iss, secret, token string) error {
+	subIss := sub + ":" + iss
 	oidcUser := &commonmodels.OIDCUser{
 		UserID: userID,
-		SubIss: sub + iss,
+		SubIss: subIss,
 		Secret: secret,
 		Token:  token,
 	}
 	_, err := c.oidcMetaMgr.Create(ctx, oidcUser)
 	if err != nil {
 		if errors.IsConflictErr(err) {
-			oidcUser.SubIss = sub + iss
+			oidcUser.SubIss = subIss
 			return c.oidcMetaMgr.Update(ctx, oidcUser)
 		}
 		return errors.Wrap(err, "failed to create OIDC metadata record")
@@ -176,6 +178,9 @@ func (c *controller) GetByEmail(ctx context.Context, email string) (*commonmodel
 	}
 	if len(u) == 0 {
 		return nil, errors.NotFoundError(nil)
+	}
+	if len(u) > 1 {
+		log.G(ctx).Warningf("found %d users with email %s, returning first match", len(u), email)
 	}
 	return u[0], nil
 }

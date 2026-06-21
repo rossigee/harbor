@@ -25,6 +25,7 @@ import (
 	"github.com/goharbor/harbor/src/controller/project"
 	"github.com/goharbor/harbor/src/controller/robot"
 	"github.com/goharbor/harbor/src/controller/user"
+	"github.com/goharbor/harbor/src/lib/errors"
 	"github.com/goharbor/harbor/src/lib/log"
 	"github.com/goharbor/harbor/src/lib/q"
 	"github.com/goharbor/harbor/src/pkg/pat"
@@ -97,8 +98,7 @@ func (c *controller) Create(ctx context.Context, pat *model.PersonalAccessToken)
 	// Generate scope based on user's project permissions
 	scope, err := c.computeScope(ctx, pat.UserID)
 	if err != nil {
-		log.Warningf("failed to compute scope for user %d: %v", pat.UserID, err)
-		scope = "[]"
+		return 0, "", errors.Wrapf(err, "failed to compute scope for user %d", pat.UserID)
 	}
 
 	patToCreate := &model.PersonalAccessToken{

@@ -188,11 +188,14 @@ func (oc *OIDCController) Callback() {
 				return
 			}
 			// Check if user already exists in harbor_user but not linked to OIDC
+			log.Debugf("OIDC auto onboard: username=%s, email=%s, sub=%s, iss=%s\n", username, info.Email, info.Subject, info.Issuer)
 			existingUser, err := ctluser.Ctl.GetByName(ctx, username)
 			if err != nil || existingUser == nil {
 				// Username lookup failed or returned nil, try by email
 				log.Debugf("User not found by name %s (err: %v), trying by email %s\n", username, err, info.Email)
 				existingUser, err = ctluser.Ctl.GetByEmail(ctx, info.Email)
+			} else {
+				log.Debugf("Found user by name: %s (id=%d)\n", existingUser.Username, existingUser.UserID)
 			}
 			if existingUser != nil && err == nil {
 				// Check if user already has OIDC metadata (already linked)
@@ -204,7 +207,7 @@ func (oc *OIDCController) Callback() {
 					u = userWithOIDC
 				} else {
 					// User exists but not linked to OIDC - link them
-					log.Debugf("Linking existing user %s to OIDC\n", username)
+					log.Debugf("Linking existing user %s (id=%d) to OIDC\n", username, existingUser.UserID)
 					s, t, err := secretAndToken(tokenBytes)
 					if err != nil {
 						oc.SendInternalServerError(err)
@@ -215,19 +218,21 @@ func (oc *OIDCController) Callback() {
 						oc.SendInternalServerError(err)
 						return
 					}
+					log.Infof("Successfully linked user %s to OIDC\n", username)
 					oidc.InjectGroupsToUser(info, existingUser)
 					u = existingUser
 				}
-			} else {
-				// User doesn't exist - create new user
-				userRec, onboarded := userOnboard(ctx, oc, info, username, tokenBytes)
-				if !onboarded {
-					log.Error("User not onboarded\n")
-					return
-				}
-				log.Debug("User automatically onboarded\n")
-				u = userRec
+} else {
+			// User doesn't exist in harbor - creating new user via onboard
+			log.Debugf("Creating new user for %s (email: %s)\n", username, info.Email)
+			userRec, onboarded := userOnboard(ctx, oc, info, username, tokenBytes)
+			if !onboarded {
+				log.Error("User not onboarded\n")
+				return
 			}
+			log.Infof("User automatically onboarded: %s (id=%d)\n", username, userRec.UserID)
+			u = userRec
+		}
 		} else {
 			if err := oc.SetSession(userInfoKey, string(ouDataStr)); err != nil {
 				log.Errorf("failed to set session for key: %s, error: %v", userInfoKey, err)
