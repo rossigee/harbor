@@ -222,17 +222,17 @@ func (oc *OIDCController) Callback() {
 					oidc.InjectGroupsToUser(info, existingUser)
 					u = existingUser
 				}
-} else {
-			// User doesn't exist in harbor - creating new user via onboard
-			log.Debugf("Creating new user for %s (email: %s)\n", username, info.Email)
-			userRec, onboarded := userOnboard(ctx, oc, info, username, tokenBytes)
-			if !onboarded {
-				log.Error("User not onboarded\n")
-				return
+			} else {
+				// User doesn't exist in harbor - creating new user via onboard
+				log.Debugf("Creating new user for %s (email: %s)\n", username, info.Email)
+				userRec, onboarded := userOnboard(ctx, oc, info, username, tokenBytes)
+				if !onboarded {
+					log.Error("User not onboarded\n")
+					return
+				}
+				log.Infof("User automatically onboarded: %s (id=%d)\n", username, userRec.UserID)
+				u = userRec
 			}
-			log.Infof("User automatically onboarded: %s (id=%d)\n", username, userRec.UserID)
-			u = userRec
-		}
 		} else {
 			if err := oc.SetSession(userInfoKey, string(ouDataStr)); err != nil {
 				log.Errorf("failed to set session for key: %s, error: %v", userInfoKey, err)
