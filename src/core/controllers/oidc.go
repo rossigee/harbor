@@ -168,7 +168,9 @@ func (oc *OIDCController) Callback() {
 		oc.SendInternalServerError(err)
 		return
 	}
+	log.Infof("OIDC callback: checking for existing user with sub=%s, iss=%s\n", info.Subject, info.Issuer)
 	u, err := ctluser.Ctl.GetBySubIss(ctx, info.Subject, info.Issuer)
+	log.Infof("OIDC callback: GetBySubIss returned user=%v, err=%v\n", u != nil, err)
 	if errors.IsNotFoundErr(err) { // User is not onboarded, kickoff the onboard flow
 		// Recover the username from d.Username by default
 		username := info.Username
@@ -245,6 +247,7 @@ func (oc *OIDCController) Callback() {
 				oc.SendInternalServerError(err)
 				return
 			}
+			log.Infof("OIDC: user found by sub/iss but AutoOnboard is disabled or username empty, redirecting to onboard. username=%s\n", username)
 			oc.Controller.Redirect(fmt.Sprintf("/oidc-onboard?username=%s&redirect_url=%s", username, redirectURLStr), http.StatusFound)
 			// Once redirected, no further actions are done
 			return
