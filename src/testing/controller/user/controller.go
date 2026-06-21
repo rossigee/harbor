@@ -151,6 +151,36 @@ func (_m *Controller) GetByName(ctx context.Context, username string) (*models.U
 	return r0, r1
 }
 
+// GetByEmail provides a mock function with given fields: ctx, email
+func (_m *Controller) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+	ret := _m.Called(ctx, email)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetByEmail")
+	}
+
+	var r0 *models.User
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) (*models.User, error)); ok {
+		return rf(ctx, email)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string) *models.User); ok {
+		r0 = rf(ctx, email)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*models.User)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, email)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetBySubIss provides a mock function with given fields: ctx, sub, iss
 func (_m *Controller) GetBySubIss(ctx context.Context, sub string, iss string) (*models.User, error) {
 	ret := _m.Called(ctx, sub, iss)
@@ -396,6 +426,23 @@ func (_m *Controller) VerifyPassword(ctx context.Context, usernameOrEmail string
 	}
 
 	return r0, r1
+}
+
+// LinkExistingUserToOIDC provides a mock function with given fields: ctx, userID, sub, iss, secret, token
+func (_m *Controller) LinkExistingUserToOIDC(ctx context.Context, userID int, sub string, iss string, secret string, token string) error {
+	ret := _m.Called(ctx, userID, sub, iss, secret, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for LinkExistingUserToOIDC")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, string, string, string) error); ok {
+		return rf(ctx, userID, sub, iss, secret, token)
+	}
+	r0 = ret.Error(0)
+
+	return r0
 }
 
 // NewController creates a new instance of Controller. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

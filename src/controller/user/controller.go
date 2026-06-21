@@ -57,6 +57,8 @@ type Controller interface {
 	Get(ctx context.Context, id int, opt *Option) (*commonmodels.User, error)
 	// GetByName gets the user model by username, it only supports getting the basic and does not support opt
 	GetByName(ctx context.Context, username string) (*commonmodels.User, error)
+	// GetByEmail gets the user model by email address
+	GetByEmail(ctx context.Context, email string) (*commonmodels.User, error)
 	// GetBySubIss gets the user model by subject and issuer, the result will contain the basic user model and does not support opt
 	GetBySubIss(ctx context.Context, sub, iss string) (*commonmodels.User, error)
 	// Delete ...
