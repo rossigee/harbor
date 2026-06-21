@@ -111,7 +111,7 @@ jobs:
           if [ -n "$DOCKER_HUB_USERNAME" ]; then
             publishImage $target_branch $Harbor_Assets_Version "$DOCKER_HUB_USERNAME" "$DOCKER_HUB_PASSWORD" ${ARCH} || true
           fi
-          publishImageGhcr $target_branch $Harbor_Assets_Version "${{ github.repository_owner }}" "${{ secrets.GITHUB_TOKEN }}" ${ARCH}
+          publishImageGhcr $target_branch $Harbor_Assets_Version "${{ github.repository_owner }}" "${{ secrets.GITHUB_TOKEN }}" ${ARCH} || true
       - name: Save ghcr.io repo list
         run: |
           docker images --format '{{.Repository}}' | grep "^ghcr.io/${{ github.repository_owner }}/" | sort -u > "$GITHUB_WORKSPACE/_ghcr_repos_${ARCH}.txt"
