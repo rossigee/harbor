@@ -145,8 +145,20 @@ jobs:
         run: |
           set -euo pipefail
           version=$(cat ./VERSION)
-          image_tag="dev"
-          
+          target_branch="$(echo ${GITHUB_REF#refs/heads/})"
+
+          # Determine the correct image tag that was actually built
+          if [[ $target_branch == "develop" ]]; then
+            image_tag="dev"
+            build_tag="${version}-build.${GITHUB_RUN_NUMBER}"
+          elif [[ $target_branch == "release-"* ]]; then
+            image_tag="${version}-dev"
+            build_tag="${version}"
+          else
+            image_tag="${version}"
+            build_tag="${version}"
+          fi
+
           # List of images to create manifests for
           images=(
             harbor-core
@@ -162,14 +174,14 @@ jobs:
             trivy-adapter-photon
             valkey-photon
           )
-          
+
           for img in "${images[@]}"; do
             repo="ghcr.io/${{ github.repository_owner }}/${img}"
-            echo "Pulling and creating manifest for ${repo}:${image_tag}"
-            docker pull "${repo}:${version}-amd64" || echo "amd64 not found for ${repo}"
-            docker pull "${repo}:${version}-arm64" || echo "arm64 not found for ${repo}"
+            echo "Pulling and creating manifest for ${repo}:${image_tag} from ${build_tag}"
+            docker pull "${repo}:${build_tag}-amd64" || echo "amd64 not found for ${repo}"
+            docker pull "${repo}:${build_tag}-arm64" || echo "arm64 not found for ${repo}"
             docker buildx imagetools create -t "${repo}:${image_tag}" \
-              "${repo}:${version}-amd64" \
-              "${repo}:${version}-arm64" || echo "Failed to create manifest for ${repo}, continuing..."
+              "${repo}:${build_tag}-amd64" \
+              "${repo}:${build_tag}-arm64" || echo "Failed to create manifest for ${repo}, continuing..."
           done
           docker logout ghcr.io
