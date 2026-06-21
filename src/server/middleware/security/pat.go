@@ -90,8 +90,9 @@ func (p *pat) Generate(req *http.Request) security.Context {
 		}
 
 		// Found a matching token - update last_used_at in the background
+		// Detach from request context to avoid cancellation when request ends
 		go func(t *model.PersonalAccessToken) {
-			bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			bgCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
 			defer cancel()
 			_ = pat_ctl.Ctl.Update(bgCtx, t, "last_used_at")
 		}(token)
