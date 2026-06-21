@@ -15,6 +15,7 @@
 package pat
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -38,8 +39,8 @@ func (suite *ControllerTestSuite) SetupSuite() {
 
 	// Create test users for PAT tests
 	for userID := 1; userID <= 12; userID++ {
-		username := "testuser" + string(rune(48+userID))
-		email := "user" + string(rune(48+userID)) + "@example.com"
+		username := fmt.Sprintf("testuser%d", userID)
+		email := fmt.Sprintf("user%d@example.com", userID)
 		suite.ExecSQL("INSERT INTO harbor_user (user_id, username, email, password) VALUES (?, ?, ?, ?)", userID, username, email, "Harbor12345")
 	}
 }
