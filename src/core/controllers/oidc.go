@@ -99,7 +99,7 @@ func (oc *OIDCController) RedirectLogin() {
 		oc.SendInternalServerError(err)
 		return
 	}
-	log.Debugf("State dumped to session: %s", state)
+	log.Infof("State dumped to session: %s", state)
 	// Force to use the func 'Redirect' of beego.Controller
 	oc.Controller.Redirect(url, http.StatusFound)
 }
@@ -181,33 +181,39 @@ func (oc *OIDCController) Callback() {
 		}
 		// If automatic onboard is enabled, skip the onboard page
 		if oidcSettings.AutoOnboard {
-			log.Debug("Doing automatic onboarding\n")
+			log.Info("Doing automatic onboarding\n")
 			if username == "" {
 				oc.SendInternalServerError(fmt.Errorf("unable to recover username for auto onboard, username claim: %s",
 					oidcSettings.UserClaim))
 				return
 			}
 			// Check if user already exists in harbor_user but not linked to OIDC
-			log.Debugf("OIDC auto onboard: username=%s, email=%s, sub=%s, iss=%s\n", username, info.Email, info.Subject, info.Issuer)
+			log.Infof("OIDC auto onboard: username=%s, email=%s, sub=%s, iss=%s\n", username, info.Email, info.Subject, info.Issuer)
 			existingUser, err := ctluser.Ctl.GetByName(ctx, username)
 			if err != nil || existingUser == nil {
 				// Username lookup failed or returned nil, try by email
-				log.Debugf("User not found by name %s (err: %v), trying by email %s\n", username, err, info.Email)
+				log.Infof("User not found by name %s (err: %v), trying by email %s\n", username, err, info.Email)
 				existingUser, err = ctluser.Ctl.GetByEmail(ctx, info.Email)
-			} else {
-				log.Debugf("Found user by name: %s (id=%d)\n", existingUser.Username, existingUser.UserID)
+			}
+			// If still not found, try extracting local part from email (everything before @)
+			if (err != nil || existingUser == nil) && info.Email != "" {
+				if atIdx := strings.Index(info.Email, "@"); atIdx > 0 {
+					emailUsername := info.Email[:atIdx]
+					log.Infof("User not found by email, trying username from email local part: %s\n", emailUsername)
+					existingUser, err = ctluser.Ctl.GetByName(ctx, emailUsername)
+				}
 			}
 			if existingUser != nil && err == nil {
 				// Check if user already has OIDC metadata (already linked)
 				userWithOIDC, err := ctluser.Ctl.Get(ctx, existingUser.UserID, &ctluser.Option{WithOIDCInfo: true})
 				if err == nil && userWithOIDC != nil && userWithOIDC.OIDCUserMeta != nil {
 					// User already linked to OIDC, just return them
-					log.Debugf("User %s already linked to OIDC, using existing record\n", username)
+					log.Infof("User %s already linked to OIDC, using existing record\n", username)
 					oidc.InjectGroupsToUser(info, userWithOIDC)
 					u = userWithOIDC
 				} else {
 					// User exists but not linked to OIDC - link them
-					log.Debugf("Linking existing user %s (id=%d) to OIDC\n", username, existingUser.UserID)
+					log.Infof("Linking existing user %s (id=%d) to OIDC\n", username, existingUser.UserID)
 					s, t, err := secretAndToken(tokenBytes)
 					if err != nil {
 						oc.SendInternalServerError(err)
@@ -224,7 +230,7 @@ func (oc *OIDCController) Callback() {
 				}
 			} else {
 				// User doesn't exist in harbor - creating new user via onboard
-				log.Debugf("Creating new user for %s (email: %s)\n", username, info.Email)
+				log.Infof("Creating new user for %s (email: %s)\n", username, info.Email)
 				userRec, onboarded := userOnboard(ctx, oc, info, username, tokenBytes)
 				if !onboarded {
 					log.Error("User not onboarded\n")
@@ -360,7 +366,7 @@ func (oc *OIDCController) RedirectLogout() {
 		url.QueryEscape(token.RawIDToken),
 		url.QueryEscape(postRedirectURL),
 	)
-	log.Debugf("Redirect user to logout page of OIDC provider: %s", logoutURL)
+	log.Infof("Redirect user to logout page of OIDC provider: %s", logoutURL)
 	oc.Controller.Redirect(logoutURL, http.StatusFound)
 }
 
@@ -385,7 +391,7 @@ func userOnboard(ctx context.Context, oc *OIDCController, info *oidc.UserInfo, u
 	}
 	oidc.InjectGroupsToUser(info, user)
 
-	log.Debugf("User created: %v\n", user.Username)
+	log.Infof("User created: %v\n", user.Username)
 
 	err = ctluser.Ctl.OnboardOIDCUser(ctx, user)
 	if err != nil {
@@ -417,7 +423,7 @@ func (oc *OIDCController) Onboard() {
 		oc.SendBadRequestError(errors.New("Failed to get OIDC user info from session"))
 		return
 	}
-	log.Debugf("User info string: %s\n", userInfoStr)
+	log.Infof("User info string: %s\n", userInfoStr)
 	tb, ok := oc.GetSession(tokenKey).([]byte)
 	if !ok {
 		oc.SendBadRequestError(errors.New("Failed to get OIDC token from session"))
