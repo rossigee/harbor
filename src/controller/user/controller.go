@@ -163,6 +163,21 @@ func (c *controller) GetByName(ctx context.Context, username string) (*commonmod
 	return c.mgr.GetByName(ctx, username)
 }
 
+func (c *controller) GetByEmail(ctx context.Context, email string) (*commonmodels.User, error) {
+	u, err := c.mgr.List(ctx, &q.Query{
+		Keywords: map[string]interface{}{
+			"email": email,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(u) == 0 {
+		return nil, errors.NewNotFoundError(nil)
+	}
+	return u[0], nil
+}
+
 func (c *controller) SetCliSecret(ctx context.Context, id int, secret string) error {
 	return c.oidcMetaMgr.SetCliSecretByUserID(ctx, id, secret)
 }

@@ -187,9 +187,14 @@ func (oc *OIDCController) Callback() {
 					oidcSettings.UserClaim))
 				return
 			}
-			// Check if user already exists in harbor_user but not linked to OIDC
-			existingUser, err := ctluser.Ctl.GetByName(ctx, username)
-			if err == nil && existingUser != nil {
+// Check if user already exists in harbor_user but not linked to OIDC
+		existingUser, err := ctluser.Ctl.GetByName(ctx, username)
+		if err != nil {
+			// Try by email if username lookup fails
+			log.Debugf("User not found by name %s, trying by email\n", username)
+			existingUser, err = ctluser.Ctl.GetByEmail(ctx, info.Email)
+		}
+		if err == nil && existingUser != nil {
 				// User exists - link to OIDC instead of creating new user
 				log.Debugf("Linking existing user %s to OIDC\n", username)
 				s, t, err := secretAndToken(tokenBytes)
