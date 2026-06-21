@@ -48,10 +48,10 @@ import (
 
 type usersAPI struct {
 	BaseAPI
-	ctl        user.Controller
-	patCtl     pat.Controller
-	auditMgr   auditext.Manager
-	getAuth    func(ctx context.Context) (string, error)
+	ctl      user.Controller
+	patCtl   pat.Controller
+	auditMgr auditext.Manager
+	getAuth  func(ctx context.Context) (string, error)
 }
 
 func newUsersAPI() *usersAPI {
@@ -662,7 +662,7 @@ func getRandomSecret() (string, error) {
 }
 
 // logAuditEntry logs an audit entry for PAT operations
-func (u *usersAPI) logAuditEntry(ctx context.Context, operation, patName, resource string, isSuccessful bool) {
+func (u *usersAPI) logAuditEntry(ctx context.Context, operation, patName, _ string, isSuccessful bool) {
 	sctx, _ := security.FromContext(ctx)
 	username := "unknown"
 	if sctx != nil {
