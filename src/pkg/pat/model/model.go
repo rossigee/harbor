@@ -32,8 +32,8 @@ type AccessLevel struct {
 
 // ProjectScope defines the scope for a specific project
 type ProjectScope struct {
-	ProjectID   int64        `json:"project_id"`
-	ProjectName string       `json:"project_name"`
+	ProjectID   int64         `json:"project_id"`
+	ProjectName string        `json:"project_name"`
 	Access      []AccessLevel `json:"access"`
 }
 
