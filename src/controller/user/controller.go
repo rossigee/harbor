@@ -173,7 +173,7 @@ func (c *controller) GetByEmail(ctx context.Context, email string) (*commonmodel
 		return nil, err
 	}
 	if len(u) == 0 {
-		return nil, errors.NewNotFoundError(nil)
+		return nil, errors.NotFoundError(nil)
 	}
 	return u[0], nil
 }
