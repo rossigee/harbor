@@ -195,20 +195,29 @@ func (oc *OIDCController) Callback() {
 				existingUser, err = ctluser.Ctl.GetByEmail(ctx, info.Email)
 			}
 			if existingUser != nil && err == nil {
-				// User exists - link to OIDC instead of creating new user
-				log.Debugf("Linking existing user %s to OIDC\n", username)
-				s, t, err := secretAndToken(tokenBytes)
-				if err != nil {
-					oc.SendInternalServerError(err)
-					return
+				// Check if user already has OIDC metadata (already linked)
+				userWithOIDC, err := ctluser.Ctl.Get(ctx, existingUser.UserID, &ctluser.Option{WithOIDCInfo: true})
+				if err == nil && userWithOIDC != nil && userWithOIDC.OIDCUserMeta != nil {
+					// User already linked to OIDC, just return them
+					log.Debugf("User %s already linked to OIDC, using existing record\n", username)
+					oidc.InjectGroupsToUser(info, userWithOIDC)
+					u = userWithOIDC
+				} else {
+					// User exists but not linked to OIDC - link them
+					log.Debugf("Linking existing user %s to OIDC\n", username)
+					s, t, err := secretAndToken(tokenBytes)
+					if err != nil {
+						oc.SendInternalServerError(err)
+						return
+					}
+					if err := ctluser.Ctl.LinkExistingUserToOIDC(ctx, existingUser.UserID, info.Subject, info.Issuer, s, t); err != nil {
+						log.Errorf("failed to link existing user to OIDC: %v\n", err)
+						oc.SendInternalServerError(err)
+						return
+					}
+					oidc.InjectGroupsToUser(info, existingUser)
+					u = existingUser
 				}
-				if err := ctluser.Ctl.LinkExistingUserToOIDC(ctx, existingUser.UserID, info.Subject, info.Issuer, s, t); err != nil {
-					log.Errorf("failed to link existing user to OIDC: %v\n", err)
-					oc.SendInternalServerError(err)
-					return
-				}
-				oidc.InjectGroupsToUser(info, existingUser)
-				u = existingUser
 			} else {
 				// User doesn't exist - create new user
 				userRec, onboarded := userOnboard(ctx, oc, info, username, tokenBytes)
