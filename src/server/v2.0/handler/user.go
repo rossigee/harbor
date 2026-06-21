@@ -37,6 +37,8 @@ import (
 	"github.com/goharbor/harbor/src/lib/log"
 	"github.com/goharbor/harbor/src/lib/q"
 	"github.com/goharbor/harbor/src/lib/retry"
+	"github.com/goharbor/harbor/src/pkg/auditext"
+	auditmodel "github.com/goharbor/harbor/src/pkg/auditext/model"
 	patmodel "github.com/goharbor/harbor/src/pkg/pat/model"
 	"github.com/goharbor/harbor/src/pkg/permission/types"
 	"github.com/goharbor/harbor/src/server/v2.0/handler/model"
@@ -46,16 +48,18 @@ import (
 
 type usersAPI struct {
 	BaseAPI
-	ctl     user.Controller
-	patCtl  pat.Controller
-	getAuth func(ctx context.Context) (string, error)
+	ctl        user.Controller
+	patCtl     pat.Controller
+	auditMgr   auditext.Manager
+	getAuth    func(ctx context.Context) (string, error)
 }
 
 func newUsersAPI() *usersAPI {
 	return &usersAPI{
-		ctl:     user.Ctl,
-		patCtl:  pat.Ctl,
-		getAuth: config.AuthMode,
+		ctl:      user.Ctl,
+		patCtl:   pat.Ctl,
+		auditMgr: auditext.Mgr,
+		getAuth:  config.AuthMode,
 	}
 }
 
@@ -77,8 +81,10 @@ func (u *usersAPI) CreatePersonalAccessToken(ctx context.Context, params operati
 	}
 	id, secret, err := u.patCtl.Create(ctx, patModel)
 	if err != nil {
+		u.logAuditEntry(ctx, "Create", patModel.Name, fmt.Sprintf("user:%d", userID), false)
 		return u.SendError(ctx, err)
 	}
+	u.logAuditEntry(ctx, "Create", patModel.Name, fmt.Sprintf("user:%d", userID), true)
 	return operation.NewCreatePersonalAccessTokenCreated().WithPayload(&models.PersonalAccessTokenCreatedResponse{
 		ID:        id,
 		Name:      *params.Request.Name,
@@ -95,9 +101,16 @@ func (u *usersAPI) DeletePersonalAccessToken(ctx context.Context, params operati
 	if err := u.requireForPAT(ctx, userID, false); err != nil {
 		return u.SendError(ctx, err)
 	}
+	pat, err := u.patCtl.Get(ctx, params.TokenID)
+	patName := fmt.Sprintf("PAT-%d", params.TokenID)
+	if err == nil && pat != nil {
+		patName = pat.Name
+	}
 	if err := u.patCtl.Delete(ctx, params.TokenID); err != nil {
+		u.logAuditEntry(ctx, "Delete", patName, fmt.Sprintf("user:%d", userID), false)
 		return u.SendError(ctx, err)
 	}
+	u.logAuditEntry(ctx, "Delete", patName, fmt.Sprintf("user:%d", userID), true)
 	return operation.NewDeletePersonalAccessTokenNoContent()
 }
 
@@ -177,10 +190,17 @@ func (u *usersAPI) RefreshPersonalAccessTokenSecret(ctx context.Context, params 
 	if err := u.requireForPAT(ctx, userID, false); err != nil {
 		return u.SendError(ctx, err)
 	}
+	pat, _ := u.patCtl.Get(ctx, params.TokenID)
+	patName := fmt.Sprintf("PAT-%d", params.TokenID)
+	if pat != nil {
+		patName = pat.Name
+	}
 	secret, err := u.patCtl.RefreshSecret(ctx, params.TokenID, params.Request.Secret)
 	if err != nil {
+		u.logAuditEntry(ctx, "Refresh", patName, fmt.Sprintf("user:%d", userID), false)
 		return u.SendError(ctx, err)
 	}
+	u.logAuditEntry(ctx, "Refresh", patName, fmt.Sprintf("user:%d", userID), true)
 	return operation.NewRefreshPersonalAccessTokenSecretOK().WithPayload(&models.PersonalAccessTokenCreatedResponse{
 		ID:     params.TokenID,
 		Secret: secret,
@@ -205,12 +225,23 @@ func (u *usersAPI) UpdatePersonalAccessToken(ctx context.Context, params operati
 	if params.Request.Description != "" {
 		pat.Description = params.Request.Description
 	}
+	oldDisabled := pat.Disabled
 	if params.Request.Disabled {
 		pat.Disabled = params.Request.Disabled
 	}
+	auditOp := "Update"
+	if oldDisabled != pat.Disabled {
+		if pat.Disabled {
+			auditOp = "Disable"
+		} else {
+			auditOp = "Enable"
+		}
+	}
 	if err := u.patCtl.Update(ctx, pat); err != nil {
+		u.logAuditEntry(ctx, auditOp, pat.Name, fmt.Sprintf("user:%d", userID), false)
 		return u.SendError(ctx, err)
 	}
+	u.logAuditEntry(ctx, auditOp, pat.Name, fmt.Sprintf("user:%d", userID), true)
 	return operation.NewUpdatePersonalAccessTokenOK()
 }
 
@@ -628,6 +659,29 @@ func getRandomSecret() (string, error) {
 		return "", errors.Wrap(err, "failed to generate an valid random secret for cli in one minute, please try again")
 	}
 	return cliSecret, nil
+}
+
+// logAuditEntry logs an audit entry for PAT operations
+func (u *usersAPI) logAuditEntry(ctx context.Context, operation, patName, resource string, isSuccessful bool) {
+	sctx, _ := security.FromContext(ctx)
+	username := "unknown"
+	if sctx != nil {
+		username = sctx.GetUsername()
+	}
+
+	auditLog := &auditmodel.AuditLogExt{
+		Operation:            operation,
+		ResourceType:         "PAT",
+		Resource:             patName,
+		Username:             username,
+		OpTime:               time.Now(),
+		OperationDescription: fmt.Sprintf("%s personal access token %s", operation, patName),
+		IsSuccessful:         isSuccessful,
+	}
+
+	if _, err := u.auditMgr.Create(ctx, auditLog); err != nil {
+		log.Errorf("failed to log audit entry for PAT %s operation: %v", operation, err)
+	}
 }
 
 func validateUserProfile(user *commonmodels.User, create bool) error {
