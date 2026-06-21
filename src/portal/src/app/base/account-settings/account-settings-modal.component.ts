@@ -446,11 +446,15 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
             .subscribe({
                 next: res => {
                     if (secret) {
-                        this.account.oidc_user_meta.secret = secret;
+                        if (this.account.oidc_user_meta) {
+                            this.account.oidc_user_meta.secret = secret;
+                        }
                     } else {
                         this.userService.getCurrentUserInfo().subscribe(res => {
-                            this.account.oidc_user_meta.secret =
-                                res?.oidc_user_meta?.secret;
+                            if (this.account.oidc_user_meta) {
+                                this.account.oidc_user_meta.secret =
+                                    res?.oidc_user_meta?.secret;
+                            }
                         });
                     }
                     this.closeReset();
