@@ -147,8 +147,16 @@ func (c *controller) LinkExistingUserToOIDC(ctx context.Context, userID int, sub
 	_, err := c.oidcMetaMgr.Create(ctx, oidcUser)
 	if err != nil {
 		if errors.IsConflictErr(err) {
-			oidcUser.SubIss = subIss
-			return c.oidcMetaMgr.Update(ctx, oidcUser)
+			// Conflict means OIDC metadata already exists for this user.
+			// Retrieve the existing record to get its ID, then update.
+			existing, err := c.oidcMetaMgr.GetByUserID(ctx, userID)
+			if err != nil {
+				return errors.Wrap(err, "failed to retrieve existing OIDC metadata")
+			}
+			existing.SubIss = subIss
+			existing.Secret = secret
+			existing.Token = token
+			return c.oidcMetaMgr.Update(ctx, existing, "subiss", "secret", "token")
 		}
 		return errors.Wrap(err, "failed to create OIDC metadata record")
 	}

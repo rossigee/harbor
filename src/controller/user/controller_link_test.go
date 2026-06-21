@@ -81,6 +81,7 @@ func TestLinkExistingUserToOIDC(t *testing.T) {
 	t.Run("update on conflict", func(t *testing.T) {
 		m := ctrl.oidcMetaMgr.(*mockMetaManager)
 		m.On("Create", mock2.Anything, mock2.Anything).Return(0, errors.ConflictError(nil)).Once()
+		m.On("GetByUserID", mock2.Anything, 123).Return(&models.OIDCUser{ID: 1, UserID: 123}, nil).Once()
 		m.On("Update", mock2.Anything, mock2.Anything, mock2.Anything).Return(nil).Once()
 
 		err := ctrl.LinkExistingUserToOIDC(context.Background(), 123, "sub123", "iss456", "secret", "token")
