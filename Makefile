@@ -312,6 +312,7 @@ PACKAGE_ONLINE_PARA=-zcvf harbor-online-installer-$(PKGVERSIONTAG).tgz \
 DOCKERCOMPOSE_FILE_OPT=-f $(DOCKERCOMPOSEFILEPATH)/$(DOCKERCOMPOSEFILENAME)
 
 RUNCONTAINER=$(DOCKERCMD) run --rm -u $(shell id -u):$(shell id -g) -v $(BUILDPATH):$(BUILDPATH) -w $(BUILDPATH)
+MOCKERY_RUNCONTAINER=$(DOCKERCMD) run --rm -u $(shell id -u):$(shell id -g) -e GOCACHE=/tmp -v $(BUILDPATH):$(BUILDPATH) -w $(BUILDPATH)
 
 # $1 the name of the docker image
 # $2 the tag of the docker image
@@ -365,12 +366,12 @@ gen_apis: check_docker
 
 MOCKERY_IMAGENAME=$(IMAGENAMESPACE)/mockery
 MOCKERY_VERSION=v2.53.3
-MOCKERY=$(RUNCONTAINER)/src ${MOCKERY_IMAGENAME}:${MOCKERY_VERSION}
+MOCKERY=$(MOCKERY_RUNCONTAINER)/src ${MOCKERY_IMAGENAME}:${MOCKERY_VERSION}
 MOCKERY_IMAGE_BUILD_CMD=${DOCKERBUILD} -f ${TOOLSPATH}/mockery/Dockerfile --build-arg GOLANG=${GOBUILDIMAGE} --build-arg MOCKERY_VERSION=${MOCKERY_VERSION} -t ${MOCKERY_IMAGENAME}:$(MOCKERY_VERSION) .
 
 gen_mocks:
 	$(call prepare_docker_image,${MOCKERY_IMAGENAME},${MOCKERY_VERSION},${MOCKERY_IMAGE_BUILD_CMD})
-	$(DOCKERCMD) run --rm -u $(shell id -u):$(shell id -g) -e GOCACHE=/tmp -v $(BUILDPATH):$(BUILDPATH) -w $(BUILDPATH)/src ${MOCKERY_IMAGENAME}:${MOCKERY_VERSION} mockery
+	${MOCKERY} mockery
 
 mocks_check: gen_mocks
 	@echo checking mocks...
