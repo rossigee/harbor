@@ -35,6 +35,13 @@ func (suite *ControllerTestSuite) SetupSuite() {
 	suite.Suite.SetupSuite()
 	suite.ClearTables = []string{"personal_access_token"}
 	suite.ctl = NewController()
+
+	// Create test users for PAT tests
+	for userID := 1; userID <= 12; userID++ {
+		username := "testuser" + string(rune(48+userID))
+		email := "user" + string(rune(48+userID)) + "@example.com"
+		suite.ExecSQL("INSERT INTO harbor_user (user_id, username, email, password) VALUES (?, ?, ?, ?)", userID, username, email, "Harbor12345")
+	}
 }
 
 func (suite *ControllerTestSuite) TestCreateGeneratesSecretWithPrefix() {
