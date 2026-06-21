@@ -370,7 +370,7 @@ MOCKERY_IMAGE_BUILD_CMD=${DOCKERBUILD} -f ${TOOLSPATH}/mockery/Dockerfile --buil
 
 gen_mocks:
 	$(call prepare_docker_image,${MOCKERY_IMAGENAME},${MOCKERY_VERSION},${MOCKERY_IMAGE_BUILD_CMD})
-	${MOCKERY} mockery
+	$(DOCKERCMD) run --rm -u $(shell id -u):$(shell id -g) -e GOCACHE=/tmp -v $(BUILDPATH):$(BUILDPATH) -w $(BUILDPATH)/src ${MOCKERY_IMAGENAME}:${MOCKERY_VERSION} mockery
 
 mocks_check: gen_mocks
 	@echo checking mocks...
