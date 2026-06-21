@@ -20,6 +20,7 @@ import (
 
 	"github.com/goharbor/harbor/src/common/models"
 	"github.com/goharbor/harbor/src/lib/errors"
+	"github.com/goharbor/harbor/src/lib/log"
 	"github.com/goharbor/harbor/src/lib/orm"
 	"github.com/goharbor/harbor/src/lib/q"
 )
@@ -58,7 +59,7 @@ func (md *metaDAO) DeleteByUserID(ctx context.Context, uid int) error {
 func (md *metaDAO) GetByUsername(ctx context.Context, username string) (*models.OIDCUser, error) {
 	sql := `SELECT oidc_user.id, oidc_user.user_id, oidc_user.secret, oidc_user.subiss, oidc_user.token,
 				oidc_user.creation_time, oidc_user.update_time FROM oidc_user
-			JOIN harbor_user ON oidc_user.user_id = harbor_user.user_id 
+			JOIN harbor_user ON oidc_user.user_id = harbor_user.user_id
 			WHERE harbor_user.username = ?`
 	ormer, err := orm.FromContext(ctx)
 	if err != nil {
@@ -71,6 +72,9 @@ func (md *metaDAO) GetByUsername(ctx context.Context, username string) (*models.
 		}
 		return nil, err
 	}
+	if res.ID == 0 {
+		return nil, fmt.Errorf("oidc user data for username %s has invalid ID (0); possible database schema issue", username)
+	}
 	return res, nil
 }
 
@@ -79,7 +83,8 @@ func (md *metaDAO) Update(ctx context.Context, oidcUser *models.OIDCUser, props 
 		return errors.BadRequestError(nil).WithMessage("oidc user is nil")
 	}
 	if oidcUser.ID == 0 {
-		return errors.BadRequestError(nil).WithMessage("cannot update oidc user with id 0; the record does not exist or was not properly initialized")
+		log.G(ctx).Errorf("BUG: attempting to update oidc user with id 0; user_id=%d, props=%v. This indicates a database or ORM mapping issue.", oidcUser.UserID, props)
+		return errors.BadRequestError(nil).WithMessage("cannot update oidc user with id 0; the record does not exist or was not properly initialized from the database")
 	}
 	ormer, err := orm.FromContext(ctx)
 	if err != nil {
