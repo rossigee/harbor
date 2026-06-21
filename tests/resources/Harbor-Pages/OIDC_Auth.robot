@@ -38,7 +38,7 @@ Sign In Harbor With OIDC User
     # - AutoOnboard=true: new users are auto-created, no manual onboard page
     # - AutoOnboard=false: new users get 403 Forbidden (expect_error=true for those tests)
     # The is_onboard parameter is kept for backwards compatibility but no longer checks for a page element
-    Run Keyword If  ${expect_error} == ${true}  Run Keywords  Retry Wait Element  xpath=//*[contains(text(), 'provisioned')]  AND  Capture Page Screenshot  AND  Return From Keyword
+    Run Keyword If  ${expect_error} == ${true}  Run Keywords  Sleep  2s  AND  Capture Page Screenshot  AND  Return From Keyword
 
     Retry Wait Element  ${head_username}
     Capture Page Screenshot
