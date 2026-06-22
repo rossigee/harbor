@@ -211,6 +211,24 @@ func (_m *Controller) GetBySubIss(ctx context.Context, sub string, iss string) (
 	return r0, r1
 }
 
+// LinkExistingUserToOIDC provides a mock function with given fields: ctx, userID, sub, iss, secret, token
+func (_m *Controller) LinkExistingUserToOIDC(ctx context.Context, userID int, sub string, iss string, secret string, token string) error {
+	ret := _m.Called(ctx, userID, sub, iss, secret, token)
+
+	if len(ret) == 0 {
+		panic("no return value specified for LinkExistingUserToOIDC")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, int, string, string, string, string) error); ok {
+		r0 = rf(ctx, userID, sub, iss, secret, token)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // List provides a mock function with given fields: ctx, query, options
 func (_m *Controller) List(ctx context.Context, query *q.Query, options ...usermodels.Option) ([]*models.User, error) {
 	_va := make([]interface{}, len(options))
