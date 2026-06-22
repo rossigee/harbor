@@ -81,7 +81,7 @@
                     name="primaryAuthMode"
                     id="primaryAuthMode"
                     [(ngModel)]="currentConfig.primary_auth_mode.value"
-                    [disabled]="!currentConfig.primary_auth_mode.editable" />
+                    [disabled]="disabled(currentConfig.primary_auth_mode)" />
             </clr-checkbox-wrapper>
         </clr-checkbox-container>
     </section>
@@ -98,7 +98,7 @@
                 name="uaa-endpoint"
                 size="35"
                 [(ngModel)]="currentConfig.uaa_endpoint.value"
-                [disabled]="!currentConfig.uaa_verify_cert.editable" />
+                [disabled]="disabled(currentConfig.uaa_endpoint)" />
         </clr-input-container>
         <clr-input-container>
             <label for="uaa-id" class="required">{{
@@ -111,7 +111,7 @@
                 name="uaa-client-id"
                 size="35"
                 [(ngModel)]="currentConfig.uaa_client_id.value"
-                [disabled]="!currentConfig.uaa_verify_cert.editable" />
+                [disabled]="disabled(currentConfig.uaa_client_id)" />
         </clr-input-container>
         <clr-input-container>
             <label for="uaa-secret" class="required">{{
@@ -124,7 +124,7 @@
                 type="password"
                 size="35"
                 [(ngModel)]="currentConfig.uaa_client_secret.value"
-                [disabled]="!currentConfig.uaa_verify_cert.editable" />
+                [disabled]="disabled(currentConfig.uaa_client_secret)" />
         </clr-input-container>
         <clr-checkbox-container>
             <label for="uaa-cert">{{
@@ -137,7 +137,7 @@
                     name="uaa-cert"
                     id="uaa-cert"
                     [(ngModel)]="currentConfig.uaa_verify_cert.value"
-                    [disabled]="!currentConfig.uaa_verify_cert.editable" />
+                    [disabled]="disabled(currentConfig.uaa_verify_cert)" />
             </clr-checkbox-wrapper>
         </clr-checkbox-container>
     </section>
@@ -609,7 +609,7 @@
                 name="http_authproxy_endpoint"
                 size="35"
                 [(ngModel)]="currentConfig.http_authproxy_endpoint.value"
-                [disabled]="!currentConfig.http_authproxy_endpoint.editable" />
+                [disabled]="disabled(currentConfig.http_authproxy_endpoint)" />
             <clr-control-error>{{
                 'TOOLTIP.ENDPOINT_FORMAT' | translate
             }}</clr-control-error>
@@ -631,7 +631,7 @@
                     currentConfig.http_authproxy_tokenreview_endpoint.value
                 "
                 [disabled]="
-                    !currentConfig.http_authproxy_tokenreview_endpoint.editable
+                    disabled(currentConfig.http_authproxy_tokenreview_endpoint)
                 " />
             <clr-control-error>{{
                 'TOOLTIP.ENDPOINT_FORMAT' | translate
@@ -667,7 +667,7 @@
                     id="http_authproxy_verify_cert"
                     [(ngModel)]="currentConfig.http_authproxy_verify_cert.value"
                     [disabled]="
-                        !currentConfig.http_authproxy_verify_cert.editable
+                        disabled(currentConfig.http_authproxy_verify_cert)
                     " />
             </clr-checkbox-wrapper>
         </clr-checkbox-container>
@@ -682,7 +682,7 @@
                     name="http_authproxy_skip_search"
                     id="http_authproxy_skip_search"
                     [disabled]="
-                        !currentConfig.http_authproxy_skip_search.editable
+                        disabled(currentConfig.http_authproxy_skip_search)
                     "
                     [(ngModel)]="
                         currentConfig.http_authproxy_skip_search.value

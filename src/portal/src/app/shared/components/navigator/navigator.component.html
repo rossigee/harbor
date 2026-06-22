@@ -19,7 +19,7 @@
     <global-search class="global-search"></global-search>
     <div class="header-actions">
         @if (!isSessionValid) {
-        <clr-dropdown class="dropdown-lang dropdown bottom-left">
+        <clr-dropdown class="dropdown-lang dropdown bottom-right">
             <button class="nav-icon nav-icon-width" clrDropdownToggle>
                 <clr-icon shape="world" class="icon-left"></clr-icon>
                 <span class="currentLocale">{{ currentLang }}</span>
@@ -38,7 +38,7 @@
             </clr-dropdown-menu>
         </clr-dropdown>
         } @if (!isSessionValid) {
-        <clr-dropdown class="dropdown-locale dropdown bottom-left">
+        <clr-dropdown class="dropdown-locale dropdown bottom-right">
             <button class="nav-icon nav-icon-width" clrDropdownToggle>
                 <clr-icon shape="calendar" class="icon-left"></clr-icon>
                 <span class="currentLocale">{{
