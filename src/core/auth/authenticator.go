@@ -149,6 +149,9 @@ func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
 	} else if authMode == common.OIDCAuth && !canUseOIDCAuth(ctx, m.Principal) {
 		// If OIDC is enabled but the user doesn't have OIDC metadata, fall back to DB auth
 		authMode = common.DBAuth
+	} else if authMode == common.OIDCAuth && !canUseOIDCAuth(ctx, m.Principal) {
+		// If OIDC is enabled but the user doesn't have OIDC metadata, fall back to DB auth
+		authMode = common.DBAuth
 	}
 	log.Debug("Current AUTH_MODE is ", authMode)
 
