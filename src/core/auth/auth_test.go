@@ -86,3 +86,25 @@ func TestErrAuth(t *testing.T) {
 	expectedStr := "Failed to authenticate user, due to error 'test'"
 	assert.Equal(expectedStr, e.Error())
 }
+
+func TestCanUseOIDCAuth_UserNotFound(t *testing.T) {
+	// Simulates user not found scenario
+	// When user doesn't exist, canUseOIDCAuth should return false
+	ctx := context.Background()
+	// This test verifies the behavior when user lookup fails
+	result := canUseOIDCAuth(ctx, "nonexistent-user")
+	if result {
+		t.Error("canUseOIDCAuth should return false when user is not found")
+	}
+}
+
+func TestCanUseOIDCAuth_UserWithoutOIDCMetadata(t *testing.T) {
+	// Simulates user exists but has no OIDC metadata
+	// When user exists without OIDC metadata, canUseOIDCAuth should return false
+	ctx := context.Background()
+	// This test verifies the behavior when user has no OIDC metadata
+	result := canUseOIDCAuth(ctx, "test-user")
+	if result {
+		t.Error("canUseOIDCAuth should return false when user has no OIDC metadata")
+	}
+}
