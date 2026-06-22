@@ -85,10 +85,9 @@ function publishImageGhcr {
       repo="${image%:*}"
       tag="${image##*:}"
       if [[ "$tag" == *"$version"* ]]; then
-        # Create ghcr.io image name - strip prefix version from tag
-        base_version="${version%%-*}"
+        # Create ghcr.io image name
         ghcr_image="ghcr.io/$owner/${repo#goharbor/}"
-        new_tag="${base_version}${arch_suffix}"
+        new_tag="${version}${arch_suffix}"
         echo "Tagging and pushing $repo:$tag -> $ghcr_image:$new_tag"
         docker tag "$repo:$tag" "$ghcr_image:$new_tag"
         docker push "$ghcr_image:$new_tag" || echo "Failed to push $ghcr_image:$new_tag, continuing..."
