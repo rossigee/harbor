@@ -17,26 +17,16 @@ package migration
 import (
 	"testing"
 
-<<<<<<< HEAD
-	htesting "github.com/goharbor/harbor/src/testing"
-	"github.com/stretchr/testify/suite"
-=======
 	"github.com/stretchr/testify/suite"
 	htesting "github.com/goharbor/harbor/src/testing"
->>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 
 	"github.com/goharbor/harbor/src/common/models"
 	"github.com/goharbor/harbor/src/common/utils"
 	"github.com/goharbor/harbor/src/controller/user"
 	"github.com/goharbor/harbor/src/lib/config"
 	"github.com/goharbor/harbor/src/lib/q"
-<<<<<<< HEAD
 	oidcdao "github.com/goharbor/harbor/src/pkg/oidc/dao"
 	pat "github.com/goharbor/harbor/src/pkg/pat"
-=======
-	pat "github.com/goharbor/harbor/src/pkg/pat"
-	oidcdao "github.com/goharbor/harbor/src/pkg/oidc/dao"
->>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 )
 
 type MigrateCliSecretsTestSuite struct {
@@ -74,17 +64,10 @@ func (suite *MigrateCliSecretsTestSuite) TestMigrateCliSecretsBasic() {
 	// Create OIDC user record with encrypted secret directly in DB
 	oidcDAO := oidcdao.NewMetaDao()
 	oidcU := &models.OIDCUser{
-<<<<<<< HEAD
-		UserID: int(uid),
-		Secret: encryptedSecret,
-		SubIss: "test-sub|test-issuer",
-		Token:  "test-token",
-=======
 		UserID:  int(uid),
 		Secret:  encryptedSecret,
 		SubIss:  "test-sub|test-issuer",
 		Token:   "test-token",
->>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	}
 	_, err = oidcDAO.Create(ctx, oidcU)
 	suite.NoError(err)
@@ -129,17 +112,10 @@ func (suite *MigrateCliSecretsTestSuite) TestMigrateCliSecretsIdempotent() {
 
 	oidcDAO := oidcdao.NewMetaDao()
 	oidcU := &models.OIDCUser{
-<<<<<<< HEAD
-		UserID: int(uid),
-		Secret: encryptedSecret,
-		SubIss: "idempotent-sub|idempotent-issuer",
-		Token:  "idempotent-token",
-=======
 		UserID:  int(uid),
 		Secret:  encryptedSecret,
 		SubIss:  "idempotent-sub|idempotent-issuer",
 		Token:   "idempotent-token",
->>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 	}
 	_, err = oidcDAO.Create(ctx, oidcU)
 	suite.NoError(err)
@@ -187,17 +163,10 @@ func (suite *MigrateCliSecretsTestSuite) TestMigrateCliSecretsMultipleUsers() {
 
 		oidcDAO := oidcdao.NewMetaDao()
 		oidcU := &models.OIDCUser{
-<<<<<<< HEAD
-			UserID: int(uid),
-			Secret: encryptedSecret,
-			SubIss: "sub" + string(rune(48+i)) + "|issuer",
-			Token:  "token" + string(rune(48+i)),
-=======
 			UserID:  int(uid),
 			Secret:  encryptedSecret,
 			SubIss:  "sub" + string(rune(48+i)) + "|issuer",
 			Token:   "token" + string(rune(48+i)),
->>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 		}
 		_, err = oidcDAO.Create(ctx, oidcU)
 		suite.NoError(err)

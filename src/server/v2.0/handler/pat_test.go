@@ -20,13 +20,8 @@ import (
 	"testing"
 	"time"
 
-<<<<<<< HEAD
-	htesting "github.com/goharbor/harbor/src/testing"
-	"github.com/stretchr/testify/suite"
-=======
 	"github.com/stretchr/testify/suite"
 	htesting "github.com/goharbor/harbor/src/testing"
->>>>>>> dd62bee97 (feat: add Personal Access Tokens (PAT) for CLI authentication)
 
 	"github.com/goharbor/harbor/src/common/models"
 	patctl "github.com/goharbor/harbor/src/controller/pat"

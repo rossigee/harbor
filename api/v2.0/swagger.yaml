@@ -5893,6 +5893,7 @@ paths:
           description: User ID
         - name: request
           in: body
+          description: The personal access token to create.
           required: true
           schema:
             $ref: '#/definitions/PersonalAccessTokenCreateRequest'
@@ -5968,6 +5969,7 @@ paths:
           description: Token ID
         - name: request
           in: body
+          description: The personal access token to update.
           required: true
           schema:
             $ref: '#/definitions/PersonalAccessTokenUpdateRequest'
@@ -6037,6 +6039,7 @@ paths:
           description: Token ID
         - name: request
           in: body
+          description: The personal access token secret refresh request.
           required: false
           schema:
             $ref: '#/definitions/PersonalAccessTokenRefreshRequest'
