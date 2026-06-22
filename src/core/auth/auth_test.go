@@ -88,23 +88,50 @@ func TestErrAuth(t *testing.T) {
 }
 
 func TestCanUseOIDCAuth_UserNotFound(t *testing.T) {
-	// Simulates user not found scenario
-	// When user doesn't exist, canUseOIDCAuth should return false
+	assert := assert.New(t)
 	ctx := context.Background()
-	// This test verifies the behavior when user lookup fails
+	// When user doesn't exist, canUseOIDCAuth should return false to trigger DB auth fallback
 	result := canUseOIDCAuth(ctx, "nonexistent-user")
-	if result {
-		t.Error("canUseOIDCAuth should return false when user is not found")
-	}
+	assert.False(result, "canUseOIDCAuth should return false when user is not found")
 }
 
 func TestCanUseOIDCAuth_UserWithoutOIDCMetadata(t *testing.T) {
-	// Simulates user exists but has no OIDC metadata
-	// When user exists without OIDC metadata, canUseOIDCAuth should return false
+	assert := assert.New(t)
 	ctx := context.Background()
-	// This test verifies the behavior when user has no OIDC metadata
+	// When user exists but lacks OIDC metadata, fallback to DB auth
 	result := canUseOIDCAuth(ctx, "test-user")
-	if result {
-		t.Error("canUseOIDCAuth should return false when user has no OIDC metadata")
+	assert.False(result, "canUseOIDCAuth should return false when user has no OIDC metadata")
+}
+
+func TestCanUseOIDCAuth_TestCases(t *testing.T) {
+	// Test comprehensive scenarios for OIDC auth capability checking
+	testCases := []struct {
+		name     string
+		username string
+		expected bool
+		desc     string
+	}{
+		{
+			name:     "UserNotFound",
+			username: "nonexistent-user",
+			expected: false,
+			desc:     "Non-existent user should fall back to DB auth",
+		},
+		{
+			name:     "ExistingUserNoOIDC",
+			username: "test-user",
+			expected: false,
+			desc:     "Existing user without OIDC metadata should use DB auth",
+		},
+	}
+
+	ctx := context.Background()
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result := canUseOIDCAuth(ctx, tc.username)
+			if result != tc.expected {
+				t.Errorf("%s: expected %v, got %v", tc.desc, tc.expected, result)
+			}
+		})
 	}
 }
