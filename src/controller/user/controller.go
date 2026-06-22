@@ -58,8 +58,6 @@ type Controller interface {
 	Get(ctx context.Context, id int, opt *Option) (*commonmodels.User, error)
 	// GetByName gets the user model by username, it only supports getting the basic and does not support opt
 	GetByName(ctx context.Context, username string) (*commonmodels.User, error)
-	// GetByEmail gets the user model by email address
-	GetByEmail(ctx context.Context, email string) (*commonmodels.User, error)
 	// GetBySubIss gets the user model by subject and issuer, the result will contain the basic user model and does not support opt
 	GetBySubIss(ctx context.Context, sub, iss string) (*commonmodels.User, error)
 	// Delete ...
@@ -74,8 +72,6 @@ type Controller interface {
 	// OnboardOIDCUser inserts the record for basic user info and the oidc metadata
 	// if the onboard process is successful the input parm of user model will be populated with user id
 	OnboardOIDCUser(ctx context.Context, u *commonmodels.User) error
-	// LinkExistingUserToOIDC links an existing user to OIDC by creating the OIDC metadata record
-	LinkExistingUserToOIDC(ctx context.Context, userID int, sub, iss, secret, token string) error
 	// SearchByName search user by name with fuzzy search
 	SearchByName(ctx context.Context, name string, limitSize int) ([]*commonmodels.User, error)
 }
