@@ -68,14 +68,14 @@ export class SystemSettingsComponent
     messageText: string;
     messageType: string;
     messageClosable: boolean;
-    messageFromDate: Date;
-    messageToDate: Date;
+    messageFromDate: Date = null;
+    messageToDate: Date = null;
     // the copy of bannerMessage
     messageTextCopy: string;
     messageTypeCopy: string;
     messageClosableCopy: boolean;
-    messageFromDateCopy: Date;
-    messageToDateCopy: Date;
+    messageFromDateCopy: Date = null;
+    messageToDateCopy: Date = null;
     bannerRefreshSub: Subscription;
     currentDate: Date = new Date();
     logEventTypes: Record<string, string>[] = [];
