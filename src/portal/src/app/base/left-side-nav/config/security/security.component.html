@@ -106,7 +106,7 @@
                                         'CVE_ALLOWLIST.NEVER_EXPIRES'
                                             | translate
                                     }}"
-                                    readonly
+                                    [attr.readonly]="true"
                                     type="date"
                                     [(clrDate)]="expiresDate"
                                     newFormLayout="true"
