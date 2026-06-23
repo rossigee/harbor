@@ -98,17 +98,6 @@ jobs:
             build_base_params=" BUILD_BASE=true PULL_BASE_FROM_DOCKERHUB=true PUSHBASEIMAGE=true REGISTRYUSER=\"${{ secrets.DOCKER_HUB_USERNAME }}\" REGISTRYPASSWORD=\"${{ secrets.DOCKER_HUB_PASSWORD }}\""
           fi
 
-          # Build Docker images first (before packaging)
-          sudo make build ARCH=${ARCH} GOBUILDTAGS="include_oss include_gcs" BASEIMAGETAG=${Harbor_Build_Base_Tag} VERSIONTAG=${Harbor_Assets_Version} TRIVYFLAG=true EXPORTERFLAG=true HTTPPROXY= ${build_base_params}
-
-          # Push images to registries immediately after building (while they're still in Docker daemon)
-          source tests/ci/build_util.sh
-          if [ -n "$DOCKER_HUB_USERNAME" ]; then
-            publishImage $target_branch $Harbor_Assets_Version "$DOCKER_HUB_USERNAME" "$DOCKER_HUB_PASSWORD" ${ARCH} || true
-          fi
-          publishImageGhcr $target_branch $Harbor_Assets_Version "${{ github.repository_owner }}" "${{ secrets.GITHUB_TOKEN }}" ${ARCH} || true
-
-          # Now create the installer packages (reuses the built images)
           sudo make package_offline ARCH=${ARCH} GOBUILDTAGS="include_oss include_gcs" BASEIMAGETAG=${Harbor_Build_Base_Tag} VERSIONTAG=${Harbor_Assets_Version} PKGVERSIONTAG=${Harbor_Package_Version} TRIVYFLAG=true EXPORTERFLAG=true HTTPPROXY= ${build_base_params}
           sudo make package_online ARCH=${ARCH} GOBUILDTAGS="include_oss include_gcs" BASEIMAGETAG=${Harbor_Build_Base_Tag} VERSIONTAG=${Harbor_Assets_Version} PKGVERSIONTAG=${Harbor_Package_Version} TRIVYFLAG=true EXPORTERFLAG=true HTTPPROXY= ${build_base_params}
           harbor_offline_build_bundle=$(basename harbor-offline-installer-*.tgz)
@@ -117,6 +106,12 @@ jobs:
           mv "${harbor_online_build_bundle}" "harbor-online-installer-${Harbor_Package_Version}-${ARCH}.tgz"
           harbor_offline_build_bundle="harbor-offline-installer-${Harbor_Package_Version}-${ARCH}.tgz"
           harbor_online_build_bundle="harbor-online-installer-${Harbor_Package_Version}-${ARCH}.tgz"
+
+          source tests/ci/build_util.sh
+          if [ -n "$DOCKER_HUB_USERNAME" ]; then
+            publishImage $target_branch $Harbor_Assets_Version "$DOCKER_HUB_USERNAME" "$DOCKER_HUB_PASSWORD" ${ARCH} || true
+          fi
+          publishImageGhcr $target_branch $Harbor_Assets_Version "${{ github.repository_owner }}" "${{ secrets.GITHUB_TOKEN }}" ${ARCH} || true
 
   CREATE_MANIFEST:
     needs: [BUILD_PACKAGE]
