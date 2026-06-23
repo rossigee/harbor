@@ -143,8 +143,6 @@ func (c *controller) OnboardOIDCUser(ctx context.Context, u *commonmodels.User) 
 // LinkExistingUserToOIDC links an existing user to OIDC by creating the OIDC metadata record.
 // This handles the case where a user exists in harbor_user but not in oidc_user.
 func (c *controller) LinkExistingUserToOIDC(ctx context.Context, userID int, sub, iss, secret, token string) error {
-	subIss := sub + ":" + iss
-
 	// Check if OIDC metadata already exists for this (subject, issuer) pair
 	existing, err := c.oidcMetaMgr.GetBySubIss(ctx, sub, iss)
 	if err == nil {
@@ -164,9 +162,10 @@ func (c *controller) LinkExistingUserToOIDC(ctx context.Context, userID int, sub
 		return errors.Wrap(err, "failed to check existing OIDC metadata")
 	}
 
+	// Create new OIDC record using the same format as GetBySubIss expects: sub+iss (no separator)
 	oidcUser := &commonmodels.OIDCUser{
 		UserID: userID,
-		SubIss: subIss,
+		SubIss: sub + iss,
 		Secret: secret,
 		Token:  token,
 	}
@@ -174,7 +173,7 @@ func (c *controller) LinkExistingUserToOIDC(ctx context.Context, userID int, sub
 	if createErr != nil {
 		if errors.IsConflictErr(createErr) {
 			// Race condition: another request created the record between our check and create.
-			// Try again to update the existing record.
+			// Try again to retrieve and update the existing record.
 			existing, retryErr := c.oidcMetaMgr.GetBySubIss(ctx, sub, iss)
 			if retryErr != nil {
 				return errors.Wrap(retryErr, "failed to retrieve OIDC metadata after conflict")
