@@ -172,19 +172,40 @@ func (c *controller) LinkExistingUserToOIDC(ctx context.Context, userID int, sub
 	_, createErr := c.oidcMetaMgr.Create(ctx, oidcUser)
 	if createErr != nil {
 		if errors.IsConflictErr(createErr) {
-			// Race condition: another request created the record between our check and create.
-			// Try again to retrieve and update the existing record.
-			existing, retryErr := c.oidcMetaMgr.GetBySubIss(ctx, sub, iss)
-			if retryErr != nil {
-				return errors.Wrap(retryErr, "failed to retrieve OIDC metadata after conflict")
+			// Conflict on OIDC metadata creation. Could be due to:
+			// 1. Race condition: another request created the record between our check and create
+			// 2. User already has OIDC metadata for a different (subject, issuer) pair
+			//
+			// Try multiple strategies to find the existing record:
+
+			// Strategy 1: Try to get by the specific (subject, issuer) pair
+			existing, err1 := c.oidcMetaMgr.GetBySubIss(ctx, sub, iss)
+			if err1 == nil {
+				// Found it by (subject, issuer) - check if it's for the same user
+				if existing.UserID != userID {
+					return errors.ConflictError(nil).WithMessagef(
+						"OIDC identity (subject: %s, issuer: %s) is already linked to another user", sub, iss)
+				}
+				// Update the existing record
+				existing.Secret = secret
+				existing.Token = token
+				return c.oidcMetaMgr.Update(ctx, existing, "secret", "token")
 			}
-			if existing.UserID != userID {
-				return errors.ConflictError(nil).WithMessagef(
-					"OIDC identity (subject: %s, issuer: %s) is already linked to another user", sub, iss)
+
+			// Strategy 2: If not found by (subject, issuer), try to get by user ID
+			// This handles the case where the user already has OIDC metadata
+			existing, err2 := c.oidcMetaMgr.GetByUserID(ctx, userID)
+			if err2 == nil {
+				// User already has OIDC metadata - update it
+				existing.SubIss = sub + iss
+				existing.Secret = secret
+				existing.Token = token
+				return c.oidcMetaMgr.Update(ctx, existing, "subiss", "secret", "token")
 			}
-			existing.Secret = secret
-			existing.Token = token
-			return c.oidcMetaMgr.Update(ctx, existing, "secret", "token")
+
+			// If we get here, we found a conflict but can't locate the record
+			// This is a database consistency issue - return the original conflict error
+			return errors.Wrap(createErr, "OIDC metadata conflict detected but record not found; possible database issue")
 		}
 		return errors.Wrap(createErr, "failed to create OIDC metadata record")
 	}
