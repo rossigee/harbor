@@ -143,72 +143,62 @@ func (c *controller) OnboardOIDCUser(ctx context.Context, u *commonmodels.User) 
 // LinkExistingUserToOIDC links an existing user to OIDC by creating the OIDC metadata record.
 // This handles the case where a user exists in harbor_user but not in oidc_user.
 func (c *controller) LinkExistingUserToOIDC(ctx context.Context, userID int, sub, iss, secret, token string) error {
-	// Check if OIDC metadata already exists for this (subject, issuer) pair
+	subIss := sub + iss
+
+	// Try to get existing OIDC metadata for this (subject, issuer) pair
 	existing, err := c.oidcMetaMgr.GetBySubIss(ctx, sub, iss)
+
 	if err == nil {
-		// Record exists - check if it belongs to the same user
+		// Record already exists - verify it belongs to the requested user
 		if existing.UserID != userID {
 			return errors.ConflictError(nil).WithMessagef(
-				"OIDC identity (subject: %s, issuer: %s) is already linked to another user", sub, iss)
+				"OIDC identity (subject: %s, issuer: %s) is already linked to another user (ID: %d, current: %d)",
+				sub, iss, existing.UserID, userID)
 		}
-		// Same user - update the existing record
+		// Same user - update the record with new token/secret
 		existing.Secret = secret
 		existing.Token = token
 		return c.oidcMetaMgr.Update(ctx, existing, "secret", "token")
 	}
 
-	// Record doesn't exist (or some other error) - try to create it
-	if !errors.IsNotFoundErr(err) && err != nil {
-		return errors.Wrap(err, "failed to check existing OIDC metadata")
+	if !errors.IsNotFoundErr(err) {
+		return errors.Wrap(err, "failed to check OIDC metadata by subject/issuer")
 	}
 
-	// Create new OIDC record using the same format as GetBySubIss expects: sub+iss (no separator)
-	oidcUser := &commonmodels.OIDCUser{
+	// No record found by (subject, issuer) - check if user already has OIDC metadata from different provider
+	existingByUser, errByUser := c.oidcMetaMgr.GetByUserID(ctx, userID)
+	if errByUser == nil {
+		// User already has OIDC metadata - update it with new (subject, issuer)
+		existingByUser.SubIss = subIss
+		existingByUser.Secret = secret
+		existingByUser.Token = token
+		return c.oidcMetaMgr.Update(ctx, existingByUser, "subiss", "secret", "token")
+	}
+
+	if !errors.IsNotFoundErr(errByUser) {
+		return errors.Wrap(errByUser, "failed to check OIDC metadata by user ID")
+	}
+
+	// No existing OIDC metadata - create new record
+	newOIDCUser := &commonmodels.OIDCUser{
 		UserID: userID,
-		SubIss: sub + iss,
+		SubIss: subIss,
 		Secret: secret,
 		Token:  token,
 	}
-	_, createErr := c.oidcMetaMgr.Create(ctx, oidcUser)
-	if createErr != nil {
-		if errors.IsConflictErr(createErr) {
-			// Conflict on OIDC metadata creation. Could be due to:
-			// 1. Race condition: another request created the record between our check and create
-			// 2. User already has OIDC metadata for a different (subject, issuer) pair
-			//
-			// Try multiple strategies to find the existing record:
 
-			// Strategy 1: Try to get by the specific (subject, issuer) pair
-			existing, err1 := c.oidcMetaMgr.GetBySubIss(ctx, sub, iss)
-			if err1 == nil {
-				// Found it by (subject, issuer) - check if it's for the same user
-				if existing.UserID != userID {
-					return errors.ConflictError(nil).WithMessagef(
-						"OIDC identity (subject: %s, issuer: %s) is already linked to another user", sub, iss)
-				}
-				// Update the existing record
-				existing.Secret = secret
-				existing.Token = token
-				return c.oidcMetaMgr.Update(ctx, existing, "secret", "token")
-			}
-
-			// Strategy 2: If not found by (subject, issuer), try to get by user ID
-			// This handles the case where the user already has OIDC metadata
-			existing, err2 := c.oidcMetaMgr.GetByUserID(ctx, userID)
-			if err2 == nil {
-				// User already has OIDC metadata - update it
-				existing.SubIss = sub + iss
-				existing.Secret = secret
-				existing.Token = token
-				return c.oidcMetaMgr.Update(ctx, existing, "subiss", "secret", "token")
-			}
-
-			// If we get here, we found a conflict but can't locate the record
-			// This is a database consistency issue - return the original conflict error
-			return errors.Wrap(createErr, "OIDC metadata conflict detected but record not found; possible database issue")
+	_, err = c.oidcMetaMgr.Create(ctx, newOIDCUser)
+	if err != nil {
+		// If creation fails with conflict, it means another request created the record
+		// in a concurrent request. Just log and treat as success since the record now exists.
+		if errors.IsConflictErr(err) {
+			log.G(ctx).Infof("OIDC record for user %d already created by concurrent request (subject: %s, issuer: %s)",
+				userID, sub, iss)
+			return nil
 		}
-		return errors.Wrap(createErr, "failed to create OIDC metadata record")
+		return errors.Wrap(err, "failed to create OIDC metadata record")
 	}
+
 	return nil
 }
 
