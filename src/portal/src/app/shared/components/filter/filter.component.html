@@ -8,7 +8,7 @@
     <input
         [style.width.px]="width"
         #inputElement
-        [attr.readOnly]="readonly"
+        [attr.readOnly]="readonly || null"
         [hidden]="!isShowSearchBox"
         type="text"
         class="filter-input clr-input"

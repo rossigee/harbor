@@ -37,7 +37,7 @@ export class FilterComponent implements OnInit {
 
     @Output() private filterEvt = new EventEmitter<string>();
     @Output() private openFlag = new EventEmitter<boolean>();
-    @Input() readonly: string = null;
+    @Input() readonly: string | undefined;
     @Input() currentValue: string;
     @Input()
     public set filterPlaceholder(placeHolder: string) {
