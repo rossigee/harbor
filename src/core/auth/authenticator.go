@@ -342,5 +342,9 @@ func IsSuperUser(ctx context.Context, username string) bool {
 		log.Debugf("Failed to get user from DB, username: %s, error: %v", username, err)
 		return false
 	}
+	if u == nil {
+		log.Debugf("User %s not found in database", username)
+		return false
+	}
 	return u.UserID == 1
 }
