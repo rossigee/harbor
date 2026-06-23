@@ -144,27 +144,50 @@ func (c *controller) OnboardOIDCUser(ctx context.Context, u *commonmodels.User) 
 // This handles the case where a user exists in harbor_user but not in oidc_user.
 func (c *controller) LinkExistingUserToOIDC(ctx context.Context, userID int, sub, iss, secret, token string) error {
 	subIss := sub + ":" + iss
+
+	// Check if OIDC metadata already exists for this (subject, issuer) pair
+	existing, err := c.oidcMetaMgr.GetBySubIss(ctx, sub, iss)
+	if err == nil {
+		// Record exists - check if it belongs to the same user
+		if existing.UserID != userID {
+			return errors.ConflictError(nil).WithMessagef(
+				"OIDC identity (subject: %s, issuer: %s) is already linked to another user", sub, iss)
+		}
+		// Same user - update the existing record
+		existing.Secret = secret
+		existing.Token = token
+		return c.oidcMetaMgr.Update(ctx, existing, "secret", "token")
+	}
+
+	// Record doesn't exist (or some other error) - try to create it
+	if !errors.IsNotFoundErr(err) && err != nil {
+		return errors.Wrap(err, "failed to check existing OIDC metadata")
+	}
+
 	oidcUser := &commonmodels.OIDCUser{
 		UserID: userID,
 		SubIss: subIss,
 		Secret: secret,
 		Token:  token,
 	}
-	_, err := c.oidcMetaMgr.Create(ctx, oidcUser)
-	if err != nil {
-		if errors.IsConflictErr(err) {
-			// Conflict means OIDC metadata already exists for this user.
-			// Retrieve the existing record to get its ID, then update.
-			existing, err := c.oidcMetaMgr.GetByUserID(ctx, userID)
-			if err != nil {
-				return errors.Wrap(err, "failed to retrieve existing OIDC metadata")
+	_, createErr := c.oidcMetaMgr.Create(ctx, oidcUser)
+	if createErr != nil {
+		if errors.IsConflictErr(createErr) {
+			// Race condition: another request created the record between our check and create.
+			// Try again to update the existing record.
+			existing, retryErr := c.oidcMetaMgr.GetBySubIss(ctx, sub, iss)
+			if retryErr != nil {
+				return errors.Wrap(retryErr, "failed to retrieve OIDC metadata after conflict")
 			}
-			existing.SubIss = subIss
+			if existing.UserID != userID {
+				return errors.ConflictError(nil).WithMessagef(
+					"OIDC identity (subject: %s, issuer: %s) is already linked to another user", sub, iss)
+			}
 			existing.Secret = secret
 			existing.Token = token
-			return c.oidcMetaMgr.Update(ctx, existing, "subiss", "secret", "token")
+			return c.oidcMetaMgr.Update(ctx, existing, "secret", "token")
 		}
-		return errors.Wrap(err, "failed to create OIDC metadata record")
+		return errors.Wrap(createErr, "failed to create OIDC metadata record")
 	}
 	return nil
 }
