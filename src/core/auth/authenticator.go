@@ -147,9 +147,6 @@ func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
 	} else if authMode == "" || IsSuperUser(ctx, m.Principal) {
 		authMode = common.DBAuth
 	} else if authMode == common.OIDCAuth && !canUseOIDCAuth(ctx, m.Principal) {
-		// If OIDC is enabled but the user doesn't have OIDC metadata, fall back to DB auth
-		authMode = common.DBAuth
-	} else if authMode == common.OIDCAuth && !canUseOIDCAuth(ctx, m.Principal) {
 		// OIDC migration support: allow local database users (e.g., admin) without OIDC metadata
 		// to authenticate using DB credentials when OIDC is enabled. This prevents lockout
 		// when switching authentication modes while maintaining OIDC-first for users with metadata.
@@ -275,6 +272,10 @@ func IsSuperUser(ctx context.Context, username string) bool {
 	if err != nil {
 		// LDAP user can't be found before onboard to Harbor
 		log.Debugf("Failed to get user from DB, username: %s, error: %v", username, err)
+		return false
+	}
+	if u == nil {
+		log.Debugf("User %s not found in database", username)
 		return false
 	}
 	return u.UserID == 1
