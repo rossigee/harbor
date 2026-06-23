@@ -63,7 +63,7 @@
         }
         <div class="nav-divider"></div>
         @if (isSessionValid) {
-        <clr-dropdown class="dropdown">
+        <clr-dropdown class="dropdown bottom-right">
             <button class="nav-text" clrDropdownToggle>
                 <clr-icon
                     shape="user"
@@ -76,7 +76,7 @@
                     shape="caret"
                     direction="down"></clr-icon>
             </button>
-            <clr-dropdown-menu [clrPosition]="'bottom-right'" *clrIfOpen>
+            <clr-dropdown-menu *clrIfOpen>
                 <a
                     href="javascript:void(0)"
                     clrDropdownItem
