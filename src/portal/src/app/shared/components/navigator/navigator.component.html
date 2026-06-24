@@ -25,7 +25,7 @@
                 <span class="currentLocale">{{ currentLang }}</span>
                 <clr-icon size="10" shape="caret" direction="down"></clr-icon>
             </button>
-            <clr-dropdown-menu>
+            <clr-dropdown-menu *clrIfOpen>
                 @for (lang of guiLanguages; track lang) {
                 <a
                     href="javascript:void(0)"
@@ -46,7 +46,7 @@
                 }}</span>
                 <clr-icon size="10" shape="caret" direction="down"></clr-icon>
             </button>
-            <clr-dropdown-menu>
+            <clr-dropdown-menu *clrIfOpen>
                 @for (rendering of guiDatetimeRenderings; track rendering) {
                 <a
                     href="javascript:void(0)"
