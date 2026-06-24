@@ -31,7 +31,8 @@
                                     disabled
                                     id="account_settings_username"
                                     size="30" />
-                                <div *ngIf="canRename" class="rename-tool">
+                                @if (canRename) {
+                                <div class="rename-tool">
                                     <button
                                         id="rename-btn"
                                         [disabled]="RenameOnGoing"
@@ -59,6 +60,7 @@
                                         </clr-tooltip-content>
                                     </clr-tooltip>
                                 </div>
+                                }
                             </div>
                         </div>
                         <div class="clr-form-control">
@@ -218,35 +220,42 @@
                                     pat.creation_time | date : 'short'
                                 }}</clr-dg-cell>
                                 <clr-dg-cell>
-                                    <span *ngIf="pat.expires_at === -1">{{
+                                    @if (pat.expires_at === -1) {
+                                    <span>{{
                                         'PROFILE.PAT_NEVER' | translate
                                     }}</span>
-                                    <span *ngIf="pat.expires_at !== -1">{{
+                                    }
+                                    @if (pat.expires_at !== -1) {
+                                    <span>{{
                                         pat.expires_at | date : 'short'
                                     }}</span>
+                                    }
                                 </clr-dg-cell>
                                 <clr-dg-cell>
+                                    @if (pat.disabled) {
                                     <clr-label
-                                        *ngIf="pat.disabled"
                                         class="label label-danger"
                                         >{{
                                             'PROFILE.PAT_DISABLED' | translate
                                         }}</clr-label
                                     >
+                                    }
+                                    @if (!pat.disabled && pat.expired) {
                                     <clr-label
-                                        *ngIf="!pat.disabled && pat.expired"
                                         class="label label-warning"
                                         >{{
                                             'PROFILE.PAT_EXPIRED' | translate
                                         }}</clr-label
                                     >
+                                    }
+                                    @if (!pat.disabled && !pat.expired) {
                                     <clr-label
-                                        *ngIf="!pat.disabled && !pat.expired"
                                         class="label label-success"
                                         >{{
                                             'PROFILE.PAT_ACTIVE' | translate
                                         }}</clr-label
                                     >
+                                    }
                                 </clr-dg-cell>
                                 <clr-dg-action-overflow [clrPosition]="'left'">
                                     <button
@@ -259,12 +268,16 @@
                                         clrDropdownItem
                                         (click)="togglePATDisabled(pat)"
                                         id="toggle-pat-{{ pat.id }}">
-                                        <span *ngIf="pat.disabled">{{
+                                        @if (pat.disabled) {
+                                        <span>{{
                                             'PROFILE.PAT_ENABLE' | translate
                                         }}</span>
-                                        <span *ngIf="!pat.disabled">{{
+                                        }
+                                        @if (!pat.disabled) {
+                                        <span>{{
                                             'PROFILE.PAT_DISABLE' | translate
                                         }}</span>
+                                        }
                                     </button>
                                     <button
                                         clrDropdownItem
@@ -346,31 +359,34 @@
                             name="input_secret"
                             [(ngModel)]="resetForms.input_secret"
                             id="input-secret" />
+                        @if (!showInputSecret) {
                         <clr-icon
-                            *ngIf="!showInputSecret"
                             shape="eye"
                             class="pw-eye"
                             (click)="
                                 showInputSecret = !showInputSecret
                             "></clr-icon>
+                        }
+                        @if (showInputSecret) {
                         <clr-icon
-                            *ngIf="showInputSecret"
                             shape="eye-hide"
                             class="pw-eye"
                             (click)="
                                 showInputSecret = !showInputSecret
                             "></clr-icon>
+                        }
                         <clr-icon
                             class="clr-validate-icon"
                             shape="exclamation-circle"></clr-icon>
                     </div>
-                    <clr-control-error
-                        *ngIf="
-                            (inputSecret.dirty || inputSecret.touched) &&
-                            inputSecret.invalid
-                        ">
+                    @if (
+                        (inputSecret.dirty || inputSecret.touched) &&
+                        inputSecret.invalid
+                    ) {
+                    <clr-control-error>
                         {{ 'TOOLTIP.NEW_SECRET' | translate }}
                     </clr-control-error>
+                    }
                 </div>
             </div>
 
@@ -389,20 +405,22 @@
                             [(ngModel)]="resetForms.confirm_secret"
                             name="confirm_secret"
                             id="confirm-secret" />
+                        @if (!showConfirmSecret) {
                         <clr-icon
-                            *ngIf="!showConfirmSecret"
                             shape="eye"
                             class="pw-eye"
                             (click)="
                                 showConfirmSecret = !showConfirmSecret
                             "></clr-icon>
+                        }
+                        @if (showConfirmSecret) {
                         <clr-icon
-                            *ngIf="showConfirmSecret"
                             shape="eye-hide"
                             class="pw-eye"
                             (click)="
                                 showConfirmSecret = !showConfirmSecret
                             "></clr-icon>
+                        }
                     </div>
                 </div>
             </div>
@@ -433,7 +451,8 @@
     [clrModalClosable]="false">
     <h3 class="modal-title">{{ 'PROFILE.CREATE_PAT' | translate }}</h3>
     <div class="modal-body">
-        <div *ngIf="createdPATSecret">
+        @if (createdPATSecret) {
+        <div>
             <clr-alert
                 clrAlertType="warning"
                 [clrCloseButtonAriaLabel]="'close'">
@@ -462,10 +481,11 @@
                 </div>
             </div>
         </div>
+        }
+        @if (!createdPATSecret) {
         <form
             #createPATForm="ngForm"
-            class="clr-form clr-form-horizontal"
-            *ngIf="!createdPATSecret">
+            class="clr-form clr-form-horizontal">
             <clr-input-container>
                 <label for="pat-name" class="required">{{
                     'PROFILE.PAT_NAME' | translate
@@ -508,6 +528,7 @@
                 }}</clr-control-helper>
             </clr-number-input-container>
         </form>
+        }
     </div>
     <div class="modal-footer">
         <button
@@ -519,13 +540,14 @@
                     | translate
             }}
         </button>
+        @if (!createdPATSecret) {
         <button
-            *ngIf="!createdPATSecret"
             type="button"
             class="btn btn-primary"
             [disabled]="!newPATForm?.name"
             (click)="createPAT()">
             {{ 'BUTTON.CREATE' | translate }}
         </button>
+        }
     </div>
 </clr-modal>
