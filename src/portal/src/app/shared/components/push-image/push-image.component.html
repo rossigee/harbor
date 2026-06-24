@@ -8,7 +8,7 @@
             <clr-icon shape="caret" direction="down"></clr-icon>
         </button>
         <clr-dropdown-menu
-           
+            *clrIfOpen
             [clrPosition]="'bottom-right'"
             class="dropdown-width">
             <div class="commands-container">
@@ -28,7 +28,7 @@
                             <clr-tooltip-content
                                 [clrPosition]="'top-right'"
                                 [clrSize]="'md'"
-                               >
+                                *clrIfOpen>
                                 {{ 'PUSH_IMAGE.TOOLTIP' | translate }}
                             </clr-tooltip-content>
                         </clr-tooltip>

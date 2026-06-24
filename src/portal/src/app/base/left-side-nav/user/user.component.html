@@ -56,7 +56,7 @@
                                 shape="caret"
                                 direction="down"></clr-icon
                         ></span>
-                        <clr-dropdown-menu>
+                        <clr-dropdown-menu *clrIfOpen>
                             <button
                                 type="button"
                                 class="btn btn-secondary"
@@ -97,7 +97,7 @@
                         <clr-tooltip-content
                             clrPosition="top-right"
                             clrSize="lg"
-                           >
+                            *clrIfOpen>
                             <span>{{ 'USER.UNKNOWN_TIP' | translate }}</span>
                         </clr-tooltip-content>
                     </clr-tooltip>

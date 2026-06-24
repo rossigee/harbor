@@ -26,7 +26,7 @@
                     {{ 'AUDIT_LOG.OPERATIONS' | translate }}
                     <clr-icon shape="caret" direction="down"></clr-icon>
                 </button>
-                <clr-dropdown-menu [clrPosition]="'bottom-left'">
+                <clr-dropdown-menu [clrPosition]="'bottom-left'" *clrIfOpen>
                     @for (f of filterOptions; track f) {
                     <a
                         href="javascript:void(0)"

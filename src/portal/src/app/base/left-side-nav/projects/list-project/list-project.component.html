@@ -23,7 +23,7 @@
                 >{{ 'MEMBER.ACTION' | translate
                 }}<clr-icon shape="caret" direction="down"></clr-icon
             ></span>
-            <clr-dropdown-menu>
+            <clr-dropdown-menu *clrIfOpen>
                 <button
                     [disabled]="!hasPermission || !canClickExport"
                     clrDropdownItem

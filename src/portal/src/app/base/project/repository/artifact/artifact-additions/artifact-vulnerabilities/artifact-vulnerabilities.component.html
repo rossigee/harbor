@@ -102,7 +102,7 @@
                     <span *ngIf="res.links && res.links.length > 1">
                         {{ res.id }}
                         <clr-signpost>
-                            <clr-signpost-content>
+                            <clr-signpost-content *clrIfOpen>
                                 <div
                                     class="mt-5px"
                                     *ngFor="let link of res.links">

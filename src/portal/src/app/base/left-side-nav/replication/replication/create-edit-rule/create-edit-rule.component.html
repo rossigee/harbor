@@ -83,7 +83,7 @@
                             <clr-tooltip-content
                                 clrPosition="top-left"
                                 clrSize="md"
-                               >
+                                *clrIfOpen>
                                 <span>{{
                                     'TOOLTIP.PUSH_BASED' | translate
                                 }}</span>
@@ -112,7 +112,7 @@
                             <clr-tooltip-content
                                 clrPosition="top-left"
                                 clrSize="md"
-                               >
+                                *clrIfOpen>
                                 <span>{{
                                     'TOOLTIP.PULL_BASED' | translate
                                 }}</span>
@@ -286,7 +286,7 @@
                                             [ngStyle]="{ 'max-height.px': 230 }"
                                             class="right-align"
                                             clrPosition="bottom-left"
-                                           >
+                                            *clrIfOpen>
                                             @for ( value of
                                             supportedFilterLabels ; track value)
                                             {
@@ -346,7 +346,7 @@
                                 <clr-tooltip-content
                                     clrPosition="top-left"
                                     clrSize="md"
-                                   >
+                                    *clrIfOpen>
                                     @if ( supportedFilters[i]?.type === 'name' )
                                     {
                                     <span class="tooltip-content">{{
@@ -445,7 +445,7 @@
                             <clr-tooltip-content
                                 clrPosition="top-left"
                                 clrSize="lg"
-                               >
+                                *clrIfOpen>
                                 <span>{{
                                     'TOOLTIP.DESTINATION_NAMESPACE' | translate
                                 }}</span>
@@ -499,7 +499,7 @@
                                 class="flatten"
                                 clrPosition="top-left"
                                 clrSize="lg"
-                               >
+                                *clrIfOpen>
                                 <div>
                                     {{
                                         'REPLICATION.FLATTEN_LEVEL_TIP'
@@ -602,7 +602,7 @@
                                                 class="flatten"
                                                 clrPosition="top-left"
                                                 clrSize="lg"
-                                               >
+                                                *clrIfOpen>
                                                 <cron-tooltip></cron-tooltip>
                                             </clr-tooltip-content>
                                         </clr-tooltip>
@@ -642,7 +642,7 @@
                                 <clr-tooltip-content
                                     clrPosition="top-left"
                                     clrSize="lg"
-                                   >
+                                    *clrIfOpen>
                                     <span>
                                         {{
                                             'REPLICATION.PUSH_BASED_ONLY'
@@ -709,7 +709,7 @@
                             <clr-tooltip-content
                                 clrPosition="top-left"
                                 clrSize="lg"
-                               >
+                                *clrIfOpen>
                                 <span>{{
                                     'REPLICATION.BANDWIDTH_TOOLTIP'
                                         | translate
@@ -752,7 +752,7 @@
                                 <clr-tooltip-content
                                     clrPosition="top-left"
                                     clrSize="md"
-                                   >
+                                    *clrIfOpen>
                                     <span>{{
                                         'TOOLTIP.OVERRIDE' | translate
                                     }}</span>
@@ -778,7 +778,7 @@
                                 <clr-tooltip-content
                                     clrPosition="top-left"
                                     clrSize="md"
-                                   >
+                                    *clrIfOpen>
                                     <span>{{
                                         'REPLICATION.COPY_BY_CHUNK_TIP'
                                             | translate
@@ -822,7 +822,7 @@
                                 <clr-tooltip-content
                                     clrPosition="top-left"
                                     clrSize="md"
-                                   >
+                                    *clrIfOpen>
                                     <span>{{
                                         'TOOLTIP.SINGLE_ACTIVE_REPLICATION'
                                             | translate

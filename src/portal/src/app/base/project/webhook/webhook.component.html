@@ -32,7 +32,7 @@
                                 shape="caret"
                                 direction="down"></clr-icon
                         ></span>
-                        <clr-dropdown-menu>
+                        <clr-dropdown-menu *clrIfOpen>
                             <button
                                 clrDropdownItem
                                 (click)="switchWebhookStatus()"
@@ -189,7 +189,7 @@
                                 </button>
                                 <clr-signpost-content
                                     [clrPosition]="'top-middle'"
-                                   >
+                                    *clrIfOpen>
                                     <div>
                                         @for (e of w?.event_types; track e) {
                                         <div class="bar-state">

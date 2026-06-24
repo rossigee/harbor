@@ -46,7 +46,7 @@
                         aria-label="Color dropdown">
                         <clr-icon shape="caret" direction="down"></clr-icon>
                     </button>
-                    <clr-dropdown-menu class="color-dropdown-menu">
+                    <clr-dropdown-menu class="color-dropdown-menu" *clrIfOpen>
                         @for (i of labelColor; track i) {
                         <button
                             clrDropdownItem

@@ -57,7 +57,7 @@
         clrPosition="{{ dropdownPosition }}"
         [style.position]="usedInDatagrid ? 'fixed' : 'absolute'"
         [style.transform]="usedInDatagrid ? getTransform() : 'unset'"
-       >
+        *clrIfOpen>
         <div>
             <button
                 class="btn btn-link btn-sm select-all-for-dropdown p-0"

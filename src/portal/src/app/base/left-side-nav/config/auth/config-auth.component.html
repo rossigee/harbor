@@ -10,7 +10,7 @@
                 <clr-tooltip-content
                     clrPosition="top-right"
                     clrSize="lg"
-                   >
+                    *clrIfOpen>
                     <span>{{ 'CONFIG.TOOLTIP.AUTH_MODE' | translate }}</span>
                 </clr-tooltip-content>
             </clr-tooltip></label
@@ -67,7 +67,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.TOOLTIP.PRIMARY_AUTH_MODE' | translate
                         }}</span>
@@ -172,7 +172,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.TOOLTIP.LDAP_SEARCH_DN' | translate
                         }}</span>
@@ -215,7 +215,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.TOOLTIP.LDAP_BASE_DN' | translate
                         }}</span>
@@ -261,7 +261,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{ 'CONFIG.TOOLTIP.LDAP_UID' | translate }}</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
@@ -291,7 +291,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.TOOLTIP.LDAP_SCOPE' | translate
                         }}</span>
@@ -324,7 +324,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.LDAP.LDAP_GROUP_BASE_DN_INFO' | translate
                         }}</span>
@@ -352,7 +352,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.LDAP.LDAP_GROUP_FILTER_INFO' | translate
                         }}</span>
@@ -380,7 +380,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.LDAP.LDAP_GROUP_GID_INFO' | translate
                         }}</span>
@@ -411,7 +411,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.LDAP.LDAP_GROUP_ADMIN_DN_INFO' | translate
                         }}</span>
@@ -440,7 +440,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.LDAP.LDAP_GROUP_MEMBERSHIP_INFO' | translate
                         }}</span>
@@ -472,7 +472,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.LDAP.GROUP_SCOPE_INFO' | translate
                         }}</span>
@@ -503,7 +503,7 @@
                         shape="info-circle"
                         size="24"></clr-icon>
                     <clr-tooltip-content
-                       
+                        *clrIfOpen
                         clrPosition="top-right"
                         clrSize="lg">
                         <span>{{
@@ -538,7 +538,7 @@
                 <clr-tooltip-content
                     clrPosition="top-right"
                     clrSize="lg"
-                   >
+                    *clrIfOpen>
                     @if (checkable) {
                     <span class="tooltip-content">{{
                         'CONFIG.TOOLTIP.SELF_REGISTRATION_ENABLE' | translate
@@ -574,7 +574,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.TOOLTIP.VERIFY_CERT' | translate
                         }}</span>
@@ -703,7 +703,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{ 'TOOLTIP.OIDC_NAME' | translate }}</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
@@ -733,7 +733,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{ 'TOOLTIP.OIDC_ENDPOINT' | translate }}</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
@@ -800,7 +800,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.OIDC.OIDC_GROUP_FILTER_INFO' | translate
                         }}</span>
@@ -828,7 +828,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.OIDC.GROUP_CLAIM_NAME_INFO' | translate
                         }}</span>
@@ -856,7 +856,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'CONFIG.OIDC.OIDC_ADMIN_GROUP_INFO' | translate
                         }}</span>
@@ -884,7 +884,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{ 'TOOLTIP.OIDC_SCOPE' | translate }}</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
@@ -915,7 +915,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{ 'TOOLTIP.OIDC_VERIFYCERT' | translate }}</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
@@ -941,7 +941,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{
                             'TOOLTIP.OIDC_AUTOONBOARD' | translate
                         }}</span>
@@ -970,7 +970,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{ 'TOOLTIP.OIDC_LOGOUT' | translate }}</span>
                     </clr-tooltip-content>
                 </clr-tooltip>
@@ -996,7 +996,7 @@
                     <clr-tooltip-content
                         clrPosition="top-right"
                         clrSize="lg"
-                       >
+                        *clrIfOpen>
                         <span>{{ 'TOOLTIP.OIDC_USER_CLAIM' | translate }}</span>
                     </clr-tooltip-content>
                 </clr-tooltip>

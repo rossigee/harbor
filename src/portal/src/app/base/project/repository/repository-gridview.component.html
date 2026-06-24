@@ -226,7 +226,7 @@
                             {{ 'REPOSITORY.ACTION' | translate }}
                             <clr-icon shape="caret" direction="down"></clr-icon>
                         </button>
-                        <clr-dropdown-menu clrPosition="top-left">
+                        <clr-dropdown-menu clrPosition="top-left" *clrIfOpen>
                             @if (withAdmiral) {
                             <button
                                 type="button"
