@@ -478,7 +478,7 @@
                             <div class="underline">
                                 <input
                                     #dateSystemInput
-                                    [attr.readonly]="true"
+                                    readonly
                                     type="date"
                                     [(clrDate)]="systemExpiresDate" />
                                 @if (!isUseSystemAllowlist()) {
@@ -489,7 +489,7 @@
                                         'CVE_ALLOWLIST.NEVER_EXPIRES'
                                             | translate
                                     }}"
-                                    [attr.readonly]="true"
+                                    readonly
                                     type="date"
                                     [(clrDate)]="expiresDate"
                                     newFormLayout="true" />
@@ -501,7 +501,7 @@
                                         'CVE_ALLOWLIST.NEVER_EXPIRES'
                                             | translate
                                     }}"
-                                    [attr.readonly]="true"
+                                    readonly
                                     type="text"
                                     value="{{ systemExpiresDateString }}" />
                                 }
