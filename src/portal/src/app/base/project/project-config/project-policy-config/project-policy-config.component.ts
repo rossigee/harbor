@@ -145,8 +145,8 @@ export class ProjectPolicyConfigComponent implements OnInit {
     showAddModal: boolean = false;
     systemAllowlist: SystemCVEAllowlist;
     cveIds: string;
-    systemExpiresDate: Date = null;
-    systemExpiresDateString: string = '';
+    systemExpiresDate: Date;
+    systemExpiresDateString: string;
     userProjectAllowlist = false;
     systemAllowlistOrProjectAllowlist: string;
     systemAllowlistOrProjectAllowlistOrigin: string;
