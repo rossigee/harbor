@@ -65,7 +65,7 @@
                         <clr-dropdown-menu
                             class="action-dropdown"
                             clrPosition="bottom-left"
-                            *clrIfOpen>
+                           >
                             <button
                                 clrDropdownItem
                                 id="stop-scan"
@@ -296,7 +296,7 @@
                             <clr-tooltip-content
                                 [clrPosition]="'top-right'"
                                 [clrSize]="'lg'"
-                                *clrIfOpen>
+                               >
                                 {{ 'REPOSITORY.ARTIFACT_TOOTIP' | translate }}
                             </clr-tooltip-content>
                         </clr-tooltip>
@@ -342,7 +342,7 @@
                             <clr-tooltip-content
                                 [clrPosition]="'top-right'"
                                 [clrSize]="'lg'"
-                                *clrIfOpen>
+                               >
                                 <table
                                     class="table table-noborder mt-0 table-tag">
                                     <thead class="tag-thead">
@@ -506,7 +506,7 @@
                                     </button>
                                     <clr-signpost-content
                                         [clrPosition]="'left-top'"
-                                        *clrIfOpen>
+                                       >
                                         <div>
                                             @for ( attr of
                                             artifact.annotationsArray ; track
@@ -543,7 +543,7 @@
                                 </button>
                                 <clr-signpost-content
                                     [clrPosition]="'top-middle'"
-                                    *clrIfOpen>
+                                   >
                                     <div
                                         class="clr-signpost-content-label-list">
                                         @for ( label of artifact.labels ; track

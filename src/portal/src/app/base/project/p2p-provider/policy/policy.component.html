@@ -10,7 +10,7 @@
             <clr-tooltip-content
                 clrPosition="top-right"
                 clrSize="lg"
-                *clrIfOpen>
+               >
                 {{ 'P2P_PROVIDER.PREHEAT_EXPLAIN' | translate }}
             </clr-tooltip-content>
         </clr-tooltip>
@@ -47,7 +47,7 @@
                                 shape="caret"
                                 direction="down"></clr-icon
                         ></span>
-                        <clr-dropdown-menu *clrIfOpen>
+                        <clr-dropdown-menu>
                             <button
                                 clrDropdownItem
                                 class="btn btn-secondary"
@@ -256,13 +256,13 @@
                 {{ getTriggerTypeI18n(p.trigger) | translate }}
                 @if (isScheduled(p.trigger)) {
                 <clr-signpost>
-                    <clr-signpost-content *clrIfOpen>
+                    <clr-signpost-content>
                         {{ getScheduledCron(p.trigger) }}
                     </clr-signpost-content>
                 </clr-signpost>
                 } @if (isEventBased(p.trigger)) {
                 <clr-signpost>
-                    <clr-signpost-content *clrIfOpen>
+                    <clr-signpost-content>
                         <div>
                             {{
                                 'P2P_PROVIDER.EVENT_BASED_EXPLAIN_LINE1'
@@ -415,7 +415,7 @@
                     <clr-tooltip-content
                         [clrPosition]="'left'"
                         clrSize="md"
-                        *clrIfOpen>
+                       >
                         <span>{{ execution.status_message }}</span>
                     </clr-tooltip-content>
                 </clr-tooltip>

@@ -83,7 +83,7 @@
                             <clr-tooltip-content
                                 clrPosition="top-left"
                                 clrSize="md"
-                                *clrIfOpen>
+                               >
                                 <span>{{
                                     'TOOLTIP.PUSH_BASED' | translate
                                 }}</span>
@@ -112,7 +112,7 @@
                             <clr-tooltip-content
                                 clrPosition="top-left"
                                 clrSize="md"
-                                *clrIfOpen>
+                               >
                                 <span>{{
                                     'TOOLTIP.PULL_BASED' | translate
                                 }}</span>
@@ -286,7 +286,7 @@
                                             [ngStyle]="{ 'max-height.px': 230 }"
                                             class="right-align"
                                             clrPosition="bottom-left"
-                                            *clrIfOpen>
+                                           >
                                             @for ( value of
                                             supportedFilterLabels ; track value)
                                             {
@@ -346,7 +346,7 @@
                                 <clr-tooltip-content
                                     clrPosition="top-left"
                                     clrSize="md"
-                                    *clrIfOpen>
+                                   >
                                     @if ( supportedFilters[i]?.type === 'name' )
                                     {
                                     <span class="tooltip-content">{{
@@ -445,7 +445,7 @@
                             <clr-tooltip-content
                                 clrPosition="top-left"
                                 clrSize="lg"
-                                *clrIfOpen>
+                               >
                                 <span>{{
                                     'TOOLTIP.DESTINATION_NAMESPACE' | translate
                                 }}</span>
@@ -467,31 +467,29 @@
                     for="dest_namespace_replace_count"
                     class="clr-control-label"></label>
                 <div class="clr-control-container">
-                    <div class="flex">
-                        <div class="clr-select-wrapper flex">
-                            <label class="sub-label"
-                                >{{
-                                    'REPLICATION.REPO_FLATTENING' | translate
-                                }}:</label
-                            >
-                            <select
-                                [attr.disabled]="
-                                    ruleForm.controls.dest_namespace.invalid ||
-                                    !ruleForm.controls.dest_namespace.value
-                                        ? 'disabled'
-                                        : null
-                                "
-                                id="dest_namespace_replace_count"
-                                formControlName="dest_namespace_replace_count"
-                                class="clr-select width-name-resource">
-                                @for (item of flattenLevelMap | keyvalue; track
-                                item) {
-                                <option [value]="item.key">
-                                    {{ item.value | translate }}
-                                </option>
-                                }
-                            </select>
-                        </div>
+                    <div class="clr-select-wrapper flex">
+                        <label class="sub-label"
+                            >{{
+                                'REPLICATION.REPO_FLATTENING' | translate
+                            }}:</label
+                        >
+                        <select
+                            [attr.disabled]="
+                                ruleForm.controls.dest_namespace.invalid ||
+                                !ruleForm.controls.dest_namespace.value
+                                    ? 'disabled'
+                                    : null
+                            "
+                            id="dest_namespace_replace_count"
+                            formControlName="dest_namespace_replace_count"
+                            class="clr-select width-name-resource">
+                            @for (item of flattenLevelMap | keyvalue; track
+                            item) {
+                            <option [value]="item.key">
+                                {{ item.value | translate }}
+                            </option>
+                            }
+                        </select>
                         <clr-tooltip class="des-tooltip">
                             <clr-icon
                                 clrTooltipTrigger
@@ -501,7 +499,7 @@
                                 class="flatten"
                                 clrPosition="top-left"
                                 clrSize="lg"
-                                *clrIfOpen>
+                               >
                                 <div>
                                     {{
                                         'REPLICATION.FLATTEN_LEVEL_TIP'
@@ -604,7 +602,7 @@
                                                 class="flatten"
                                                 clrPosition="top-left"
                                                 clrSize="lg"
-                                                *clrIfOpen>
+                                               >
                                                 <cron-tooltip></cron-tooltip>
                                             </clr-tooltip-content>
                                         </clr-tooltip>
@@ -644,7 +642,7 @@
                                 <clr-tooltip-content
                                     clrPosition="top-left"
                                     clrSize="lg"
-                                    *clrIfOpen>
+                                   >
                                     <span>
                                         {{
                                             'REPLICATION.PUSH_BASED_ONLY'
@@ -711,7 +709,7 @@
                             <clr-tooltip-content
                                 clrPosition="top-left"
                                 clrSize="lg"
-                                *clrIfOpen>
+                               >
                                 <span>{{
                                     'REPLICATION.BANDWIDTH_TOOLTIP'
                                         | translate
@@ -736,114 +734,102 @@
                     'SCANNER.OPTIONS' | translate
                 }}</label>
 
-                <div class="clr-control-container">
-                    <div class="clr-control-inline">
-                        <div class="clr-checkbox-wrapper">
-                            <input
-                                type="checkbox"
-                                class="clr-checkbox"
-                                [checked]="true"
-                                id="overridePolicy"
-                                formControlName="override" />
-                            <label
-                                for="overridePolicy"
-                                class="clr-control-label"
-                                >{{ 'REPLICATION.OVERRIDE_INFO' | translate }}
-                                <clr-tooltip class="override-tooltip">
-                                    <clr-icon
-                                        clrTooltipTrigger
-                                        shape="info-circle"
-                                        size="24"></clr-icon>
-                                    <clr-tooltip-content
-                                        clrPosition="top-left"
-                                        clrSize="md"
-                                        *clrIfOpen>
-                                        <span>{{
-                                            'TOOLTIP.OVERRIDE' | translate
-                                        }}</span>
-                                    </clr-tooltip-content>
-                                </clr-tooltip>
-                            </label>
-                        </div>
-                        <div
-                            class="clr-checkbox-wrapper"
-                            [hidden]="!showChunkOption">
-                            <input
-                                type="checkbox"
-                                id="by-chunk"
-                                formControlName="copy_by_chunk"
-                                class="clr-checkbox" />
-                            <label for="by-chunk" class="clr-control-label"
-                                >{{ 'REPLICATION.COPY_BY_CHUNK' | translate }}
-                                <clr-tooltip class="override-tooltip">
-                                    <clr-icon
-                                        clrTooltipTrigger
-                                        shape="info-circle"
-                                        size="24"></clr-icon>
-                                    <clr-tooltip-content
-                                        clrPosition="top-left"
-                                        clrSize="md"
-                                        *clrIfOpen>
-                                        <span>{{
-                                            'REPLICATION.COPY_BY_CHUNK_TIP'
-                                                | translate
-                                        }}</span>
-                                    </clr-tooltip-content>
-                                </clr-tooltip>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="clr-control-inline" [hidden]="policyId < 0">
-                        <div class="clr-checkbox-wrapper">
-                            <input
-                                type="checkbox"
-                                [checked]="true"
-                                id="enablePolicy"
-                                formControlName="enabled"
-                                class="clr-checkbox" />
-                            <label
-                                for="enablePolicy"
-                                class="clr-control-label"
-                                >{{
-                                    'REPLICATION.ENABLED_RULE' | translate
-                                }}</label
-                            >
-                        </div>
+                <div class="clr-control-container clr-control-inline">
+                    <div class="clr-checkbox-wrapper">
+                        <input
+                            type="checkbox"
+                            class="clr-checkbox"
+                            [checked]="true"
+                            id="overridePolicy"
+                            formControlName="override" />
+                        <label for="overridePolicy" class="clr-control-label"
+                            >{{ 'REPLICATION.OVERRIDE_INFO' | translate }}
+                            <clr-tooltip class="override-tooltip">
+                                <clr-icon
+                                    clrTooltipTrigger
+                                    shape="info-circle"
+                                    size="24"></clr-icon>
+                                <clr-tooltip-content
+                                    clrPosition="top-left"
+                                    clrSize="md"
+                                   >
+                                    <span>{{
+                                        'TOOLTIP.OVERRIDE' | translate
+                                    }}</span>
+                                </clr-tooltip-content>
+                            </clr-tooltip>
+                        </label>
                     </div>
                     <div
-                        class="clr-control-inline"
+                        class="clr-checkbox-wrapper"
+                        [hidden]="!showChunkOption">
+                        <input
+                            type="checkbox"
+                            id="by-chunk"
+                            formControlName="copy_by_chunk"
+                            class="clr-checkbox" />
+                        <label for="by-chunk" class="clr-control-label"
+                            >{{ 'REPLICATION.COPY_BY_CHUNK' | translate }}
+                            <clr-tooltip class="override-tooltip">
+                                <clr-icon
+                                    clrTooltipTrigger
+                                    shape="info-circle"
+                                    size="24"></clr-icon>
+                                <clr-tooltip-content
+                                    clrPosition="top-left"
+                                    clrSize="md"
+                                   >
+                                    <span>{{
+                                        'REPLICATION.COPY_BY_CHUNK_TIP'
+                                            | translate
+                                    }}</span>
+                                </clr-tooltip-content>
+                            </clr-tooltip>
+                        </label>
+                    </div>
+                    <div class="clr-checkbox-wrapper" [hidden]="policyId < 0">
+                        <input
+                            type="checkbox"
+                            [checked]="true"
+                            id="enablePolicy"
+                            formControlName="enabled"
+                            class="clr-checkbox" />
+                        <label for="enablePolicy" class="clr-control-label">{{
+                            'REPLICATION.ENABLED_RULE' | translate
+                        }}</label>
+                    </div>
+                    <div
+                        class="clr-checkbox-wrapper"
                         [hidden]="!isNotEventBased()">
-                        <div class="clr-checkbox-wrapper">
-                            <input
-                                type="checkbox"
-                                class="clr-checkbox"
-                                [checked]="true"
-                                id="singleActiveReplication"
-                                formControlName="single_active_replication" />
-                            <label
-                                for="singleActiveReplication"
-                                class="clr-control-label single-active"
-                                >{{
-                                    'REPLICATION.SINGLE_ACTIVE_REPLICATION'
-                                        | translate
-                                }}
-                                <clr-tooltip class="override-tooltip">
-                                    <clr-icon
-                                        clrTooltipTrigger
-                                        shape="info-circle"
-                                        size="24"></clr-icon>
-                                    <clr-tooltip-content
-                                        clrPosition="top-left"
-                                        clrSize="md"
-                                        *clrIfOpen>
-                                        <span>{{
-                                            'TOOLTIP.SINGLE_ACTIVE_REPLICATION'
-                                                | translate
-                                        }}</span>
-                                    </clr-tooltip-content>
-                                </clr-tooltip>
-                            </label>
-                        </div>
+                        <input
+                            type="checkbox"
+                            class="clr-checkbox"
+                            [checked]="true"
+                            id="singleActiveReplication"
+                            formControlName="single_active_replication" />
+                        <label
+                            for="singleActiveReplication"
+                            class="clr-control-label single-active"
+                            >{{
+                                'REPLICATION.SINGLE_ACTIVE_REPLICATION'
+                                    | translate
+                            }}
+                            <clr-tooltip class="override-tooltip">
+                                <clr-icon
+                                    clrTooltipTrigger
+                                    shape="info-circle"
+                                    size="24"></clr-icon>
+                                <clr-tooltip-content
+                                    clrPosition="top-left"
+                                    clrSize="md"
+                                   >
+                                    <span>{{
+                                        'TOOLTIP.SINGLE_ACTIVE_REPLICATION'
+                                            | translate
+                                    }}</span>
+                                </clr-tooltip-content>
+                            </clr-tooltip>
+                        </label>
                     </div>
                 </div>
             </div>
