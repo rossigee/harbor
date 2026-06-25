@@ -67,7 +67,7 @@
             <div class="clr-input-wrapper">
                 <input
                     [ngModel]="scanner?.url"
-                    readonly
+                    [attr.readonly]="true"
                     class="clr-input width-240"
                     type="text"
                     id="scanner-endpoint"
@@ -84,7 +84,7 @@
             <div class="clr-input-wrapper">
                 <input
                     [ngModel]="scanner?.adapter"
-                    readonly
+                    [attr.readonly]="true"
                     class="clr-input width-240"
                     type="text"
                     id="scanner-scanner"
@@ -101,7 +101,7 @@
             <div class="clr-input-wrapper">
                 <input
                     [ngModel]="scanner?.vendor"
-                    readonly
+                    [attr.readonly]="true"
                     class="clr-input width-240"
                     type="text"
                     id="scanner-vendor"
@@ -118,7 +118,7 @@
             <div class="clr-input-wrapper">
                 <input
                     [ngModel]="scanner?.version"
-                    readonly
+                    [attr.readonly]="true"
                     class="clr-input width-240"
                     type="text"
                     id="scanner-version"
