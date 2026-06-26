@@ -17,6 +17,7 @@ package local
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"sync"
 
 	"github.com/goharbor/harbor/src/common/models"
@@ -92,10 +93,15 @@ func (e *patScopeEvaluator) HasPermission(_ context.Context, resource types.Reso
 	resourceStr := resource.String()
 	actionStr := action.String()
 
+	fmt.Printf("DEBUG: HasPermission called with resource=%s, action=%s\n", resourceStr, actionStr)
+	fmt.Printf("DEBUG: scope = %+v\n", e.scope)
+
 	for _, projectScope := range e.scope {
 		for _, access := range projectScope.Access {
+			fmt.Printf("DEBUG: checking access.Resource=%s vs resourceStr=%s\n", access.Resource, resourceStr)
 			if access.Resource == resourceStr {
 				for _, a := range access.Actions {
+					fmt.Printf("DEBUG: checking action %s against %s\n", a, actionStr)
 					if a == "*" || a == actionStr {
 						return true
 					}
