@@ -21,6 +21,7 @@ import (
 
 	"github.com/goharbor/harbor/src/common"
 	"github.com/goharbor/harbor/src/common/rbac"
+	rbac_project "github.com/goharbor/harbor/src/common/rbac/project"
 	"github.com/goharbor/harbor/src/common/utils"
 	"github.com/goharbor/harbor/src/controller/project"
 	"github.com/goharbor/harbor/src/controller/robot"
@@ -176,15 +177,16 @@ func (c *controller) computeScope(ctx context.Context, userID int) (string, erro
 		}
 
 		access := []model.AccessLevel{}
+		repositoryResource := rbac_project.NewNamespace(p.ProjectID).Resource(rbac.ResourceRepository).String()
 		if hasPull {
 			access = append(access, model.AccessLevel{
-				Resource: rbac.ResourceRepository.String(),
+				Resource: repositoryResource,
 				Actions:  []string{"pull"},
 			})
 		}
 		if hasPush {
 			access = append(access, model.AccessLevel{
-				Resource: rbac.ResourceRepository.String(),
+				Resource: repositoryResource,
 				Actions:  []string{"push"},
 			})
 		}
