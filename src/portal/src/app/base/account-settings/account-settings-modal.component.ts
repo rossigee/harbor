@@ -115,7 +115,10 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
                         this.error = null;
                     }
                     this.formValueChanged = true;
-                    if (this.account.username === this.originAdminName && this.inlineAlert) {
+                    if (
+                        this.account.username === this.originAdminName &&
+                        this.inlineAlert
+                    ) {
                         this.inlineAlert.close();
                     }
                 });
@@ -397,7 +400,9 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
 
     onSuccess(event) {
         if (this.inlineAlert) {
-            this.inlineAlert.showInlineSuccess({ message: 'PROFILE.COPY_SUCCESS' });
+            this.inlineAlert.showInlineSuccess({
+                message: 'PROFILE.COPY_SUCCESS',
+            });
         }
     }
 

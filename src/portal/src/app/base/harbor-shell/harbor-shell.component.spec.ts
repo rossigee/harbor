@@ -95,6 +95,15 @@ const fakedUserService = {
     setCliSecret() {
         return of(null);
     },
+    ListPersonalAccessTokens(_options: any) {
+        return of([]);
+    },
+};
+
+const fakedScannerService = {
+    getScannerList() {
+        return of({});
+    },
 };
 
 describe('HarborShellComponent', () => {
@@ -131,6 +140,7 @@ describe('HarborShellComponent', () => {
                     useValue: mockMessageHandlerService,
                 },
                 { provide: UserService, useValue: fakedUserService },
+                { provide: ScannerService, useValue: fakedScannerService },
                 {
                     provide: PasswordSettingService,
                     useValue: mockPasswordSettingService,
@@ -145,11 +155,6 @@ describe('HarborShellComponent', () => {
     beforeEach(() => {
         fixture = TestBed.createComponent(HarborShellComponent);
         component = fixture.componentInstance;
-        component.accountSettingsModal = TestBed.createComponent(
-            AccountSettingsModalComponent
-        ).componentInstance;
-        component.accountSettingsModal.inlineAlert =
-            TestBed.createComponent(InlineAlertComponent).componentInstance;
         component.prefSetting = TestBed.createComponent(
             PreferenceSettingsComponent
         ).componentInstance;

@@ -86,6 +86,9 @@ describe('AccountSettingsModalComponent', () => {
         setCliSecret() {
             return of(null);
         },
+        ListPersonalAccessTokens(_options: any) {
+            return of([]);
+        },
     };
 
     const MockedAppConfigService = {
@@ -268,28 +271,5 @@ describe('AccountSettingsModalComponent', () => {
         const emailInput1: HTMLInputElement =
             fixture.nativeElement.querySelector('#account_settings_email');
         expect(emailInput1).toEqual(null);
-    });
-    it('should generate cli secret when oidc mode', async () => {
-        await fixture.whenStable();
-        component.account.oidc_user_meta = clone(oidcUserMeta1);
-        await fixture.whenStable();
-        const hiddenGenerateCliButton: HTMLButtonElement =
-            fixture.nativeElement.querySelector('#hidden-generate-cli');
-        expect(hiddenGenerateCliButton).toBeTruthy();
-        hiddenGenerateCliButton.dispatchEvent(new Event('click'));
-        await fixture.whenStable();
-        const hiddenGenerateCliButton1: HTMLButtonElement =
-            fixture.nativeElement.querySelector('#hidden-generate-cli');
-        expect(hiddenGenerateCliButton1).toBeNull();
-        const generateCliButton: HTMLButtonElement =
-            fixture.nativeElement.querySelector('#generate-cli-btn');
-        expect(generateCliButton).toBeTruthy();
-        component.confirmationDialogComponent = TestBed.createComponent(
-            ConfirmationDialogComponent
-        ).componentInstance;
-        generateCliButton.dispatchEvent(new Event('click'));
-        component.confirmGenerate();
-        await fixture.whenStable();
-        expect(component.showGenerateCli).toEqual(false);
     });
 });

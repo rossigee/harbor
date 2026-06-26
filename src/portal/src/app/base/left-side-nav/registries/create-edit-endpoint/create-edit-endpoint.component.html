@@ -157,7 +157,9 @@
                     placeholder="Access ID"
                     id="destination_access_key"
                     [disabled]="testOngoing"
-                    [attr.readonly]="(target.type === 'google-gcr' || !editable) ? true : null"
+                    [attr.readonly]="
+                        target.type === 'google-gcr' || !editable ? true : null
+                    "
                     [(ngModel)]="target.credential.access_key"
                     size="30"
                     name="access_key"
