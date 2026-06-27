@@ -544,7 +544,7 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
         }
         this.scopeLoading = true;
         this.projectService
-            .listProjects({ pageSize: 1000, withDetail: false })
+            .listProjects({ pageSize: 100, withDetail: false })
             .subscribe({
                 next: (projects: any[]) => {
                     this.scopeProjects = (projects || []).map(p => ({
@@ -689,7 +689,6 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
             .subscribe({
                 next: (res: any) => {
                     this.createdPATSecret = res.secret;
-                    this.msgHandler.showSuccess('PROFILE.PAT_CREATE_SUCCESS');
                     this.loadPATs();
                 },
                 error: (err: any) => {
@@ -717,8 +716,9 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
             })
             .subscribe({
                 next: (res: any) => {
+                    this.newPATForm = { name: '', expiresInDays: 0, description: '' };
                     this.createdPATSecret = res.secret;
-                    this.msgHandler.showSuccess('PROFILE.PAT_REFRESHED');
+                    this.showCreatePATModal = true;
                     this.loadPATs();
                 },
                 error: (err: any) => {

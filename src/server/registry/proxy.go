@@ -74,14 +74,19 @@ func newProxy() http.Handler {
 	return p
 }
 
-// authDirector returns a Director that authenticates to the upstream registry
-// using either basic auth or bearer token auth, detected by probing the
-// registry with the shared credential and falling back to a bearer token
-// request if the registry rejects basic auth.
+// authDirector returns a Director that authenticates to the upstream registry.
+// If the upstream request already has a valid Authorization header (set by the
+// v2auth middleware from the user's credentials), it passes it through.
+// Otherwise it falls back to the shared registry credential.
 func authDirector(d func(*http.Request)) func(*http.Request) {
 	return func(r *http.Request) {
 		d(r)
 		if r == nil {
+			return
+		}
+		// If the user already provided auth (validated by v2auth middleware),
+		// pass it through to the upstream registry.
+		if r.Header.Get("Authorization") != "" {
 			return
 		}
 		switch detectRegistryAuthType() {
