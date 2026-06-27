@@ -46,7 +46,11 @@ func main() {
 	lib.StartPprof()
 
 	cfgLib.DefaultCfgManager = common.RestCfgManager
-	if err := cfgLib.DefaultMgr().Load(context.Background()); err != nil {
+	mgr := cfgLib.DefaultMgr()
+	if mgr == nil {
+		panic("failed to initialize config manager - check CORE_URL and JOBSERVICE_SECRET env vars")
+	}
+	if err := mgr.Load(context.Background()); err != nil {
 		panic(fmt.Sprintf("failed to load configuration, error: %v", err))
 	}
 
