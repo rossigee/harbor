@@ -75,8 +75,10 @@ func newProxy() http.Handler {
 }
 
 // authDirector returns a Director that authenticates to the upstream registry.
-// If the upstream request already has a valid Authorization header (set by the
-// v2auth middleware from the user's credentials), it passes it through.
+// If the request has Bearer auth (from the user's token), it passes through.
+// If the request has Basic auth (username:password from docker login), it
+// exchanges it for a Bearer token via the token service before forwarding,
+// since the upstream registry uses token-based auth.
 // Otherwise it falls back to the shared registry credential.
 func authDirector(d func(*http.Request)) func(*http.Request) {
 	return func(r *http.Request) {
@@ -84,10 +86,16 @@ func authDirector(d func(*http.Request)) func(*http.Request) {
 		if r == nil {
 			return
 		}
-		// If the user already provided auth (validated by v2auth middleware),
-		// pass it through to the upstream registry.
-		if r.Header.Get("Authorization") != "" {
-			return
+		auth := r.Header.Get("Authorization")
+		if strings.HasPrefix(auth, "Bearer ") {
+			return // pass through user's Bearer token
+		}
+		if strings.HasPrefix(auth, "Basic ") {
+			// Exchange Basic auth for a Bearer token via the token service
+			if tk := exchangeBasicForToken(r, auth); tk != "" {
+				r.Header.Set("Authorization", "Bearer "+tk)
+				return
+			}
 		}
 		switch detectRegistryAuthType() {
 		case "token":
@@ -99,6 +107,39 @@ func authDirector(d func(*http.Request)) func(*http.Request) {
 			r.SetBasicAuth(u, p)
 		}
 	}
+}
+
+// exchangeBasicForToken sends the Basic auth credentials to the token service
+// and returns a Bearer token scoped to the request's repository.
+func exchangeBasicForToken(r *http.Request, basicAuth string) string {
+	scope := scopeFromRequest(r)
+	tokenURL := fmt.Sprintf("%s?service=harbor-registry&scope=%s",
+		getTokenServiceURL(), url.QueryEscape(scope))
+	req, err := http.NewRequest(http.MethodGet, tokenURL, nil)
+	if err != nil {
+		log.Warningf("failed to create token request: %v", err)
+		return ""
+	}
+	req.Header.Set("Authorization", basicAuth)
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Warningf("failed to exchange basic auth for token: %v", err)
+		return ""
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		log.Warningf("token service returned %d for basic auth exchange", resp.StatusCode)
+		return ""
+	}
+	var tokenResp struct {
+		Token string `json:"token"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		log.Warningf("failed to decode token response: %v", err)
+		return ""
+	}
+	return tokenResp.Token
 }
 
 // detectRegistryAuthType probes the upstream registry to determine which

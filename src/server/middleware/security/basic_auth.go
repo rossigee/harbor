@@ -69,13 +69,13 @@ func (b *basicAuth) Generate(req *http.Request) security.Context {
 	})
 
 	if err != nil {
-		log.WithField("client IP", GetClientIP(req)).WithField("user agent", GetUserAgent(req)).Errorf("failed to authenticate user:%s, error:%v", username, err)
+		log.WithField("client IP", GetClientIP(req)).WithField("user agent", GetUserAgent(req)).Warningf("basic auth failed for user:%s, error:%v", username, err)
 		return nil
 	}
 	if user == nil {
-		log.Debug("basic auth user is nil")
+		log.Warningf("basic auth user is nil for: %s", username)
 		return nil
 	}
-	log.Debugf("a basic auth security context generated for request %s %s", req.Method, req.URL.Path)
+	log.Warningf("basic auth security context generated for %s %s (user:%s)", req.Method, req.URL.Path, username)
 	return local.NewSecurityContext(user)
 }
