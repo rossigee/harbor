@@ -114,6 +114,10 @@ func (c *controller) updateLogEndpoint(ctx context.Context, cfgs map[string]any)
 func (c *controller) validateCfg(ctx context.Context, cfgs map[string]any) error {
 	mgr := config.GetCfgManager(ctx)
 
+	// auth_mode is deprecated and derived from configured backends;
+	// ignore any attempt to change it via the config API.
+	delete(cfgs, common.AUTHMode)
+
 	err := mgr.ValidateCfg(ctx, cfgs)
 	if err != nil {
 		return errors.BadRequestError(err)
@@ -243,6 +247,9 @@ func (c *controller) ConvertForGet(_ context.Context, cfg map[string]any, intern
 	if _, ok := result[common.ScanAllPolicy]; !ok {
 		cfg[common.ScanAllPolicy] = `{"type":"none"}`
 	}
+
+	// auth_mode is deprecated and derived from configured backends
+	result[common.AUTHMode].Editable = false
 
 	return result, nil
 }

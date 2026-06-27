@@ -148,11 +148,6 @@ func Register(name string, h AuthenticateHelper) {
 // priority order.  Every backend whose Match() returns true is attempted;
 // the first successful authentication wins.
 func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
-	// Use DB auth for robot accounts - they are stored in Harbor DB regardless of auth mode
-	if strings.HasPrefix(m.Principal, config.RobotPrefix(ctx)) {
-		return authenticateWithLock(ctx, m, registry[common.DBAuth])
-	}
-
 	// Superuser always authenticates via DB.
 	if IsSuperUser(ctx, m.Principal) {
 		return authenticateWithLock(ctx, m, registry[common.DBAuth])
@@ -164,7 +159,7 @@ func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
 	}
 
 	var lastErr error
-	for i, helper := range helpers {
+	for _, helper := range helpers {
 		if lock.IsLocked(m.Principal) {
 			log.Debugf("%s is locked due to login failure, login failed", m.Principal)
 			return nil, nil
@@ -172,12 +167,9 @@ func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
 		user, err := helper.Authenticate(ctx, m)
 		if err != nil {
 			if _, ok := err.(ErrAuth); ok {
-				// Only lock when this is the last helper (no more fallbacks)
-				if i == len(helpers)-1 {
-					log.Warningf("Login failed, locking %s, and sleep for %v", m.Principal, frozenTime)
-					lock.Lock(m.Principal)
-					time.Sleep(frozenTime)
-				}
+				log.Warningf("Login failed, locking %s, and sleep for %v", m.Principal, frozenTime)
+				lock.Lock(m.Principal)
+				time.Sleep(frozenTime)
 			}
 			lastErr = err
 			continue
@@ -195,7 +187,8 @@ func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
 
 // loginHelpers returns the ordered list of AuthenticateHelper to try for
 // the current request.  The primary backend is determined from the
-// configured backends.  Each backend is first checked with Match() so that
+// configured auth mode/ (still read from config during the transition
+// period).  Each backend is first checked with Match() so that
 // unconfigured backends (e.g. LDAP when no LDAP URL is set) are skipped.
 func loginHelpers(ctx context.Context) ([]AuthenticateHelper, error) {
 	authMode := config.DetectAuthMode(ctx)
@@ -213,13 +206,13 @@ func loginHelpers(ctx context.Context) ([]AuthenticateHelper, error) {
 		if h.Match(ctx) {
 			return []AuthenticateHelper{h}, nil
 		}
-		return nil, fmt.Errorf("LDAP is configured as primary auth method but not properly configured")
+		return nil, fmt.Errorf("auth mode is %q but LDAP is not configured", authMode)
 	case common.UAAAuth:
 		h := registry[common.UAAAuth]
 		if h.Match(ctx) {
 			return []AuthenticateHelper{h}, nil
 		}
-		return nil, fmt.Errorf("UAA is configured as primary auth method but not properly configured")
+		return nil, fmt.Errorf("auth mode is %q but UAA is not configured", authMode)
 	default:
 		return []AuthenticateHelper{registry[common.DBAuth]}, nil
 	}
@@ -247,13 +240,13 @@ func authenticateWithLock(ctx context.Context, m models.AuthModel, h Authenticat
 }
 
 func getHelper(ctx context.Context) (AuthenticateHelper, error) {
-	primary := config.DetectAuthMode(ctx)
-	h, ok := registry[primary]
+	authMode := config.DetectAuthMode(ctx)
+	h, ok := registry[authMode]
 	if !ok {
-		return nil, fmt.Errorf("can not get authenticator for primary auth method: %s", primary)
+		return nil, fmt.Errorf("can not get authenticator for auth mode: %s", authMode)
 	}
 	if !h.Match(ctx) {
-		return nil, fmt.Errorf("authenticator for %s is not available", primary)
+		return nil, fmt.Errorf("authenticator for authmode %s is not available", authMode)
 	}
 	return h, nil
 }

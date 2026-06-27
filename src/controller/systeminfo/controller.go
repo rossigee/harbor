@@ -99,6 +99,7 @@ func (c *controller) GetInfo(ctx context.Context, opt Options) (*Data, error) {
 	}
 	res := &Data{
 		AuthMode:         config.DetectAuthMode(ctx),
+		PrimaryAuthMode:  utils.SafeCastBool(cfg[common.PrimaryAuthMode]),
 		SelfRegistration: utils.SafeCastBool(cfg[common.SelfRegistration]),
 		BannerMessage:    utils.SafeCastString(mgr.Get(ctx, common.BannerMessage).GetString()),
 		OIDCProviderName: OIDCProviderName(ctx, cfg),

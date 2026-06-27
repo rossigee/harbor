@@ -51,7 +51,7 @@ type usersAPI struct {
 func newUsersAPI() *usersAPI {
 	return &usersAPI{
 		ctl: user.Ctl,
-		getPrimaryAuth: func(ctx context.Context) (string, error) {
+		getAuth: func(ctx context.Context) (string, error) {
 			return config.DetectAuthMode(ctx), nil
 		},
 	}
