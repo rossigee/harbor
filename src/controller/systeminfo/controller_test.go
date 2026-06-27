@@ -110,33 +110,18 @@ func TestOIDCProviderName(t *testing.T) {
 		cfg map[string]any
 	}
 	tests := []struct {
-		name          string
-		args          args
-		configMgrInit map[string]any
-		want          string
+		name   string
+		config map[string]any
+		args   args
+		want   string
 	}{
-		{
-			name:          "normal testing",
-			args:          args{map[string]any{common.OIDCName: "test"}},
-			configMgrInit: map[string]any{common.OIDCEndpoint: "http://example.com/oidc"},
-			want:          "test",
-		},
-		{
-			name:          "not oidc",
-			args:          args{map[string]any{common.OIDCName: "test"}},
-			configMgrInit: map[string]any{},
-			want:          "",
-		},
-		{
-			name:          "empty provider",
-			args:          args{map[string]any{common.OIDCName: ""}},
-			configMgrInit: map[string]any{common.OIDCEndpoint: "http://example.com/oidc"},
-			want:          "",
-		},
+		{"normal testing", map[string]any{common.OIDCEndpoint: "http://example.com/oidc", common.OIDCName: "test"}, args{map[string]any{common.OIDCName: "test"}}, "test"},
+		{"not oidc", map[string]any{common.OIDCEndpoint: ""}, args{map[string]any{common.OIDCName: "test"}}, ""},
+		{"empty provider", map[string]any{common.OIDCEndpoint: "http://example.com/oidc", common.OIDCName: ""}, args{map[string]any{common.OIDCName: ""}}, ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			config.InitWithSettings(tt.configMgrInit)
+			config.InitWithSettings(tt.config)
 			if got := OIDCProviderName(context.Background(), tt.args.cfg); got != tt.want {
 				t.Errorf("OIDCProviderName() = %v, want %v", got, tt.want)
 			}

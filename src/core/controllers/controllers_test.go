@@ -58,15 +58,18 @@ func TestMain(m *testing.M) {
 }
 
 func TestRedirectForOIDC(t *testing.T) {
-	ctx := orm.Context()
-	assert.False(t, redirectForOIDC(ctx, "nonexist"))
-	config.Upload(map[string]any{
+	ormCtx := orm.Context()
+
+	// No OIDC configured — should not redirect
+	assert.False(t, redirectForOIDC(ormCtx, "nonexist"))
+
+	// Configure OIDC
+	c := map[string]any{
 		common.OIDCEndpoint: "http://example.com/oidc",
-		common.OIDCScope:    "openid,profile",
-	})
-	ctx = orm.Context()
-	assert.True(t, redirectForOIDC(ctx, "nonexist"))
-	assert.False(t, redirectForOIDC(ctx, "admin"))
+	}
+	config.Upload(c)
+	assert.True(t, redirectForOIDC(ormCtx, "nonexist"))
+	assert.False(t, redirectForOIDC(ormCtx, "admin"))
 }
 
 // TestMain is a sample to run an endpoint test

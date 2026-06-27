@@ -32,18 +32,22 @@ func direct(req *http.Request) {
 }
 
 func TestAuthDirectorBasicAuth(t *testing.T) {
+	// Mock registry that responds with Basic Www-Authenticate
 	registryServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Www-Authenticate", `Basic realm="Registry Realm"`)
 		w.WriteHeader(http.StatusUnauthorized)
 	}))
 	defer registryServer.Close()
 
+	// Reset probe state for each test
 	detectedAuthType = atomic.Value{}
 
+	// Override probe client to use the test server
 	originalClient := probeHTTPClient
 	probeHTTPClient = registryServer.Client()
 	defer func() { probeHTTPClient = originalClient }()
 
+	// Override registry URL via env (probe uses config.RegistryURL which reads env)
 	t.Setenv("REGISTRY_URL", registryServer.URL)
 	t.Setenv("REGISTRY_CREDENTIAL_USERNAME", "testuser")
 	t.Setenv("REGISTRY_CREDENTIAL_PASSWORD", "testpassword")
@@ -59,6 +63,7 @@ func TestAuthDirectorBasicAuth(t *testing.T) {
 }
 
 func TestAuthDirectorBearerToken(t *testing.T) {
+	// Mock token service
 	tokenServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("service") != "harbor-registry" {
 			w.WriteHeader(http.StatusBadRequest)
@@ -74,13 +79,14 @@ func TestAuthDirectorBearerToken(t *testing.T) {
 	}))
 	defer tokenServer.Close()
 
+	// Mock registry that responds with Bearer Www-Authenticate
 	registryServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Www-Authenticate", `Bearer realm="http://example.com/service/token",service="harbor-registry"`)
 		w.WriteHeader(http.StatusUnauthorized)
 	}))
 	defer registryServer.Close()
 
-	detectedAuthType = atomic.Value{}
+	detectedAuthType = atomic.Value{} // reset to empty (not yet probed)
 	originalClient := probeHTTPClient
 	probeHTTPClient = registryServer.Client()
 	defer func() { probeHTTPClient = originalClient }()
@@ -99,14 +105,16 @@ func TestAuthDirectorBearerToken(t *testing.T) {
 	d := authDirector(direct)
 	d(req)
 
+	// Should have Bearer token, no basic auth
 	_, _, hasBasicAuth := req.BasicAuth()
 	assert.False(t, hasBasicAuth, "should not have basic auth when using bearer token")
 	assert.Equal(t, "Bearer test.jwt.token", req.Header.Get("Authorization"))
 }
 
 func TestAuthDirectorProbeFailureDefaultsToBasic(t *testing.T) {
-	detectedAuthType = atomic.Value{}
+	detectedAuthType = atomic.Value{} // reset to empty (not yet probed)
 
+	// Registry URL that will fail to connect
 	t.Setenv("REGISTRY_URL", "http://127.0.0.1:1")
 	t.Setenv("REGISTRY_CREDENTIAL_USERNAME", "fallbackuser")
 	t.Setenv("REGISTRY_CREDENTIAL_PASSWORD", "fallbackpass")
@@ -115,6 +123,7 @@ func TestAuthDirectorProbeFailureDefaultsToBasic(t *testing.T) {
 	d := authDirector(direct)
 	d(req)
 
+	// Should fall back to basic auth when probe fails
 	user, pass, ok := req.BasicAuth()
 	assert.True(t, ok)
 	assert.Equal(t, "fallbackuser", user)
@@ -131,7 +140,7 @@ func TestAuthDirectorCachesProbeResult(t *testing.T) {
 	}))
 	defer registryServer.Close()
 
-	detectedAuthType = atomic.Value{}
+	detectedAuthType = atomic.Value{} // reset to empty (not yet probed)
 	originalClient := probeHTTPClient
 	probeHTTPClient = registryServer.Client()
 	defer func() { probeHTTPClient = originalClient }()
@@ -140,10 +149,12 @@ func TestAuthDirectorCachesProbeResult(t *testing.T) {
 	t.Setenv("REGISTRY_CREDENTIAL_USERNAME", "u")
 	t.Setenv("REGISTRY_CREDENTIAL_PASSWORD", "p")
 
+	// First request triggers probe
 	req1, _ := http.NewRequest(http.MethodGet, "http://example.com/v2/repo", nil)
 	authDirector(direct)(req1)
 	assert.Equal(t, 1, probeCount, "probe should run on first request")
 
+	// Second request should use cached result, no additional probe
 	req2, _ := http.NewRequest(http.MethodGet, "http://example.com/v2/repo", nil)
 	authDirector(direct)(req2)
 	assert.Equal(t, 1, probeCount, "probe should NOT run again (cached)")
@@ -227,6 +238,7 @@ func TestGetRegistryToken(t *testing.T) {
 	}
 	defer func() { getTokenServiceURL = originalTokenURL }()
 
+	// Reset token cache
 	tokenCache.mu.Lock()
 	tokenCache.data = nil
 	tokenCache.mu.Unlock()
@@ -238,6 +250,7 @@ func TestGetRegistryToken(t *testing.T) {
 	token := getRegistryToken(req)
 	assert.Equal(t, "test.jwt.token", token)
 
+	// Verify caching: second call should return cached token without hitting server
 	token2 := getRegistryToken(req)
 	assert.Equal(t, "test.jwt.token", token2)
 }
@@ -266,14 +279,17 @@ func TestGetRegistryTokenCaching(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodGet, "http://example.com/v2/repo", nil)
 
+	// First call should hit the server
 	token1 := getRegistryToken(req)
 	require.Equal(t, "cached.jwt.token", token1)
 	assert.Equal(t, 1, callCount)
 
+	// Second call should use cached token
 	token2 := getRegistryToken(req)
 	assert.Equal(t, "cached.jwt.token", token2)
 	assert.Equal(t, 1, callCount, "should not call token server again (cached)")
 
+	// Force expiry and verify re-fetch
 	tokenCache.mu.Lock()
 	tokenCache.data.expires = time.Now().Add(-1 * time.Minute)
 	tokenCache.mu.Unlock()

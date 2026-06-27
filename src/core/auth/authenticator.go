@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/goharbor/harbor/src/common"
@@ -148,11 +147,6 @@ func Register(name string, h AuthenticateHelper) {
 // priority order.  Every backend whose Match() returns true is attempted;
 // the first successful authentication wins.
 func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
-	// Use DB auth for robot accounts - they are stored in Harbor DB regardless of auth mode
-	if strings.HasPrefix(m.Principal, config.RobotPrefix(ctx)) {
-		return authenticateWithLock(ctx, m, registry[common.DBAuth])
-	}
-
 	// Superuser always authenticates via DB.
 	if IsSuperUser(ctx, m.Principal) {
 		return authenticateWithLock(ctx, m, registry[common.DBAuth])
@@ -164,7 +158,7 @@ func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
 	}
 
 	var lastErr error
-	for i, helper := range helpers {
+	for _, helper := range helpers {
 		if lock.IsLocked(m.Principal) {
 			log.Debugf("%s is locked due to login failure, login failed", m.Principal)
 			return nil, nil
@@ -172,12 +166,9 @@ func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
 		user, err := helper.Authenticate(ctx, m)
 		if err != nil {
 			if _, ok := err.(ErrAuth); ok {
-				// Only lock when this is the last helper (no more fallbacks)
-				if i == len(helpers)-1 {
-					log.Warningf("Login failed, locking %s, and sleep for %v", m.Principal, frozenTime)
-					lock.Lock(m.Principal)
-					time.Sleep(frozenTime)
-				}
+				log.Warningf("Login failed, locking %s, and sleep for %v", m.Principal, frozenTime)
+				lock.Lock(m.Principal)
+				time.Sleep(frozenTime)
 			}
 			lastErr = err
 			continue
@@ -195,7 +186,7 @@ func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
 
 // loginHelpers returns the ordered list of AuthenticateHelper to try for
 // the current request.  The primary backend is determined from the
-// configured auth mode (still read from config during the transition
+// configured auth mode/ (still read from config during the transition
 // period).  Each backend is first checked with Match() so that
 // unconfigured backends (e.g. LDAP when no LDAP URL is set) are skipped.
 func loginHelpers(ctx context.Context) ([]AuthenticateHelper, error) {
@@ -227,7 +218,7 @@ func loginHelpers(ctx context.Context) ([]AuthenticateHelper, error) {
 }
 
 // authenticateWithLock wraps Authenticate + PostAuthenticate with the
-// lock check, used by Login for the superuser and robot fast-paths.
+// lock check, used by Login for the superuser fast-path.
 func authenticateWithLock(ctx context.Context, m models.AuthModel, h AuthenticateHelper) (*models.User, error) {
 	if lock.IsLocked(m.Principal) {
 		log.Debugf("%s is locked due to login failure, login failed", m.Principal)
@@ -345,30 +336,5 @@ func IsSuperUser(ctx context.Context, username string) bool {
 		log.Debugf("Failed to get user from DB, username: %s, error: %v", username, err)
 		return false
 	}
-	if u == nil {
-		log.Debugf("User %s not found in database", username)
-		return false
-	}
 	return u.UserID == 1
-}
-
-// canUseOIDCAuth checks if a user has OIDC metadata linked to their account.
-// Returns true only if the user exists and has OIDC metadata, allowing OIDC authentication.
-// Returns false if the user doesn't exist or doesn't have OIDC metadata, allowing fallback to DB auth.
-func canUseOIDCAuth(ctx context.Context, username string) bool {
-	u, err := user.Mgr.GetByName(ctx, username)
-	if err != nil {
-		log.Debugf("Could not retrieve user %s from database, will fall back to DB auth: %v", username, err)
-		return false
-	}
-	if u == nil {
-		log.Debugf("User %s not found in database, will fall back to DB auth", username)
-		return false
-	}
-	// Check if user has OIDC metadata
-	if u.OIDCUserMeta != nil {
-		return true
-	}
-	log.Debugf("User %s has no OIDC metadata, will fall back to DB auth", username)
-	return false
 }
