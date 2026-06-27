@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
 
 	"github.com/goharbor/harbor/src/common"
 	commonmodels "github.com/goharbor/harbor/src/common/models"
@@ -130,15 +131,17 @@ func (u *usersAPI) GetPersonalAccessToken(ctx context.Context, params operation.
 		return u.SendError(ctx, err)
 	}
 	return operation.NewGetPersonalAccessTokenOK().WithPayload(&models.PersonalAccessToken{
-		ID:          pat.ID,
-		Name:        pat.Name,
-		Description: pat.Description,
-		UserID:      int64(pat.UserID),
-		ExpiresAt:   pat.ExpiresAt,
-		Disabled:    pat.Disabled,
-		IsLegacy:    pat.IsLegacy,
-		LastUsedAt:  pat.LastUsedAt,
-		Scope:       pat.Scope,
+		ID:           pat.ID,
+		Name:         pat.Name,
+		Description:  pat.Description,
+		UserID:       int64(pat.UserID),
+		CreationTime: strfmt.DateTime(pat.CreationTime),
+		UpdateTime:   strfmt.DateTime(pat.UpdateTime),
+		ExpiresAt:    pat.ExpiresAt,
+		Disabled:     pat.Disabled,
+		IsLegacy:     pat.IsLegacy,
+		LastUsedAt:   pat.LastUsedAt,
+		Scope:        pat.Scope,
 	})
 }
 
@@ -168,15 +171,17 @@ func (u *usersAPI) ListPersonalAccessTokens(ctx context.Context, params operatio
 		payload = make([]*models.PersonalAccessToken, len(pats))
 		for i, pat := range pats {
 			payload[i] = &models.PersonalAccessToken{
-				ID:          pat.ID,
-				Name:        pat.Name,
-				Description: pat.Description,
-				UserID:      int64(pat.UserID),
-				ExpiresAt:   pat.ExpiresAt,
-				Disabled:    pat.Disabled,
-				IsLegacy:    pat.IsLegacy,
-				LastUsedAt:  pat.LastUsedAt,
-				Scope:       pat.Scope,
+				ID:           pat.ID,
+				Name:         pat.Name,
+				Description:  pat.Description,
+				UserID:       int64(pat.UserID),
+				CreationTime: strfmt.DateTime(pat.CreationTime),
+				UpdateTime:   strfmt.DateTime(pat.UpdateTime),
+				ExpiresAt:    pat.ExpiresAt,
+				Disabled:     pat.Disabled,
+				IsLegacy:     pat.IsLegacy,
+				LastUsedAt:   pat.LastUsedAt,
+				Scope:        pat.Scope,
 			}
 		}
 	}

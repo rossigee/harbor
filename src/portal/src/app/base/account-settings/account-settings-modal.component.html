@@ -211,6 +211,12 @@
                                     {{ 'PROFILE.PAT_STATUS' | translate }}
                                 </ng-container>
                             </clr-dg-column>
+                            <clr-dg-column>
+                                <ng-container
+                                    *clrDgHideableColumn="{ hidden: false }">
+                                    {{ 'PROFILE.PAT_SCOPE_COLUMN' | translate }}
+                                </ng-container>
+                            </clr-dg-column>
                             <clr-dg-row
                                 *ngFor="let pat of pats"
                                 [clrDgItem]="pat">
@@ -248,7 +254,10 @@
                                             'PROFILE.PAT_ACTIVE' | translate
                                         }}</clr-label
                                     >
-                                </clr-dg-cell>
+                                 </clr-dg-cell>
+                                 <clr-dg-cell>{{
+                                     pat.scope ? formatScope(pat.scope) : ('PROFILE.PAT_SCOPE_ALL' | translate)
+                                 }}</clr-dg-cell>
                                  <clr-dg-action-overflow [clrPosition]="'left'">
                                      <button
                                          class="dropdown-item"

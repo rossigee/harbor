@@ -159,7 +159,9 @@
         "PAT_SCOPE_PROJECT": "Project",
         "PAT_SCOPE_PULL": "Pull",
         "PAT_SCOPE_PUSH": "Push",
-        "PAT_SCOPE_NO_PROJECTS": "No projects found."
+        "PAT_SCOPE_NO_PROJECTS": "No projects found.",
+        "PAT_SCOPE_COLUMN": "Scope",
+        "PAT_SCOPE_ALL": "All projects"
     },
     "CHANGE_PWD": {
         "TITLE": "Change Password",

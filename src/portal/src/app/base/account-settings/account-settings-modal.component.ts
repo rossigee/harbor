@@ -610,6 +610,33 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
         return JSON.stringify(projectScopes);
     }
 
+    /** Format scope JSON string for display in the datagrid */
+    formatScope(scopeJson: string): string {
+        try {
+            const scopes: any[] = JSON.parse(scopeJson);
+            if (!Array.isArray(scopes) || scopes.length === 0) {
+                return '-';
+            }
+            return scopes
+                .map((s: any) => {
+                    const projectName = s.project_name || `project #${s.project_id}`;
+                    if (!s.access || !Array.isArray(s.access) || s.access.length === 0) {
+                        return projectName;
+                    }
+                    const actions = s.access
+                        .filter((a: any) => a.actions && Array.isArray(a.actions))
+                        .flatMap((a: any) => a.actions);
+                    if (actions.length === 0) {
+                        return projectName;
+                    }
+                    return `${projectName} (${actions.join(', ')})`;
+                })
+                .join('; ');
+        } catch {
+            return scopeJson;
+        }
+    }
+
     closeCreatePATModal() {
         this.showCreatePATModal = false;
     }
