@@ -75,19 +75,21 @@ func newProxy() http.Handler {
 }
 
 // authDirector returns a Director that authenticates to the upstream registry
-// using either basic auth or bearer token auth, detected automatically by
-// probing the registry's /v2/ endpoint.
+// using either basic auth or bearer token auth, detected by probing the
+// registry with the shared credential and falling back to a bearer token
+// request if the registry rejects basic auth.
 func authDirector(d func(*http.Request)) func(*http.Request) {
 	return func(r *http.Request) {
 		d(r)
 		if r == nil {
 			return
 		}
-		if detectRegistryAuthType() == "token" {
+		switch detectRegistryAuthType() {
+		case "token":
 			if tk := getRegistryToken(r); tk != "" {
 				r.Header.Set("Authorization", "Bearer "+tk)
 			}
-		} else {
+		default:
 			u, p := config.RegistryCredential()
 			r.SetBasicAuth(u, p)
 		}
@@ -95,9 +97,11 @@ func authDirector(d func(*http.Request)) func(*http.Request) {
 }
 
 // detectRegistryAuthType probes the upstream registry to determine which
-// authentication scheme it expects (bearer token or basic auth). The result
-// is cached on success; on probe failure "basic" is returned as a safe
-// default and the probe is retried on the next request.
+// authentication scheme it expects (bearer token or basic auth). It first
+// tries basic auth with the shared registry credential; if the registry
+// responds with a Bearer challenge it returns "token".  The result is cached
+// on success; on probe failure "basic" is returned as a safe default and the
+// probe is retried on the next request.
 func detectRegistryAuthType() string {
 	if v := detectedAuthType.Load(); v != nil {
 		if s, ok := v.(string); ok {
@@ -115,24 +119,36 @@ func detectRegistryAuthType() string {
 	return authType
 }
 
-// probeRegistry makes an unauthenticated request to the registry's /v2/
-// endpoint and inspects the Www-Authenticate response header to determine
-// whether the registry expects bearer token auth or basic auth.
+// probeRegistry makes a request to the registry's /v2/ endpoint with the
+// shared registry credential as basic auth.  If the registry accepts the
+// credential (any non-401 response) it returns "basic".  If the registry
+// returns 401 with a Www-Authenticate: Bearer challenge it returns "token".
 func probeRegistry() (string, error) {
 	regURL, err := config.RegistryURL()
 	if err != nil {
 		return "", fmt.Errorf("failed to get registry URL: %w", err)
 	}
 
-	resp, err := probeHTTPClient.Get(strings.TrimSuffix(regURL, "/") + "/v2/")
+	req, err := http.NewRequest(http.MethodGet, strings.TrimSuffix(regURL, "/")+"/v2/", nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create probe request: %w", err)
+	}
+	u, p := config.RegistryCredential()
+	if u != "" {
+		req.SetBasicAuth(u, p)
+	}
+
+	resp, err := probeHTTPClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("failed to probe registry: %w", err)
 	}
 	defer resp.Body.Close()
 
-	wwwAuth := resp.Header.Get("Www-Authenticate")
-	if strings.HasPrefix(wwwAuth, "Bearer") {
-		return "token", nil
+	if resp.StatusCode == http.StatusUnauthorized {
+		wwwAuth := resp.Header.Get("Www-Authenticate")
+		if strings.HasPrefix(wwwAuth, "Bearer") {
+			return "token", nil
+		}
 	}
 	return "basic", nil
 }
