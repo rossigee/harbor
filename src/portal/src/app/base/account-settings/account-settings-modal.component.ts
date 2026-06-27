@@ -32,6 +32,7 @@ import { InlineAlertComponent } from '../../shared/components/inline-alert/inlin
 import { ConfirmationMessage } from '../global-confirmation-dialog/confirmation-message';
 import { ConfirmationAcknowledgement } from '../global-confirmation-dialog/confirmation-state-message';
 import { UserService } from 'ng-swagger-gen/services/user.service';
+import { ProjectService } from 'ng-swagger-gen/services/project.service';
 import { AppConfigService } from '../../services/app-config.service';
 
 @Component({
@@ -79,12 +80,32 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
     newPATForm = { name: '', expiresInDays: 0, description: '' };
     createdPATSecret: string = '';
 
+    // PAT Scope Selection
+    scopeProjects: Array<{
+        project_id: number;
+        project_name: string;
+        pull: boolean;
+        push: boolean;
+    }> = [];
+    scopeLoading: boolean = false;
+
+    /** All projects are selected by default (full auto-computed scope) */
+    get allScopeSelected(): boolean {
+        return this.scopeProjects.every(p => p.pull && p.push);
+    }
+
+    /** No projects are selected */
+    get noScopeSelected(): boolean {
+        return this.scopeProjects.every(p => !p.pull && !p.push);
+    }
+
     constructor(
         private session: SessionService,
         private msgHandler: MessageHandlerService,
         private router: Router,
         private searchTrigger: SearchTriggerService,
         private userService: UserService,
+        private projectService: ProjectService,
         private appConfigService: AppConfigService
     ) {}
 
@@ -514,6 +535,79 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
         this.showCreatePATModal = true;
         this.newPATForm = { name: '', expiresInDays: 0, description: '' };
         this.createdPATSecret = '';
+        this.loadScopeProjects();
+    }
+
+    loadScopeProjects() {
+        if (!this.account) {
+            return;
+        }
+        this.scopeLoading = true;
+        this.projectService
+            .listProjects({ pageSize: 1000, withDetail: false })
+            .subscribe({
+                next: (projects: any[]) => {
+                    this.scopeProjects = (projects || []).map(p => ({
+                        project_id: p.project_id,
+                        project_name: p.name,
+                        pull: true,
+                        push: true,
+                    }));
+                    this.scopeLoading = false;
+                },
+                error: () => {
+                    this.scopeProjects = [];
+                    this.scopeLoading = false;
+                },
+            });
+    }
+
+    selectAllScope() {
+        this.scopeProjects.forEach(p => {
+            p.pull = true;
+            p.push = true;
+        });
+    }
+
+    deselectAllScope() {
+        this.scopeProjects.forEach(p => {
+            p.pull = false;
+            p.push = false;
+        });
+    }
+
+    /** Build the scope JSON string from selected project permissions.
+     *  Returns undefined (auto-compute) when all projects have full permissions. */
+    buildScopeJson(): string | undefined {
+        if (this.allScopeSelected) {
+            return undefined;
+        }
+        const selected = this.scopeProjects.filter(
+            p => p.pull || p.push
+        );
+        if (selected.length === 0) {
+            return undefined;
+        }
+        const projectScopes: any[] = selected.map(p => {
+            const actions: string[] = [];
+            if (p.pull) {
+                actions.push('pull');
+            }
+            if (p.push) {
+                actions.push('push');
+            }
+            return {
+                project_id: p.project_id,
+                project_name: p.project_name,
+                access: [
+                    {
+                        resource: 'repository',
+                        actions: actions,
+                    },
+                ],
+            };
+        });
+        return JSON.stringify(projectScopes);
     }
 
     closeCreatePATModal() {
@@ -554,6 +648,7 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
         if (!this.newPATForm.name || !this.account) {
             return;
         }
+        const scopeJson = this.buildScopeJson();
         this.userService
             .CreatePersonalAccessToken({
                 userId: this.account.user_id,
@@ -561,6 +656,7 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
                     name: this.newPATForm.name,
                     description: this.newPATForm.description,
                     expires_in_days: this.newPATForm.expiresInDays,
+                    scope: scopeJson,
                 },
             })
             .subscribe({

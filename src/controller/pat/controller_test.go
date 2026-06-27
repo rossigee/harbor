@@ -304,6 +304,56 @@ func (suite *ControllerTestSuite) TestScopeContainsProjectAccess() {
 	}
 }
 
+func (suite *ControllerTestSuite) TestCreateWithUserSuppliedScope() {
+	scopeJSON := `[{"project_id":1,"project_name":"library","access":[{"resource":"repository","actions":["pull"]}]}]`
+	pat := &model.PersonalAccessToken{
+		UserID:      1,
+		Name:        "supplied-scope",
+		Description: "Token with user-supplied scope",
+		ExpiresAt:   -1,
+		Scope:       scopeJSON,
+	}
+
+	id, _, err := suite.ctl.Create(suite.Context(), pat)
+	suite.NoError(err)
+
+	retrieved, err := suite.ctl.Get(suite.Context(), id)
+	suite.NoError(err)
+	suite.NotEmpty(retrieved.Scope)
+	suite.Contains(retrieved.Scope, "project_id")
+}
+
+func (suite *ControllerTestSuite) TestCreateWithEmptyScopeFallsBack() {
+	pat := &model.PersonalAccessToken{
+		UserID:      1,
+		Name:        "empty-scope-fallback",
+		Description: "Token without scope should auto-compute",
+		ExpiresAt:   -1,
+		Scope:       "",
+	}
+
+	id, _, err := suite.ctl.Create(suite.Context(), pat)
+	suite.NoError(err)
+
+	retrieved, err := suite.ctl.Get(suite.Context(), id)
+	suite.NoError(err)
+	suite.NotNil(retrieved.Scope)
+}
+
+func (suite *ControllerTestSuite) TestCreateWithInvalidScopeJSON() {
+	pat := &model.PersonalAccessToken{
+		UserID:      1,
+		Name:        "invalid-scope",
+		Description: "Token with invalid scope JSON",
+		ExpiresAt:   -1,
+		Scope:       "not-valid-json",
+	}
+
+	_, _, err := suite.ctl.Create(suite.Context(), pat)
+	suite.Error(err)
+	suite.Contains(err.Error(), "invalid scope JSON")
+}
+
 func TestControllerTestSuite(t *testing.T) {
 	suite.Run(t, new(ControllerTestSuite))
 }

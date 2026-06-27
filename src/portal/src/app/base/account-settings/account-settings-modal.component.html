@@ -508,6 +508,74 @@
                     'PROFILE.PAT_EXPIRES_HELP' | translate
                 }}</clr-control-helper>
             </clr-number-input-container>
+
+            <div class="scope-section" style="margin-top: 24px">
+                <label style="font-weight: 600; display: block; margin-bottom: 4px">
+                    {{ 'PROFILE.PAT_SCOPE' | translate }}
+                </label>
+                <p style="font-size: 13px; color: #666; margin-bottom: 12px">
+                    {{ 'PROFILE.PAT_SCOPE_HELP' | translate }}
+                </p>
+                <div *ngIf="scopeLoading">
+                    <span class="spinner spinner-sm"></span>
+                    {{ 'PROFILE.LOADING' | translate }}
+                </div>
+                <div *ngIf="!scopeLoading && scopeProjects.length > 0">
+                    <div style="margin-bottom: 8px">
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-link"
+                            (click)="selectAllScope()">
+                            {{ 'PROFILE.PAT_SCOPE_SELECT_ALL' | translate }}
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-link"
+                            (click)="deselectAllScope()">
+                            {{ 'PROFILE.PAT_SCOPE_DESELECT_ALL' | translate }}
+                        </button>
+                    </div>
+                    <table
+                        class="table table-noborder"
+                        style="width: 100%">
+                        <thead>
+                            <tr>
+                                <th>{{ 'PROFILE.PAT_SCOPE_PROJECT' | translate }}</th>
+                                <th style="width: 80px; text-align: center">
+                                    {{ 'PROFILE.PAT_SCOPE_PULL' | translate }}
+                                </th>
+                                <th style="width: 80px; text-align: center">
+                                    {{ 'PROFILE.PAT_SCOPE_PUSH' | translate }}
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let p of scopeProjects">
+                                <td>{{ p.project_name }}</td>
+                                <td style="text-align: center">
+                                    <input
+                                        clrCheckbox
+                                        type="checkbox"
+                                        [(ngModel)]="p.pull"
+                                        [name]="'pull_' + p.project_id" />
+                                </td>
+                                <td style="text-align: center">
+                                    <input
+                                        clrCheckbox
+                                        type="checkbox"
+                                        [(ngModel)]="p.push"
+                                        [name]="'push_' + p.project_id" />
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div
+                    *ngIf="!scopeLoading && scopeProjects.length === 0"
+                    style="font-size: 13px; color: #666">
+                    {{ 'PROFILE.PAT_SCOPE_NO_PROJECTS' | translate }}
+                </div>
+            </div>
         </form>
     </div>
     <div class="modal-footer">

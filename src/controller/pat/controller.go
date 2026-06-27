@@ -96,10 +96,18 @@ func (c *controller) Create(ctx context.Context, pat *model.PersonalAccessToken)
 	// Prefix the plaintext secret with "hbr_pat_" for new tokens
 	fullPlaintextSecret := fmt.Sprintf("hbr_pat_%s", plaintextSecret)
 
-	// Generate scope based on user's project permissions
-	scope, err := c.computeScope(ctx, pat.UserID)
-	if err != nil {
-		return 0, "", errors.Wrapf(err, "failed to compute scope for user %d", pat.UserID)
+	// Compute scope: use user-supplied scope if provided, otherwise auto-compute
+	var scope string
+	if pat.Scope != "" {
+		scope, err = c.intersectScope(ctx, pat.UserID, pat.Scope)
+		if err != nil {
+			return 0, "", errors.Wrapf(err, "failed to process scope for user %d", pat.UserID)
+		}
+	} else {
+		scope, err = c.computeScope(ctx, pat.UserID)
+		if err != nil {
+			return 0, "", errors.Wrapf(err, "failed to compute scope for user %d", pat.UserID)
+		}
 	}
 
 	patToCreate := &model.PersonalAccessToken{
@@ -206,6 +214,82 @@ func (c *controller) computeScope(ctx context.Context, userID int) (string, erro
 	}
 
 	return string(scopeJSON), nil
+}
+
+// intersectScope parses the user-supplied scope and intersects it with the user's
+// actual project permissions. The user can only narrow their scope, never broaden it.
+func (c *controller) intersectScope(ctx context.Context, userID int, userScope string) (string, error) {
+	var requestedScopes []model.ProjectScope
+	if err := json.Unmarshal([]byte(userScope), &requestedScopes); err != nil {
+		return "[]", errors.Wrap(err, "invalid scope JSON")
+	}
+
+	// Get the user's full effective scope
+	fullScope, err := c.computeScope(ctx, userID)
+	if err != nil {
+		return "[]", err
+	}
+
+	var fullScopes []model.ProjectScope
+	if err := json.Unmarshal([]byte(fullScope), &fullScopes); err != nil {
+		return "[]", errors.Wrap(err, "failed to parse computed scope")
+	}
+
+	// Build a lookup map from project ID -> AccessLevel (from full scope)
+	type actionSet map[string]struct{}
+	fullActionsByProject := make(map[int64]map[string]actionSet)
+	for _, ps := range fullScopes {
+		actionsByResource := make(map[string]actionSet)
+		for _, al := range ps.Access {
+			actions := make(actionSet)
+			for _, a := range al.Actions {
+				actions[a] = struct{}{}
+			}
+			actionsByResource[al.Resource] = actions
+		}
+		fullActionsByProject[ps.ProjectID] = actionsByResource
+	}
+
+	// Intersect: for each requested project scope, clamp actions to what the user actually has
+	var intersected []model.ProjectScope
+	for _, req := range requestedScopes {
+		fullResources, exists := fullActionsByProject[req.ProjectID]
+		if !exists {
+			continue
+		}
+		var access []model.AccessLevel
+		for _, al := range req.Access {
+			fullActions, ok := fullResources[al.Resource]
+			if !ok {
+				continue
+			}
+			var allowedActions []string
+			for _, a := range al.Actions {
+				if _, allowed := fullActions[a]; allowed {
+					allowedActions = append(allowedActions, a)
+				}
+			}
+			if len(allowedActions) > 0 {
+				access = append(access, model.AccessLevel{
+					Resource: al.Resource,
+					Actions:  allowedActions,
+				})
+			}
+		}
+		if len(access) > 0 {
+			intersected = append(intersected, model.ProjectScope{
+				ProjectID:   req.ProjectID,
+				ProjectName: req.ProjectName,
+				Access:      access,
+			})
+		}
+	}
+
+	result, err := json.Marshal(intersected)
+	if err != nil {
+		return "[]", err
+	}
+	return string(result), nil
 }
 
 // Get returns a personal access token by ID

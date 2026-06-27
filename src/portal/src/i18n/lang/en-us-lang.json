@@ -151,7 +151,15 @@
         "PAT_UPDATED": "Token updated successfully",
         "PAT_DELETED": "Token deleted successfully",
         "DELETE_PAT_TITLE": "Delete Token",
-        "DELETE_PAT_CONFIRM": "Are you sure you want to delete this token? This action cannot be undone."
+        "DELETE_PAT_CONFIRM": "Are you sure you want to delete this token? This action cannot be undone.",
+        "PAT_SCOPE": "Scope (optional)",
+        "PAT_SCOPE_HELP": "Restrict this token to specific projects and actions. All projects and actions are selected by default.",
+        "PAT_SCOPE_SELECT_ALL": "Select All",
+        "PAT_SCOPE_DESELECT_ALL": "Deselect All",
+        "PAT_SCOPE_PROJECT": "Project",
+        "PAT_SCOPE_PULL": "Pull",
+        "PAT_SCOPE_PUSH": "Push",
+        "PAT_SCOPE_NO_PROJECTS": "No projects found."
     },
     "CHANGE_PWD": {
         "TITLE": "Change Password",

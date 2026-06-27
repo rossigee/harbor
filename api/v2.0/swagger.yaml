@@ -10444,6 +10444,9 @@ definitions:
         type: integer
         format: int32
         description: The number of days until the token expires. If not specified or -1, the token never expires.
+      scope:
+        type: string
+        description: Optional JSON string representing the token's scope as []ProjectScope. If not provided, the scope is auto-computed from the user's project memberships. If provided, the scope is intersected with the user's actual permissions so the user will not receive permissions they don't already have.
   PersonalAccessTokenCreatedResponse:
     type: object
     description: Response when creating or refreshing a personal access token (secret shown only once)

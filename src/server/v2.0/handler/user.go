@@ -77,6 +77,7 @@ func (u *usersAPI) CreatePersonalAccessToken(ctx context.Context, params operati
 		UserID:      userID,
 		Name:        *params.Request.Name,
 		Description: params.Request.Description,
+		Scope:       params.Request.Scope,
 	}
 	if params.Request.ExpiresInDays > 0 {
 		patModel.ExpiresAt = time.Now().AddDate(0, 0, int(params.Request.ExpiresInDays)).Unix()
