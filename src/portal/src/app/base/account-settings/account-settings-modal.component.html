@@ -249,31 +249,31 @@
                                         }}</clr-label
                                     >
                                 </clr-dg-cell>
-                                <clr-dg-action-overflow [clrPosition]="'left'">
-                                    <button
-                                        clrDropdownItem
-                                        (click)="refreshPATSecret(pat.id)"
-                                        id="refresh-pat-{{ pat.id }}">
-                                        {{ 'PROFILE.PAT_REFRESH' | translate }}
-                                    </button>
-                                    <button
-                                        clrDropdownItem
-                                        (click)="togglePATDisabled(pat)"
-                                        id="toggle-pat-{{ pat.id }}">
-                                        <span *ngIf="pat.disabled">{{
-                                            'PROFILE.PAT_ENABLE' | translate
-                                        }}</span>
-                                        <span *ngIf="!pat.disabled">{{
-                                            'PROFILE.PAT_DISABLE' | translate
-                                        }}</span>
-                                    </button>
-                                    <button
-                                        clrDropdownItem
-                                        (click)="deletePAT(pat.id)"
-                                        id="delete-pat-{{ pat.id }}">
-                                        {{ 'BUTTON.DELETE' | translate }}
-                                    </button>
-                                </clr-dg-action-overflow>
+                                 <clr-dg-action-overflow [clrPosition]="'left'">
+                                     <button
+                                         class="dropdown-item"
+                                         (click)="refreshPATSecret(pat.id)"
+                                         id="refresh-pat-{{ pat.id }}">
+                                         {{ 'PROFILE.PAT_REFRESH' | translate }}
+                                     </button>
+                                     <button
+                                         class="dropdown-item"
+                                         (click)="togglePATDisabled(pat)"
+                                         id="toggle-pat-{{ pat.id }}">
+                                         <span *ngIf="pat.disabled">{{
+                                             'PROFILE.PAT_ENABLE' | translate
+                                         }}</span>
+                                         <span *ngIf="!pat.disabled">{{
+                                             'PROFILE.PAT_DISABLE' | translate
+                                         }}</span>
+                                     </button>
+                                     <button
+                                         class="dropdown-item"
+                                         (click)="deletePAT(pat.id)"
+                                         id="delete-pat-{{ pat.id }}">
+                                         {{ 'BUTTON.DELETE' | translate }}
+                                     </button>
+                                 </clr-dg-action-overflow>
                             </clr-dg-row>
                             <clr-dg-placeholder>
                                 {{ 'PROFILE.PAT_EMPTY' | translate }}
