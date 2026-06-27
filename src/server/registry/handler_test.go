@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func direct(req *http.Request) {
+func basicDirect(req *http.Request) {
 	req.Header.Add("test-key", "test-value")
 }
 
@@ -30,7 +30,7 @@ func TestBasicAuthDirector(t *testing.T) {
 	t.Setenv("REGISTRY_CREDENTIAL_USERNAME", "testuser")
 	t.Setenv("REGISTRY_CREDENTIAL_PASSWORD", "testpassword")
 
-	d := basicAuthDirector(direct)
+	d := basicAuthDirector(basicDirect)
 	d(req)
 	assert.Equal(t, "test-value", req.Header.Get("test-key"))
 	user, pass, ok := req.BasicAuth()

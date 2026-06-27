@@ -29,7 +29,6 @@ import (
 	"github.com/goharbor/harbor/src/common"
 	utilstest "github.com/goharbor/harbor/src/common/utils/test"
 	"github.com/goharbor/harbor/src/core/middlewares"
-	"github.com/goharbor/harbor/src/lib"
 	"github.com/goharbor/harbor/src/lib/config"
 	"github.com/goharbor/harbor/src/lib/orm"
 	_ "github.com/goharbor/harbor/src/pkg/config/db"
@@ -59,12 +58,15 @@ func TestMain(m *testing.M) {
 }
 
 func TestRedirectForOIDC(t *testing.T) {
-	ctx := lib.WithAuthMode(orm.Context(), common.DBAuth)
+	ctx := orm.Context()
 	assert.False(t, redirectForOIDC(ctx, "nonexist"))
-	ctx = lib.WithAuthMode(orm.Context(), common.OIDCAuth)
+	config.Upload(map[string]any{
+		common.OIDCEndpoint: "http://example.com/oidc",
+		common.OIDCScope:    "openid,profile",
+	})
+	ctx = orm.Context()
 	assert.True(t, redirectForOIDC(ctx, "nonexist"))
 	assert.False(t, redirectForOIDC(ctx, "admin"))
-
 }
 
 // TestMain is a sample to run an endpoint test

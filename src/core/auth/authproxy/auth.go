@@ -61,6 +61,11 @@ type Auth struct {
 	userMgr             user.Manager
 }
 
+// Match returns false — authproxy authentication is handled by the middleware, not by Login().
+func (a *Auth) Match(_ context.Context) bool {
+	return false
+}
+
 type session struct {
 	SessionID string `json:"session_id,omitempty"`
 }

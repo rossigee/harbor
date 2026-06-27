@@ -103,6 +103,7 @@ func getManifest(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 	}
+	log.Warningf("MANIFEST_DEBUG: fromCache=%v, calling proxy", fromCache)
 	// proxy to registry if not from cache
 	if !fromCache {
 		proxy.ServeHTTP(buffer, req)

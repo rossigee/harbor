@@ -115,19 +115,9 @@ func (c *controller) updateLogEndpoint(ctx context.Context, cfgs map[string]any)
 func (c *controller) validateCfg(ctx context.Context, cfgs map[string]any) error {
 	mgr := config.GetCfgManager(ctx)
 
-	// check if auth can be modified
-	if nv, ok := cfgs[common.AUTHMode]; ok {
-		if nv.(string) != mgr.Get(ctx, common.AUTHMode).GetString() {
-			canBeModified, err := c.authModeCanBeModified(ctx)
-			if err != nil {
-				return err
-			}
-			if !canBeModified {
-				return errors.BadRequestError(nil).
-					WithMessage("the auth mode cannot be modified as new users have been inserted into database")
-			}
-		}
-	}
+	// auth_mode is deprecated and derived from configured backends;
+	// ignore any attempt to change it via the config API.
+	delete(cfgs, common.AUTHMode)
 
 	err := mgr.ValidateCfg(ctx, cfgs)
 	if err != nil {
@@ -221,7 +211,7 @@ type ScanAllPolicy struct {
 	Param map[string]any `json:"parameter,omitempty"`
 }
 
-func (c *controller) ConvertForGet(ctx context.Context, cfg map[string]any, internal bool) (map[string]*models.Value, error) {
+func (c *controller) ConvertForGet(_ context.Context, cfg map[string]any, internal bool) (map[string]*models.Value, error) {
 	result := map[string]*models.Value{}
 
 	mList := metadata.Instance().GetAll()
@@ -259,12 +249,8 @@ func (c *controller) ConvertForGet(ctx context.Context, cfg map[string]any, inte
 		cfg[common.ScanAllPolicy] = `{"type":"none"}`
 	}
 
-	// set value for auth_mode
-	canBeModified, err := c.authModeCanBeModified(ctx)
-	if err != nil {
-		return nil, err
-	}
-	result[common.AUTHMode].Editable = canBeModified && !readOnlyForAll
+	// auth_mode is deprecated and derived from configured backends
+	result[common.AUTHMode].Editable = false
 
 	return result, nil
 }

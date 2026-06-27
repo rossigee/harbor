@@ -34,9 +34,13 @@ func (r *robot) Generate(req *http.Request) security.Context {
 	log := log.G(req.Context())
 	name, secret, ok := req.BasicAuth()
 	if !ok {
+		log.Debugf("DEBUG_ROBOT: no basic auth")
 		return nil
 	}
-	if !strings.HasPrefix(name, config.RobotPrefix(req.Context())) {
+	robotPrefix := config.RobotPrefix(req.Context())
+	log.Debugf("DEBUG_ROBOT: name=%s, prefix=%s, hasPrefix=%v", name, robotPrefix, strings.HasPrefix(name, robotPrefix))
+	if !strings.HasPrefix(name, robotPrefix) {
+		log.Debugf("DEBUG_ROBOT: name doesn't start with prefix")
 		return nil
 	}
 	// The robot name can be used as the unique identifier to locate robot as it contains the project name.

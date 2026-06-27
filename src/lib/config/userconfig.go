@@ -22,7 +22,6 @@ import (
 	"github.com/goharbor/harbor/src/common/models"
 	cfgModels "github.com/goharbor/harbor/src/lib/config/models"
 	"github.com/goharbor/harbor/src/lib/errors"
-	"github.com/goharbor/harbor/src/lib/log"
 )
 
 // It contains all user related configurations, each of user related settings requires a context provided
@@ -37,14 +36,22 @@ func GetSystemCfg(ctx context.Context) (map[string]any, error) {
 }
 
 // AuthMode ...
-func AuthMode(ctx context.Context) (string, error) {
-	mgr := DefaultMgr()
-	err := mgr.Load(ctx)
-	if err != nil {
-		log.Errorf("failed to load config, error %v", err)
-		return "db_auth", err
+// DetectAuthMode derives the auth mode from configured backends.
+// Priority: OIDC > LDAP > UAA > HTTP Auth Proxy > DB (default).
+func DetectAuthMode(ctx context.Context) string {
+	if setting, err := OIDCSetting(ctx); err == nil && setting.Endpoint != "" {
+		return common.OIDCAuth
 	}
-	return mgr.Get(ctx, common.AUTHMode).GetString(), nil
+	if conf, err := LDAPConf(ctx); err == nil && conf.URL != "" {
+		return common.LDAPAuth
+	}
+	if setting, err := UAASettings(ctx); err == nil && setting.Endpoint != "" {
+		return common.UAAAuth
+	}
+	if conf, err := HTTPAuthProxySetting(ctx); err == nil && conf.Endpoint != "" {
+		return common.HTTPAuth
+	}
+	return common.DBAuth
 }
 
 // LDAPConf returns the setting of ldap server
