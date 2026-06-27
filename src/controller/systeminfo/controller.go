@@ -99,11 +99,11 @@ func (c *controller) GetInfo(ctx context.Context, opt Options) (*Data, error) {
 		return nil, err
 	}
 	res := &Data{
-		AuthMode:         utils.SafeCastString(cfg[common.AUTHMode]),
+		AuthMode:         config.DetectAuthMode(ctx),
 		PrimaryAuthMode:  utils.SafeCastBool(cfg[common.PrimaryAuthMode]),
 		SelfRegistration: utils.SafeCastBool(cfg[common.SelfRegistration]),
 		BannerMessage:    utils.SafeCastString(mgr.Get(ctx, common.BannerMessage).GetString()),
-		OIDCProviderName: OIDCProviderName(cfg),
+		OIDCProviderName: OIDCProviderName(ctx, cfg),
 	}
 	if res.AuthMode == common.HTTPAuth {
 		if s, err := config.HTTPAuthProxySetting(ctx); err == nil {
@@ -139,9 +139,8 @@ func (c *controller) GetInfo(ctx context.Context, opt Options) (*Data, error) {
 	return res, nil
 }
 
-func OIDCProviderName(cfg map[string]any) string {
-	authMode := utils.SafeCastString(cfg[common.AUTHMode])
-	if authMode != common.OIDCAuth {
+func OIDCProviderName(ctx context.Context, cfg map[string]any) string {
+	if config.DetectAuthMode(ctx) != common.OIDCAuth {
 		return ""
 	}
 	return utils.SafeCastString(cfg[common.OIDCName])
