@@ -164,7 +164,7 @@ func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
 	}
 
 	var lastErr error
-	for _, helper := range helpers {
+	for i, helper := range helpers {
 		if lock.IsLocked(m.Principal) {
 			log.Debugf("%s is locked due to login failure, login failed", m.Principal)
 			return nil, nil
@@ -172,9 +172,12 @@ func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
 		user, err := helper.Authenticate(ctx, m)
 		if err != nil {
 			if _, ok := err.(ErrAuth); ok {
-				log.Warningf("Login failed, locking %s, and sleep for %v", m.Principal, frozenTime)
-				lock.Lock(m.Principal)
-				time.Sleep(frozenTime)
+				// Only lock when this is the last helper (no more fallbacks)
+				if i == len(helpers)-1 {
+					log.Warningf("Login failed, locking %s, and sleep for %v", m.Principal, frozenTime)
+					lock.Lock(m.Principal)
+					time.Sleep(frozenTime)
+				}
 			}
 			lastErr = err
 			continue
