@@ -61,17 +61,17 @@ var getTokenServiceURL = func() string {
 
 func newProxy() http.Handler {
 	regURL, _ := config.RegistryURL()
-	u, err := url.Parse(regURL)
+	url, err := url.Parse(regURL)
 	if err != nil {
 		panic(fmt.Sprintf("failed to parse URL of registry: %v", err))
 	}
-	p := httputil.NewSingleHostReverseProxy(u)
+	proxy := httputil.NewSingleHostReverseProxy(url)
 	if commonhttp.InternalTLSEnabled() {
-		p.Transport = commonhttp.GetHTTPTransport()
+		proxy.Transport = commonhttp.GetHTTPTransport()
 	}
 
-	p.Director = authDirector(p.Director)
-	return p
+	proxy.Director = authDirector(proxy.Director)
+	return proxy
 }
 
 // authDirector returns a Director that authenticates to the upstream registry.
