@@ -141,7 +141,7 @@ func Register(name string, h AuthenticateHelper) {
 		return
 	}
 	registry[name] = h
-	log.Debugf("Registered authentication helper for auth mode: %s", name)
+	log.Debugf("Registered authentication helper: %s", name)
 }
 
 // Login authenticates user credentials by trying registered backends in
@@ -195,8 +195,7 @@ func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
 
 // loginHelpers returns the ordered list of AuthenticateHelper to try for
 // the current request.  The primary backend is determined from the
-// configured auth mode/ (still read from config during the transition
-// period).  Each backend is first checked with Match() so that
+// configured backends.  Each backend is first checked with Match() so that
 // unconfigured backends (e.g. LDAP when no LDAP URL is set) are skipped.
 func loginHelpers(ctx context.Context) ([]AuthenticateHelper, error) {
 	authMode := config.DetectAuthMode(ctx)
@@ -214,13 +213,13 @@ func loginHelpers(ctx context.Context) ([]AuthenticateHelper, error) {
 		if h.Match(ctx) {
 			return []AuthenticateHelper{h}, nil
 		}
-		return nil, fmt.Errorf("auth mode is %q but LDAP is not configured", authMode)
+		return nil, fmt.Errorf("LDAP is configured as primary auth method but not properly configured")
 	case common.UAAAuth:
 		h := registry[common.UAAAuth]
 		if h.Match(ctx) {
 			return []AuthenticateHelper{h}, nil
 		}
-		return nil, fmt.Errorf("auth mode is %q but UAA is not configured", authMode)
+		return nil, fmt.Errorf("UAA is configured as primary auth method but not properly configured")
 	default:
 		return []AuthenticateHelper{registry[common.DBAuth]}, nil
 	}
@@ -248,13 +247,13 @@ func authenticateWithLock(ctx context.Context, m models.AuthModel, h Authenticat
 }
 
 func getHelper(ctx context.Context) (AuthenticateHelper, error) {
-	authMode := config.DetectAuthMode(ctx)
-	h, ok := registry[authMode]
+	primary := config.DetectAuthMode(ctx)
+	h, ok := registry[primary]
 	if !ok {
-		return nil, fmt.Errorf("can not get authenticator, authmode: %s", authMode)
+		return nil, fmt.Errorf("can not get authenticator for primary auth method: %s", primary)
 	}
 	if !h.Match(ctx) {
-		return nil, fmt.Errorf("authenticator for authmode %s is not available", authMode)
+		return nil, fmt.Errorf("authenticator for %s is not available", primary)
 	}
 	return h, nil
 }

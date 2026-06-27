@@ -26,7 +26,6 @@ import (
 	"github.com/goharbor/harbor/src/lib/config/models"
 	"github.com/goharbor/harbor/src/lib/errors"
 	"github.com/goharbor/harbor/src/lib/log"
-	"github.com/goharbor/harbor/src/lib/q"
 	"github.com/goharbor/harbor/src/pkg/audit"
 	"github.com/goharbor/harbor/src/pkg/user"
 )
@@ -114,10 +113,6 @@ func (c *controller) updateLogEndpoint(ctx context.Context, cfgs map[string]any)
 
 func (c *controller) validateCfg(ctx context.Context, cfgs map[string]any) error {
 	mgr := config.GetCfgManager(ctx)
-
-	// auth_mode is deprecated and derived from configured backends;
-	// ignore any attempt to change it via the config API.
-	delete(cfgs, common.AUTHMode)
 
 	err := mgr.ValidateCfg(ctx, cfgs)
 	if err != nil {
@@ -249,9 +244,6 @@ func (c *controller) ConvertForGet(_ context.Context, cfg map[string]any, intern
 		cfg[common.ScanAllPolicy] = `{"type":"none"}`
 	}
 
-	// auth_mode is deprecated and derived from configured backends
-	result[common.AUTHMode].Editable = false
-
 	return result, nil
 }
 
@@ -269,12 +261,4 @@ func (c *controller) OverwriteConfig(ctx context.Context) error {
 		readOnlyForAll = true
 	}
 	return nil
-}
-
-func (c *controller) authModeCanBeModified(ctx context.Context) (bool, error) {
-	cnt, err := c.userManager.Count(ctx, &q.Query{})
-	if err != nil {
-		return false, err
-	}
-	return cnt == 0, nil
 }
