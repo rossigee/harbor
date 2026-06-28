@@ -206,7 +206,7 @@ type ScanAllPolicy struct {
 	Param map[string]any `json:"parameter,omitempty"`
 }
 
-func (c *controller) ConvertForGet(ctx context.Context, cfg map[string]any, internal bool) (map[string]*models.Value, error) {
+func (c *controller) ConvertForGet(_ context.Context, cfg map[string]any, internal bool) (map[string]*models.Value, error) {
 	result := map[string]*models.Value{}
 
 	mList := metadata.Instance().GetAll()
