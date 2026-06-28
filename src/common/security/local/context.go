@@ -19,6 +19,7 @@ import (
 	"sync"
 
 	"github.com/goharbor/harbor/src/common/models"
+	"github.com/goharbor/harbor/src/lib/log"
 	rbac_project "github.com/goharbor/harbor/src/common/rbac/project"
 	"github.com/goharbor/harbor/src/controller/project"
 	"github.com/goharbor/harbor/src/pkg/permission/evaluator"
@@ -85,6 +86,8 @@ func (s *SecurityContext) IsSolutionUser() bool {
 
 // Can returns whether the user can do action on resource
 func (s *SecurityContext) Can(ctx context.Context, action types.Action, resource types.Resource) bool {
+	log.Warningf("SECURITY_DEBUG: Can called - user=%s, action=%s, resource=%s, IsSysAdmin=%v",
+		s.GetUsername(), action.String(), resource.String(), s.IsSysAdmin())
 	s.once.Do(func() {
 		var evaluators evaluator.Evaluators
 		if s.IsSysAdmin() {

@@ -68,35 +68,47 @@ func (t *tokenSecurityCtx) GetProjectRoles(_ any) []int {
 }
 
 func (t *tokenSecurityCtx) Can(ctx context.Context, action types.Action, resource types.Resource) bool {
+	t.logger.Debugf("V2TOKEN_CAN: resource=%s, action=%v", resource, action)
+	t.logger.Debugf("V2TOKEN_CAN: accessMap=%v", t.accessMap)
 	if !strings.HasSuffix(resource.String(), rbac.ResourceRepository.String()) {
+		t.logger.Debugf("resource doesn't end with repository")
 		return false
 	}
 	ns, ok := rbac_project.NamespaceParse(resource)
 	if !ok {
-		t.logger.Warningf("Failed to get namespace from resource: %s", resource)
+		t.logger.Debugf("NamespaceParse failed for resource: %s", resource)
 		return false
 	}
 	pid, ok := ns.Identity().(int64)
 	if !ok {
-		t.logger.Warningf("Failed to get project id from namespace: %s", ns)
+		t.logger.Debugf("ns.Identity() failed, ns=%v", ns)
 		return false
 	}
+	t.logger.Debugf("looking up project id=%d", pid)
 	p, err := t.ctl.Get(ctx, pid)
 	if err != nil {
-		t.logger.Warningf("Failed to get project, id: %d, error: %v", pid, err)
+		t.logger.Debugf("failed to get project, id: %d, error: %v", pid, err)
 		return false
 	}
+	t.logger.Debugf("project name=%s", p.Name)
 	actions, ok := t.accessMap[p.Name]
 	if !ok {
+		t.logger.Debugf("project name %s not in accessMap", p.Name)
 		return false
 	}
+	t.logger.Debugf("V2TOKEN_CAN: looking up action=%v in actions map", action)
+	t.logger.Debugf("V2TOKEN_CAN: actions map keys=%v", actions)
 	_, hasAction := actions[action]
+	t.logger.Debugf("V2TOKEN_CAN: hasAction=%v", hasAction)
 	return hasAction
 }
 
 // New creates instance of token security context based on access list and name
 func New(ctx context.Context, name string, access []*registry_token.ResourceActions) security.Context {
 	logger := log.G(ctx)
+	for _, ac := range access {
+		logger.Debugf("V2TOKEN_NEW: name=%s, type=%s, name=%s, actions=%v", name, ac.Type, ac.Name, ac.Actions)
+	}
 	m := make(map[string]map[types.Action]struct{})
 	for _, ac := range access {
 		if ac.Type != "repository" {

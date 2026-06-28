@@ -45,7 +45,7 @@ type reqChecker struct {
 
 func (rc *reqChecker) check(req *http.Request) (string, error) {
 	securityCtx, ok := security.FromContext(req.Context())
-	log.Warningf("V2AUTH_DEBUG: path=%s, hasSecurityCtx=%v", req.URL.Path, ok)
+	log.Debugf("path=%s, hasSecurityCtx=%v", req.URL.Path, ok)
 	if !ok {
 		return "", fmt.Errorf("the security context got from request is nil")
 	}

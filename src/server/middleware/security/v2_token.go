@@ -43,11 +43,13 @@ type v2Token struct{}
 
 func (vt *v2Token) Generate(req *http.Request) security.Context {
 	logger := log.G(req.Context())
+	logger.Debugf("V2TOKEN_GEN: path=%s", req.URL.Path)
 	if !strings.HasPrefix(req.URL.Path, "/v2") {
 		return nil
 	}
 	tokenStr := bearerToken(req)
 	if len(tokenStr) == 0 {
+		logger.Debugf("V2TOKEN_GEN: no bearer token")
 		return nil
 	}
 

@@ -18,6 +18,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/goharbor/harbor/src/lib/log"
+
 	commonsecret "github.com/goharbor/harbor/src/common/secret"
 	"github.com/goharbor/harbor/src/common/security"
 	"github.com/goharbor/harbor/src/jobservice/job"
@@ -28,8 +30,10 @@ func bearerToken(req *http.Request) string {
 		return ""
 	}
 	h := req.Header.Get("Authorization")
+	log.Debugf("BEARER_TOKEN: header=%s", h)
 	token := strings.Split(h, "Bearer")
 	if len(token) < 2 {
+		log.Debugf("BEARER_TOKEN: no Bearer prefix")
 		return ""
 	}
 	return strings.TrimSpace(token[1])
