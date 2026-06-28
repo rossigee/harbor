@@ -341,7 +341,7 @@ func (suite *ControllerTestSuite) TestCreateSecretValidation() {
 		{"invalid_no_uppercase", "testpassword123", false, "missing uppercase"},
 		{"invalid_no_lowercase", "TESTPASSWORD123", false, "missing lowercase"},
 		{"invalid_no_digit", "TestPasswordABC", false, "missing digit"},
-		{"invalid_only_letters", "TestPasswordABC", false, "no numbers"},
+		{"invalid_only_special", "Test!@#$%^&*(", false, "no digits"},
 	}
 
 	for _, tc := range testCases {

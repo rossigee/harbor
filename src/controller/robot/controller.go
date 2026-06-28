@@ -114,11 +114,10 @@ func (d *controller) Create(ctx context.Context, r *Robot) (int64, string, error
 	// If a secret is provided in the request, validate and use it
 	if r.Secret != "" {
 		if !IsValidSec(r.Secret) {
-			return 0, "", fmt.Errorf("invalid secret format: must be 8-128 characters long with at least 1 uppercase letter, 1 lowercase letter and 1 number")
+			return 0, "", errors.New(nil).WithMessage(validationErrMsg)
 		}
-		// Generate salt and encrypt the provided secret
-		salt = utils.GenerateRandomString()
-		secret = utils.Encrypt(r.Secret, salt, utils.SHA256)
+		// Encrypt the provided secret with a generated salt
+		secret, salt = encryptSecret(r.Secret, "")
 		pwd = r.Secret
 	} else {
 		// Generate a new secret if none provided
@@ -443,8 +442,18 @@ var (
 	hasLower  = regexp.MustCompile(`[a-z]`)
 	hasUpper  = regexp.MustCompile(`[A-Z]`)
 	hasNumber = regexp.MustCompile(`\d`)
+
+	validationErrMsg = "invalid secret format: must be 8-128 characters long with at least 1 uppercase letter, 1 lowercase letter and 1 number"
 )
 
 func IsValidSec(secret string) bool {
 	return len(secret) >= 8 && len(secret) <= 128 && hasLower.MatchString(secret) && hasUpper.MatchString(secret) && hasNumber.MatchString(secret)
+}
+
+// encryptSecret encrypts the provided secret with a generated or provided salt
+func encryptSecret(plaintext, salt string) (string, string) {
+	if salt == "" {
+		salt = utils.GenerateRandomString()
+	}
+	return utils.Encrypt(plaintext, salt, utils.SHA256), salt
 }
