@@ -527,4 +527,17 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
     deletePAT(patId: any): void {
         this.pats = this.pats.filter(p => p.id !== patId);
     }
+
+    formatScope(scope: any): string {
+        if (!scope) {
+            return '';
+        }
+        if (typeof scope === 'string') {
+            return scope;
+        }
+        if (Array.isArray(scope)) {
+            return scope.join(', ');
+        }
+        return JSON.stringify(scope);
+    }
 }
