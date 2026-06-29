@@ -566,7 +566,7 @@ func (suite *ControllerTestSuite) TestCreateWithInvalidUserSecret() {
 	projectMgr.On("Get", mock.Anything, mock.Anything).Return(&proModels.Project{ProjectID: 1, Name: "library"}, nil)
 
 	// Create robot with an invalid user-provided secret - should fail
-	_, _, err := c.Create(ctx, &Robot{
+	_, _, errCreate := c.Create(ctx, &Robot{
 		Robot: model.Robot{
 			Name:        "robot-invalid-secret",
 			Description: "test invalid secret",
@@ -584,7 +584,7 @@ func (suite *ControllerTestSuite) TestCreateWithInvalidUserSecret() {
 		},
 	})
 
-	suite.NotNil(err)
+	suite.NotNil(errCreate)
 }
 
 func (suite *ControllerTestSuite) TestEncryptSecretWithProvidedSalt() {
