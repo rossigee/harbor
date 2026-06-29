@@ -14,7 +14,7 @@ ENV NPM_CONFIG_REGISTRY=${npm_registry}
 ENV NODE_OPTIONS=--max_old_space_size=4096
 
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --unsafe-perm --ignore-scripts --no-optional --no-audit --no-fund --legacy-peer-deps --loglevel=error
+    npm install --legacy-peer-deps --unsafe-perm --ignore-scripts --no-optional --no-audit --no-fund --loglevel=error
 RUN npm run postinstall
 RUN npm run generate-build-timestamp
 RUN node --max_old_space_size=2048 'node_modules/@angular/cli/bin/ng' build --configuration production
