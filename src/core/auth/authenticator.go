@@ -202,6 +202,12 @@ func loginHelpers(ctx context.Context) ([]AuthenticateHelper, error) {
 	authMode := config.DetectAuthMode(ctx)
 
 	switch authMode {
+	case common.HTTPAuth:
+		h := registry[common.HTTPAuth]
+		if h != nil && h.Match(ctx) {
+			return []AuthenticateHelper{h}, nil
+		}
+		return nil, fmt.Errorf("HTTP auth proxy is configured as primary auth method but not properly configured")
 	case common.OIDCAuth:
 		h := registry[common.OIDCAuth]
 		if h != nil && h.Match(ctx) {

@@ -240,7 +240,7 @@ func TestGetRegistryToken(t *testing.T) {
 
 	// Reset token cache
 	tokenCache.mu.Lock()
-	tokenCache.data = nil
+	tokenCache.data = make(map[string]*cachedToken)
 	tokenCache.mu.Unlock()
 
 	t.Setenv("REGISTRY_CREDENTIAL_USERNAME", "testuser")
@@ -271,7 +271,7 @@ func TestGetRegistryTokenCaching(t *testing.T) {
 	defer func() { getTokenServiceURL = originalTokenURL }()
 
 	tokenCache.mu.Lock()
-	tokenCache.data = nil
+	tokenCache.data = make(map[string]*cachedToken)
 	tokenCache.mu.Unlock()
 
 	t.Setenv("REGISTRY_CREDENTIAL_USERNAME", "u")
@@ -291,7 +291,10 @@ func TestGetRegistryTokenCaching(t *testing.T) {
 
 	// Force expiry and verify re-fetch
 	tokenCache.mu.Lock()
-	tokenCache.data.expires = time.Now().Add(-1 * time.Minute)
+	scope := scopeFromRequest(req)
+	if cached, ok := tokenCache.data[scope]; ok {
+		cached.expires = time.Now().Add(-1 * time.Minute)
+	}
 	tokenCache.mu.Unlock()
 
 	token3 := getRegistryToken(req)
@@ -351,7 +354,7 @@ func TestProbeRegistryUnknownAuthDefaultsToBasic(t *testing.T) {
 
 func TestGetRegistryTokenEmptyCredentials(t *testing.T) {
 	tokenCache.mu.Lock()
-	tokenCache.data = nil
+	tokenCache.data = make(map[string]*cachedToken)
 	tokenCache.mu.Unlock()
 
 	originalTokenURL := getTokenServiceURL

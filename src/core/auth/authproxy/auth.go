@@ -61,9 +61,13 @@ type Auth struct {
 	userMgr             user.Manager
 }
 
-// Match returns false — authproxy authentication is handled by the middleware, not by Login().
-func (a *Auth) Match(_ context.Context) bool {
-	return false
+// Match returns true when HTTP auth proxy is configured.
+func (a *Auth) Match(ctx context.Context) bool {
+	setting, err := config.HTTPAuthProxySetting(ctx)
+	if err != nil {
+		return false
+	}
+	return setting.Endpoint != ""
 }
 
 type session struct {

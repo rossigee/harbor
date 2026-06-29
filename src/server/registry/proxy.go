@@ -39,7 +39,11 @@ type cachedToken struct {
 
 var tokenCache struct {
 	mu   sync.RWMutex
-	data *cachedToken
+	data map[string]*cachedToken
+}
+
+func init() {
+	tokenCache.data = make(map[string]*cachedToken)
 }
 
 var detectedAuthType atomic.Value
@@ -205,11 +209,13 @@ func probeRegistry() (string, error) {
 
 // getRegistryToken obtains a bearer token for the upstream registry by
 // exchanging the shared registry credential with Harbor's /service/token
-// endpoint. The token is cached for 30 minutes.
+// endpoint. The token is cached for 30 minutes per scope.
 func getRegistryToken(r *http.Request) string {
+	scope := scopeFromRequest(r)
+
 	tokenCache.mu.RLock()
-	if tokenCache.data != nil && tokenCache.data.token != "" && time.Now().Before(tokenCache.data.expires) {
-		tk := tokenCache.data.token
+	if cached, ok := tokenCache.data[scope]; ok && cached.token != "" && time.Now().Before(cached.expires) {
+		tk := cached.token
 		tokenCache.mu.RUnlock()
 		return tk
 	}
@@ -218,11 +224,11 @@ func getRegistryToken(r *http.Request) string {
 	tokenCache.mu.Lock()
 	defer tokenCache.mu.Unlock()
 
-	if tokenCache.data != nil && tokenCache.data.token != "" && time.Now().Before(tokenCache.data.expires) {
-		return tokenCache.data.token
+	// Double-check after acquiring write lock
+	if cached, ok := tokenCache.data[scope]; ok && cached.token != "" && time.Now().Before(cached.expires) {
+		return cached.token
 	}
 
-	scope := scopeFromRequest(r)
 	tokenURL := fmt.Sprintf("%s?service=harbor-registry&scope=%s", getTokenServiceURL(), url.QueryEscape(scope))
 
 	req, err := http.NewRequest(http.MethodGet, tokenURL, nil)
@@ -260,7 +266,7 @@ func getRegistryToken(r *http.Request) string {
 		return ""
 	}
 
-	tokenCache.data = &cachedToken{
+	tokenCache.data[scope] = &cachedToken{
 		token:   tokenResp.Token,
 		expires: time.Now().Add(30 * time.Minute),
 	}

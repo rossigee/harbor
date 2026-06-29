@@ -98,6 +98,7 @@ func getChallenge(req *http.Request, accessList []access) string {
 		tokenSvc, err := tokenSvcURL(req)
 		if err != nil {
 			logger.Errorf("failed to get the endpoint for token service, error: %v", err)
+			return `Basic realm="harbor"`
 		}
 		scope := ""
 		for _, a := range accessList {
