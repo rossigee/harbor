@@ -78,6 +78,33 @@ export class ConfigurationAuthComponent implements OnInit {
         return this.onGoing || this.conf.getLoadingConfigStatus();
     }
 
+    // Stub properties for template references (auth mode dropdown was removed)
+    // TODO: remove these stub properties once template is updated
+    get showHttpAuth(): boolean {
+        return false;
+    }
+    get showUAA(): boolean {
+        return false;
+    }
+    get showLdap(): boolean {
+        return false;
+    }
+    get showOIDC(): boolean {
+        return false;
+    }
+    get showSelfReg(): boolean {
+        return false;
+    }
+    get showTestingServerBtn(): boolean {
+        return false;
+    }
+    get hideTestingSpinner(): boolean {
+        return true;
+    }
+    handleOnChange($event: any): void {
+        // no-op: auth mode dropdown was removed
+    }
+
     hasChanges(): boolean {
         return !isEmpty(this.getChanges());
     }
