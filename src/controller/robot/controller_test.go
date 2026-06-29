@@ -494,6 +494,30 @@ func (suite *ControllerTestSuite) TestCreateWithoutSecretGeneratesRandom() {
 	suite.True(IsValidSec(pwd), "Generated password should pass validation: %s", pwd)
 }
 
+func (suite *ControllerTestSuite) TestEncryptSecretWithProvidedSalt() {
+	plaintext := "mysecretpassword"
+	salt := "mysalt123"
+	encrypted, returnedSalt := encryptSecret(plaintext, salt)
+	suite.NotEmpty(encrypted)
+	suite.Equal(salt, returnedSalt)
+}
+
+func (suite *ControllerTestSuite) TestEncryptSecretWithGeneratedSalt() {
+	plaintext := "mysecretpassword"
+	encrypted, salt := encryptSecret(plaintext, "")
+	suite.NotEmpty(encrypted)
+	suite.NotEmpty(salt)
+	suite.NotEqual("", salt)
+}
+
+func (suite *ControllerTestSuite) TestEncryptSecretConsistency() {
+	plaintext := "mysecretpassword"
+	salt := "fixedsalt"
+	encrypted1, _ := encryptSecret(plaintext, salt)
+	encrypted2, _ := encryptSecret(plaintext, salt)
+	suite.Equal(encrypted1, encrypted2)
+}
+
 func TestControllerTestSuite(t *testing.T) {
 	suite.Run(t, &ControllerTestSuite{})
 }
