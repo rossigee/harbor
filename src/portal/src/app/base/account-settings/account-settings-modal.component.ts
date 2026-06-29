@@ -68,6 +68,11 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
     @ViewChild('copyInput') copyInput: CopyInputComponent;
     showInputSecret: boolean = false;
     showConfirmSecret: boolean = false;
+    pats: any[] = [];
+    selectedPATs: any[] = [];
+    patLoading: boolean = false;
+    showCreatePATModal: boolean = false;
+    createdPATSecret: string;
 
     constructor(
         private session: SessionService,
@@ -455,5 +460,24 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
         this.resetSecretInlineAlert.close();
     }
 
+    openCreatePATModal(): void {
+        this.showCreatePATModal = true;
+        this.createdPATSecret = null;
+    }
 
+    closeCreatePATModal(): void {
+        this.showCreatePATModal = false;
+        this.createdPATSecret = null;
+    }
+
+    confirmAction(event: any): void {
+        if (this.selectedPATs && this.selectedPATs.length > 0) {
+            this.patLoading = true;
+            this.pats = this.pats.filter(
+                pat => !this.selectedPATs.includes(pat)
+            );
+            this.selectedPATs = [];
+            this.patLoading = false;
+        }
+    }
 }
