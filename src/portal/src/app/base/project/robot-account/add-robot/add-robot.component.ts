@@ -161,6 +161,38 @@ export class AddRobotComponent implements OnInit, OnDestroy {
         this._nameSubject.next(this.robot.name);
     }
 
+    toggleSecretVisibility() {
+        this.secretVisible = !this.secretVisible;
+    }
+
+    validateSecret() {
+        const secret = this.robot.secret || '';
+        if (secret.length === 0) {
+            // Empty secret is valid; don't validate individual rules
+            this.secretValidation = {
+                length: true,
+                uppercase: true,
+                lowercase: true,
+                digit: true,
+            };
+            return;
+        }
+        this.secretValidation = {
+            length: secret.length >= 8 && secret.length <= 128,
+            uppercase: /[A-Z]/.test(secret),
+            lowercase: /[a-z]/.test(secret),
+            digit: /\d/.test(secret),
+        };
+    }
+
+    isSecretValid(): boolean {
+        if (!this.robot.secret || this.robot.secret.length === 0) {
+            return true;
+        }
+        return Object.values(this.secretValidation).every(v => v);
+    }
+
+>>>>>>> 1628984ef (fix: clarify validateSecret/isSecretValid semantics for empty secrets)
     cancel() {
         this.wizard.reset();
         this.reset();
