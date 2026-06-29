@@ -204,20 +204,20 @@ func loginHelpers(ctx context.Context) ([]AuthenticateHelper, error) {
 	switch authMode {
 	case common.OIDCAuth:
 		h := registry[common.OIDCAuth]
-		if h.Match(ctx) {
+		if h != nil && h.Match(ctx) {
 			return []AuthenticateHelper{h, registry[common.DBAuth]}, nil
 		}
 		// OIDC mode with no OIDC configuration — fall back to DB only
 		return []AuthenticateHelper{registry[common.DBAuth]}, nil
 	case common.LDAPAuth:
 		h := registry[common.LDAPAuth]
-		if h.Match(ctx) {
+		if h != nil && h.Match(ctx) {
 			return []AuthenticateHelper{h}, nil
 		}
 		return nil, fmt.Errorf("auth mode is %q but LDAP is not configured", authMode)
 	case common.UAAAuth:
 		h := registry[common.UAAAuth]
-		if h.Match(ctx) {
+		if h != nil && h.Match(ctx) {
 			return []AuthenticateHelper{h}, nil
 		}
 		return nil, fmt.Errorf("auth mode is %q but UAA is not configured", authMode)

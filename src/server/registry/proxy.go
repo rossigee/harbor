@@ -47,6 +47,9 @@ var detectedAuthType atomic.Value
 // Override in tests to control the HTTP client used for registry probe.
 var probeHTTPClient = defaultProbeClient()
 
+// Override in tests to control the HTTP client used for token exchange.
+var exchangeHTTPClient = defaultProbeClient()
+
 func defaultProbeClient() *http.Client {
 	return &http.Client{
 		Timeout:   10 * time.Second,
@@ -92,7 +95,10 @@ func authDirector(d func(*http.Request)) func(*http.Request) {
 		}
 		if strings.HasPrefix(auth, "Basic ") {
 			// Exchange Basic auth for a Bearer token via the token service
-			if tk := exchangeBasicForToken(r, auth); tk != "" {
+			tk, err := exchangeBasicForToken(r, auth)
+			if err != nil {
+				log.Warningf("failed to exchange basic auth: %v, using shared registry credential", err)
+			} else if tk != "" {
 				r.Header.Set("Authorization", "Bearer "+tk)
 				return
 			}
@@ -111,35 +117,33 @@ func authDirector(d func(*http.Request)) func(*http.Request) {
 
 // exchangeBasicForToken sends the Basic auth credentials to the token service
 // and returns a Bearer token scoped to the request's repository.
-func exchangeBasicForToken(r *http.Request, basicAuth string) string {
+func exchangeBasicForToken(r *http.Request, basicAuth string) (string, error) {
 	scope := scopeFromRequest(r)
 	tokenURL := fmt.Sprintf("%s?service=harbor-registry&scope=%s",
 		getTokenServiceURL(), url.QueryEscape(scope))
 	req, err := http.NewRequest(http.MethodGet, tokenURL, nil)
 	if err != nil {
-		log.Warningf("failed to create token request: %v", err)
-		return ""
+		return "", fmt.Errorf("failed to create token request: %w", err)
 	}
 	req.Header.Set("Authorization", basicAuth)
-	client := &http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Do(req)
+	resp, err := exchangeHTTPClient.Do(req)
 	if err != nil {
-		log.Warningf("failed to exchange basic auth for token: %v", err)
-		return ""
+		return "", fmt.Errorf("failed to exchange basic auth for token: %w", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		log.Warningf("token service returned %d for basic auth exchange", resp.StatusCode)
-		return ""
+		return "", fmt.Errorf("token service returned %d for basic auth exchange", resp.StatusCode)
 	}
 	var tokenResp struct {
 		Token string `json:"token"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
-		log.Warningf("failed to decode token response: %v", err)
-		return ""
+		return "", fmt.Errorf("failed to decode token response: %w", err)
 	}
-	return tokenResp.Token
+	if tokenResp.Token == "" {
+		return "", fmt.Errorf("token service returned empty token")
+	}
+	return tokenResp.Token, nil
 }
 
 // detectRegistryAuthType probes the upstream registry to determine which
