@@ -432,10 +432,8 @@ func CreateSec(salt ...string) (string, string, string, error) {
 	var saltTmp string
 	if len(salt) != 0 {
 		saltTmp = salt[0]
-	} else {
-		saltTmp = utils.GenerateRandomString()
 	}
-	secret = utils.Encrypt(pwd, saltTmp, utils.SHA256)
+	secret, saltTmp = encryptSecret(pwd, saltTmp)
 	return secret, pwd, saltTmp, nil
 }
 
