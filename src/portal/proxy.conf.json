@@ -1,6 +1,10 @@
 {
   "/api": {
+<<<<<<< HEAD
     "target": "http://localhost:8080",
+=======
+    "target": "http://127.0.0.1:8080",
+>>>>>>> 19605010e (chore: add Angular dev server API proxy configuration)
     "secure": false,
     "changeOrigin": true,
     "pathRewrite": {
