@@ -233,27 +233,21 @@
                                     }}</span>
                                 </clr-dg-cell>
                                 <clr-dg-cell>
-                                    <clr-label
+                                    <span
                                         *ngIf="pat.disabled"
-                                        class="label label-danger"
-                                        >{{
+                                        class="label label-danger">{{
                                             'PROFILE.PAT_DISABLED' | translate
-                                        }}</clr-label
-                                    >
-                                    <clr-label
+                                        }}</span>
+                                    <span
                                         *ngIf="!pat.disabled && pat.expired"
-                                        class="label label-warning"
-                                        >{{
+                                        class="label label-warning">{{
                                             'PROFILE.PAT_EXPIRED' | translate
-                                        }}</clr-label
-                                    >
-                                    <clr-label
+                                        }}</span>
+                                    <span
                                         *ngIf="!pat.disabled && !pat.expired"
-                                        class="label label-success"
-                                        >{{
+                                        class="label label-success">{{
                                             'PROFILE.PAT_ACTIVE' | translate
-                                        }}</clr-label
-                                    >
+                                        }}</span>
                                  </clr-dg-cell>
                                  <clr-dg-cell>{{
                                      pat.scope ? formatScope(pat.scope) : ('PROFILE.PAT_SCOPE_ALL' | translate)
