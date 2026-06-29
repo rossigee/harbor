@@ -48,7 +48,7 @@ func DetectAuthMode(ctx context.Context) string {
 	if setting, err := UAASettings(ctx); err == nil && setting.Endpoint != "" {
 		return common.UAAAuth
 	}
-	if conf, err := HTTPAuthProxySetting(ctx); err == nil && conf.Endpoint != "" {
+	if conf, err := HTTPAuthProxySetting(ctx); err == nil && conf.Endpoint != "" && conf.TokenReviewEndpoint != "" {
 		return common.HTTPAuth
 	}
 	return common.DBAuth
