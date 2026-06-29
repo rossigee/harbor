@@ -3,6 +3,7 @@ package robot
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/utils"
@@ -585,6 +586,48 @@ func (suite *ControllerTestSuite) TestCreateWithInvalidUserSecret() {
 	})
 
 	suite.NotNil(errCreate)
+}
+
+func (suite *ControllerTestSuite) TestIsValidSecValidSecret() {
+	valid := IsValidSec("ValidSecret123")
+	suite.True(valid)
+}
+
+func (suite *ControllerTestSuite) TestIsValidSecTooShort() {
+	valid := IsValidSec("Short1A")
+	suite.False(valid)
+}
+
+func (suite *ControllerTestSuite) TestIsValidSecTooLong() {
+	longSecret := "A1aBcDeFgHiJkLmNoPqRsTuVwXyZ1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t1u2v3w4x5y6z7a8b9c0d1e2f3g4h5i6j7k8l9m0n1o2p3q4r5s6t7u8v9w0x1y2z3"
+	valid := IsValidSec(longSecret)
+	suite.False(valid)
+}
+
+func (suite *ControllerTestSuite) TestIsValidSecMissingUppercase() {
+	valid := IsValidSec("password123")
+	suite.False(valid)
+}
+
+func (suite *ControllerTestSuite) TestIsValidSecMissingLowercase() {
+	valid := IsValidSec("PASSWORD123")
+	suite.False(valid)
+}
+
+func (suite *ControllerTestSuite) TestIsValidSecMissingDigit() {
+	valid := IsValidSec("PasswordABC")
+	suite.False(valid)
+}
+
+func (suite *ControllerTestSuite) TestIsValidSecMinLength() {
+	valid := IsValidSec("Passwor1")
+	suite.True(valid)
+}
+
+func (suite *ControllerTestSuite) TestIsValidSecMaxLength() {
+	maxSecret := strings.Repeat("a", 127) + "B1"
+	valid := IsValidSec(maxSecret)
+	suite.True(valid)
 }
 
 func (suite *ControllerTestSuite) TestEncryptSecretWithProvidedSalt() {
