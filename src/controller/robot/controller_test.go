@@ -397,7 +397,7 @@ func (suite *ControllerTestSuite) TestCreateWithUserProvidedSecretEncryption() {
 	// Verify the secret handling
 	suite.Nil(err, "Create should succeed with valid secret")
 	suite.Equal(int64(1), id)
-	suite.Equal(userSecret, returnedPwd, "Returned password should be the user-provided secret")
+	suite.Empty(returnedPwd, "Returned password should be empty when user provides their own secret (they already know it)")
 }
 
 func (suite *ControllerTestSuite) TestCreateWithInvalidSecrets() {

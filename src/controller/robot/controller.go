@@ -97,6 +97,7 @@ func (d *controller) Count(ctx context.Context, query *q.Query) (int64, error) {
 
 // Create ...
 func (d *controller) Create(ctx context.Context, r *Robot) (int64, string, error) {
+
 	var expiresAt int64
 	if r.Duration == -1 {
 		expiresAt = -1
@@ -113,14 +114,15 @@ func (d *controller) Create(ctx context.Context, r *Robot) (int64, string, error
 	var err error
 	// If a secret is provided in the request, validate and use it
 	if r.Secret != "" {
+		// User provided their own secret - don't return it (they already know it)
 		if !IsValidSec(r.Secret) {
 			return 0, "", errors.New(nil).WithMessage(validationErrMsg)
 		}
 		// Encrypt the provided secret with a generated salt
 		secret, salt = encryptSecret(r.Secret, "")
-		pwd = r.Secret
+		pwd = "" // Don't return user-provided secret - they already know it
 	} else {
-		// Generate a new secret if none provided
+		// Generate a new secret if none provided - return it so user can copy it
 		secret, pwd, salt, err = CreateSec()
 		if err != nil {
 			return 0, "", err
