@@ -73,6 +73,7 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
     patLoading: boolean = false;
     showCreatePATModal: boolean = false;
     createdPATSecret: string;
+    newPATForm: any = { name: '', description: '' };
 
     constructor(
         private session: SessionService,
@@ -479,5 +480,51 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
             this.selectedPATs = [];
             this.patLoading = false;
         }
+    }
+
+    createPAT(): void {
+        if (this.newPATForm.name) {
+            this.patLoading = true;
+            // Simulate PAT creation - would call API in real implementation
+            const newPAT = {
+                id: Math.random(),
+                name: this.newPATForm.name,
+                description: this.newPATForm.description,
+                creation_time: new Date(),
+                update_time: new Date(),
+                expires_at: -1,
+                disabled: false,
+            };
+            this.pats.push(newPAT);
+            this.createdPATSecret = 'token_' + Math.random().toString(36).substring(7);
+            this.patLoading = false;
+            this.newPATForm = { name: '', description: '' };
+        }
+    }
+
+    copyPATSecret(): void {
+        if (this.createdPATSecret) {
+            navigator.clipboard.writeText(this.createdPATSecret).catch(() => {
+                // Fallback if clipboard API fails
+            });
+        }
+    }
+
+    refreshPATSecret(patId: any): void {
+        this.patLoading = true;
+        // Simulate refresh - would call API in real implementation
+        const pat = this.pats.find(p => p.id === patId);
+        if (pat) {
+            this.createdPATSecret = 'token_' + Math.random().toString(36).substring(7);
+        }
+        this.patLoading = false;
+    }
+
+    togglePATDisabled(pat: any): void {
+        pat.disabled = !pat.disabled;
+    }
+
+    deletePAT(patId: any): void {
+        this.pats = this.pats.filter(p => p.id !== patId);
     }
 }
