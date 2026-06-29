@@ -167,7 +167,7 @@ func Login(ctx context.Context, m models.AuthModel) (*models.User, error) {
 	for i, helper := range helpers {
 		if lock.IsLocked(m.Principal) {
 			log.Debugf("%s is locked due to login failure, login failed", m.Principal)
-			return nil, nil
+			return nil, NewErrAuth("user is locked due to repeated login failures")
 		}
 		user, err := helper.Authenticate(ctx, m)
 		if err != nil {
@@ -231,7 +231,7 @@ func loginHelpers(ctx context.Context) ([]AuthenticateHelper, error) {
 func authenticateWithLock(ctx context.Context, m models.AuthModel, h AuthenticateHelper) (*models.User, error) {
 	if lock.IsLocked(m.Principal) {
 		log.Debugf("%s is locked due to login failure, login failed", m.Principal)
-		return nil, nil
+		return nil, NewErrAuth("user is locked due to repeated login failures")
 	}
 	user, err := h.Authenticate(ctx, m)
 	if err != nil {
