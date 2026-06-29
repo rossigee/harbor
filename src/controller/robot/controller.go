@@ -97,7 +97,6 @@ func (d *controller) Count(ctx context.Context, query *q.Query) (int64, error) {
 
 // Create ...
 func (d *controller) Create(ctx context.Context, r *Robot) (int64, string, error) {
-
 	var expiresAt int64
 	if r.Duration == -1 {
 		expiresAt = -1
