@@ -494,6 +494,8 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
                 update_time: new Date(),
                 expires_at: -1,
                 disabled: false,
+                expired: false,
+                scope: [],
             };
             this.pats.push(newPAT);
             this.createdPATSecret = 'token_' + Math.random().toString(36).substring(7);
