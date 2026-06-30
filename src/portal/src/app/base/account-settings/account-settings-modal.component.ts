@@ -91,6 +91,21 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
 
     ngOnInit(): void {
         this.refreshAccount();
+        this.loadPATs();
+    }
+
+    loadPATs(): void {
+        this.patLoading = true;
+        // TODO: Implement PAT tokens loading from API
+        // this.userService.listUserPermissions().subscribe(
+        //     (data) => {
+        //         this.pats = data;
+        //         this.patLoading = false;
+        //     },
+        //     (error) => {
+        //         this.patLoading = false;
+        //     }
+        // );
     }
 
     refreshAccount() {
