@@ -70,7 +70,7 @@ export class ApiTokensModalComponent implements OnInit {
 
     createToken(): void {
         if (!this.newTokenForm.name) {
-            this.msgHandler.showError('Token name is required');
+            this.msgHandler.showError('Token name is required', {});
             return;
         }
 
