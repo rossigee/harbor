@@ -65,13 +65,22 @@ func NewController() Controller {
 
 func (c *controller) UserConfigs(ctx context.Context) (map[string]*models.Value, error) {
 	mgr := config.GetCfgManager(ctx)
+	if mgr == nil {
+		return nil, errors.New("configuration not yet initialized")
+	}
 	configs := mgr.GetUserCfgs(ctx)
 	return c.ConvertForGet(ctx, configs, false)
 }
 
 func (c *controller) AllConfigs(ctx context.Context) (map[string]any, error) {
 	mgr := config.GetCfgManager(ctx)
+	if mgr == nil {
+		return nil, errors.New("configuration not yet initialized")
+	}
 	configs := mgr.GetAll(ctx)
+	if len(configs) == 0 {
+		return nil, errors.New("configuration unavailable - system may still be initializing")
+	}
 	return configs, nil
 }
 
@@ -113,6 +122,9 @@ func (c *controller) updateLogEndpoint(ctx context.Context, cfgs map[string]any)
 
 func (c *controller) validateCfg(ctx context.Context, cfgs map[string]any) error {
 	mgr := config.GetCfgManager(ctx)
+	if mgr == nil {
+		return errors.New("configuration not yet initialized")
+	}
 
 	err := mgr.ValidateCfg(ctx, cfgs)
 	if err != nil {

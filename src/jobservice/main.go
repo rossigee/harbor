@@ -19,6 +19,8 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/goharbor/harbor/src/common"
 	"github.com/goharbor/harbor/src/jobservice/common/utils"
@@ -50,8 +52,30 @@ func main() {
 	if mgr == nil {
 		panic("failed to initialize config manager - check CORE_URL and JOBSERVICE_SECRET env vars")
 	}
-	if err := mgr.Load(context.Background()); err != nil {
-		panic(fmt.Sprintf("failed to load configuration, error: %v", err))
+
+	// Retry loading configuration with exponential backoff to handle harbor-core startup delays
+	{
+		backoff := 2 * time.Second
+		const maxBackoff = 30 * time.Second
+		const maxAttempts = 30
+		var lastErr error
+		for attempt := 1; attempt <= maxAttempts; attempt++ {
+			if lastErr = mgr.Load(context.Background()); lastErr == nil {
+				break
+			}
+			fmt.Fprintf(os.Stderr, "attempt %d/%d: failed to load configuration (%v), retrying in %v\n",
+				attempt, maxAttempts, lastErr, backoff)
+			time.Sleep(backoff)
+			if backoff < maxBackoff {
+				backoff *= 2
+				if backoff > maxBackoff {
+					backoff = maxBackoff
+				}
+			}
+		}
+		if lastErr != nil {
+			panic(fmt.Sprintf("failed to load configuration after %d attempts: %v", maxAttempts, lastErr))
+		}
 	}
 
 	// Get parameters
