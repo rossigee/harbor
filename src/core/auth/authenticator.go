@@ -265,6 +265,16 @@ func getHelper(ctx context.Context) (AuthenticateHelper, error) {
 	return h, nil
 }
 
+// canUseOIDCAuth checks if a user can use OIDC authentication by looking up the user
+// and checking if they have OIDC metadata.
+func canUseOIDCAuth(ctx context.Context, username string) bool {
+	u, err := user.Mgr.GetByName(ctx, username)
+	if err != nil || u == nil {
+		return false
+	}
+	return u.OIDCUserMeta != nil
+}
+
 // OnBoardUser will check if a user exists in user table, if not insert the user and
 // put the id in the pointer of user model, if it does exist, return the user's profile.
 func OnBoardUser(ctx context.Context, user *models.User) error {
