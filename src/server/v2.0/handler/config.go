@@ -76,6 +76,9 @@ func (c *configAPI) GetConfigurations(ctx context.Context, _ configure.GetConfig
 }
 
 func (c *configAPI) UpdateConfigurations(ctx context.Context, params configure.UpdateConfigurationsParams) middleware.Responder {
+	if c.controller == nil {
+		return c.SendError(ctx, errors.New("configuration manager not initialized"))
+	}
 	if err := c.RequireSystemAccess(ctx, rbac.ActionUpdate, rbac.ResourceConfiguration); err != nil {
 		return c.SendError(ctx, err)
 	}
