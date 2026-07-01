@@ -15,6 +15,7 @@
 package security
 
 import (
+	"math"
 	"net/http"
 
 	commonsecret "github.com/goharbor/harbor/src/common/secret"
@@ -33,5 +34,6 @@ func (s *secret) Generate(req *http.Request) security.Context {
 		return nil
 	}
 	log.Debugf("a secret security context generated for request %s %s", req.Method, req.URL.Path)
+	log.Warningf("SECRET_DEBUG: extracted secret=%s, path=%s", sec[:int(math.Min(20, float64(len(sec))))], req.URL.Path)
 	return securitysecret.NewSecurityContext(sec, config.SecretStore)
 }
