@@ -108,11 +108,11 @@ func toCfgMap(conf *models.Configurations) (map[string]any, error) {
 }
 
 func (c *configAPI) GetInternalconfig(ctx context.Context, _ configure.GetInternalconfigParams) middleware.Responder {
-	if err := c.RequireSolutionUserAccess(ctx); err != nil {
-		return c.SendError(ctx, err)
-	}
 	if c.controller == nil {
 		return c.SendError(ctx, errors.New("configuration manager not initialized"))
+	}
+	if err := c.RequireSolutionUserAccess(ctx); err != nil {
+		return c.SendError(ctx, err)
 	}
 	cfg, err := c.controller.AllConfigs(ctx)
 	if err != nil {
