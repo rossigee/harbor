@@ -244,12 +244,6 @@ func (c *controller) ConvertForGet(_ context.Context, cfg map[string]any, intern
 		cfg[common.ScanAllPolicy] = `{"type":"none"}`
 	}
 
-<<<<<<< HEAD
-	// auth_mode is deprecated and derived from configured backends
-	result[common.AUTHMode].Editable = false
-
-=======
->>>>>>> refactor/remove-auth-mode-switch
 	return result, nil
 }
 
