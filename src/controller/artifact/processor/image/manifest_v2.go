@@ -150,29 +150,8 @@ func (m *manifestV2Processor) GetArtifactType(_ context.Context, _ *artifact.Art
 	return ArtifactTypeImage
 }
 
-func (m *manifestV2Processor) ListAdditionTypes(ctx context.Context, artifact *artifact.Artifact) []string {
-	additions := []string{AdditionTypeBuildHistory}
-
-	// Check if image has Dockerfile in labels before advertising the addition
-	mani, _, err := m.RegCli.PullManifest(artifact.RepositoryName, artifact.Digest)
-	if err != nil {
-		log.Debugf("failed to pull manifest for %s: %v", artifact.RepositoryName, err)
-		return additions
-	}
-	_, content, err := mani.Payload()
-	if err != nil {
-		log.Debugf("failed to get manifest payload for %s: %v", artifact.RepositoryName, err)
-		return additions
-	}
-	config := &v1.Image{}
-	if err = m.ManifestProcessor.UnmarshalConfig(ctx, artifact.RepositoryName, content, config); err != nil {
-		log.Debugf("failed to unmarshal config for %s: %v", artifact.RepositoryName, err)
-		return additions
-	}
-
-	if m.getDockerfileFromLabels(config) != "" {
-		additions = append(additions, AdditionTypeDockerfile)
-	}
-
-	return additions
+func (m *manifestV2Processor) ListAdditionTypes(_ context.Context, _ *artifact.Artifact) []string {
+	// Dockerfile support is always available for Docker images, but may not have content
+	// The UI will show the tab, and AbstractAddition will handle missing Dockerfile gracefully
+	return []string{AdditionTypeBuildHistory, AdditionTypeDockerfile}
 }
