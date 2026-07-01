@@ -31,7 +31,8 @@
                                     disabled
                                     id="account_settings_username"
                                     size="30" />
-                                <div *ngIf="canRename" class="rename-tool">
+                                @if (canRename) {
+                                <div class="rename-tool">
                                     <button
                                         id="rename-btn"
                                         [disabled]="RenameOnGoing"
@@ -60,6 +61,7 @@
                                         </clr-tooltip-content>
                                     </clr-tooltip>
                                 </div>
+                                }
                             </div>
                         </div>
                         <div class="clr-form-control">
@@ -76,43 +78,44 @@
                                     )
                                 ">
                                 <div class="clr-input-wrapper">
-                                    <input
-                                        name="account_settings_email"
-                                        type="text"
-                                        #eamilInput="ngModel"
-                                        class="clr-input"
-                                        [(ngModel)]="account.email"
-                                        required
-                                        email
-                                        id="account_settings_email"
-                                        size="30"
-                                        (input)="
-                                            handleValidation(
-                                                'account_settings_email',
-                                                false
-                                            )
-                                        "
-                                        (blur)="
-                                            handleValidation(
-                                                'account_settings_email',
-                                                true
-                                            )
-                                        " />
-                                    <clr-icon
-                                        class="clr-validate-icon"
-                                        shape="exclamation-circle"></clr-icon>
-                                    <span
-                                        class="spinner spinner-inline"
-                                        [hidden]="!checkProgress"></span>
+                                    <div class="clr-input-group">
+                                        <input
+                                            name="account_settings_email"
+                                            type="text"
+                                            #eamilInput="ngModel"
+                                            class="clr-input"
+                                            [(ngModel)]="account.email"
+                                            required
+                                            email
+                                            id="account_settings_email"
+                                            size="30"
+                                            (input)="
+                                                handleValidation(
+                                                    'account_settings_email',
+                                                    false
+                                                )
+                                            "
+                                            (blur)="
+                                                handleValidation(
+                                                    'account_settings_email',
+                                                    true
+                                                )
+                                            " />
+                                        <clr-icon
+                                            class="clr-validate-icon"
+                                            shape="exclamation-circle"></clr-icon>
+                                        <span
+                                            class="spinner spinner-inline"
+                                            [hidden]="!checkProgress"></span>
+                                    </div>
                                 </div>
-                                <clr-control-error
-                                    *ngIf="
-                                        !getValidationState(
-                                            'account_settings_email'
-                                        )
-                                    ">
+                                @if
+                                (!getValidationState('account_settings_email'))
+                                {
+                                <clr-control-error>
                                     {{ emailTooltip | translate }}
                                 </clr-control-error>
+                                }
                             </div>
                         </div>
                         <clr-input-container>
@@ -141,14 +144,13 @@
                                         true
                                     )
                                 " />
-                            <clr-control-error
-                                *ngIf="
-                                    !getValidationState(
-                                        'account_settings_full_name'
-                                    )
-                                ">
+                            @if
+                            (!getValidationState('account_settings_full_name'))
+                            {
+                            <clr-control-error>
                                 {{ 'TOOLTIP.FULL_NAME' | translate }}
                             </clr-control-error>
+                            }
                         </clr-input-container>
                         <clr-input-container>
                             <label>{{ 'PROFILE.COMMENT' | translate }}</label>
@@ -161,14 +163,85 @@
                                 name="account_settings_comments"
                                 [(ngModel)]="account.comment"
                                 id="account_settings_comments" />
-                            <clr-control-error
-                                *ngIf="
-                                    commentInput.invalid &&
-                                    (commentInput.dirty || commentInput.touched)
-                                ">
+                            @if ( commentInput.invalid && (commentInput.dirty ||
+                            commentInput.touched) ) {
+                            <clr-control-error>
                                 {{ 'TOOLTIP.COMMENT' | translate }}
                             </clr-control-error>
+                            }
                         </clr-input-container>
+
+                        @if (account.oidc_user_meta) {
+                        <div class="clr-form-control cli-secret">
+                            <label class="clr-control-label"
+                                >{{ 'PROFILE.CLI_PASSWORD' | translate }}
+                                <clr-tooltip>
+                                    <clr-icon
+                                        clrTooltipTrigger
+                                        shape="info-circle"
+                                        size="20"></clr-icon>
+                                    <clr-tooltip-content
+                                        clrPosition="top-right"
+                                        clrSize="md"
+                                        *clrIfOpen>
+                                        <span>
+                                            {{
+                                                'PROFILE.CLI_PASSWORD_TIP'
+                                                    | translate
+                                            }}</span
+                                        >
+                                    </clr-tooltip-content>
+                                </clr-tooltip>
+                            </label>
+                            <input
+                                id="cli_password"
+                                class="clr-input input-cli"
+                                type="password"
+                                name="cli_password"
+                                disabled
+                                [ngModel]="'account.oidc_user_meta.secret'"
+                                size="33" />
+                            @if (showGenerateCli) {
+                            <button
+                                (click)="generateCli(account.user_id)"
+                                id="generate-cli-btn"
+                                class="btn btn-outline btn-padding-less">
+                                {{
+                                    'PROFILE.ADMIN_CLI_SECRET_BUTTON'
+                                        | translate
+                                }}
+                            </button>
+                            } @if (showGenerateCli) {
+                            <button
+                                (click)="openSecretDetail()"
+                                id="reset-cli-btn"
+                                class="btn btn-outline btn-padding-less">
+                                {{
+                                    'PROFILE.ADMIN_CLI_SECRET_RESET_BUTTON'
+                                        | translate
+                                }}
+                            </button>
+                            }
+                            <div class="rename-tool reset-cli">
+                                <hbr-copy-input
+                                    #copyInput
+                                    (onCopySuccess)="onSuccess($event)"
+                                    (onCopyError)="onError($event)"
+                                    iconMode="true"
+                                    [defaultValue]="
+                                        account.oidc_user_meta.secret
+                                    "></hbr-copy-input>
+                            </div>
+                            @if (!showGenerateCli) {
+                            <div
+                                (click)="showGenerateCliFn()"
+                                id="hidden-generate-cli"
+                                class="hidden-generate-cli">
+                                ···
+                            </div>
+                            }
+                        </div>
+                        }
                     </form>
                 </clr-tab-content>
             </clr-tab>
@@ -237,31 +310,31 @@
                             name="input_secret"
                             [(ngModel)]="resetForms.input_secret"
                             id="input-secret" />
+                        @if (!showInputSecret) {
                         <clr-icon
-                            *ngIf="!showInputSecret"
                             shape="eye"
                             class="pw-eye"
                             (click)="
                                 showInputSecret = !showInputSecret
                             "></clr-icon>
+                        } @if (showInputSecret) {
                         <clr-icon
-                            *ngIf="showInputSecret"
                             shape="eye-hide"
                             class="pw-eye"
                             (click)="
                                 showInputSecret = !showInputSecret
                             "></clr-icon>
+                        }
                         <clr-icon
                             class="clr-validate-icon"
                             shape="exclamation-circle"></clr-icon>
                     </div>
-                    <clr-control-error
-                        *ngIf="
-                            (inputSecret.dirty || inputSecret.touched) &&
-                            inputSecret.invalid
-                        ">
+                    @if ( (inputSecret.dirty || inputSecret.touched) &&
+                    inputSecret.invalid ) {
+                    <clr-control-error>
                         {{ 'TOOLTIP.NEW_SECRET' | translate }}
                     </clr-control-error>
+                    }
                 </div>
             </div>
 
@@ -280,20 +353,21 @@
                             [(ngModel)]="resetForms.confirm_secret"
                             name="confirm_secret"
                             id="confirm-secret" />
+                        @if (!showConfirmSecret) {
                         <clr-icon
-                            *ngIf="!showConfirmSecret"
                             shape="eye"
                             class="pw-eye"
                             (click)="
                                 showConfirmSecret = !showConfirmSecret
                             "></clr-icon>
+                        } @if (showConfirmSecret) {
                         <clr-icon
-                            *ngIf="showConfirmSecret"
                             shape="eye-hide"
                             class="pw-eye"
                             (click)="
                                 showConfirmSecret = !showConfirmSecret
                             "></clr-icon>
+                        }
                     </div>
                 </div>
             </div>
@@ -314,7 +388,7 @@
 </clr-modal>
 <confirmation-dialog
     #confirmationDialog
-    (confirmAction)="confirmAction($event)"></confirmation-dialog>
+    (confirmAction)="confirmGenerate()"></confirmation-dialog>
 
 <!-- Create PAT Modal -->
 <clr-modal
@@ -324,7 +398,8 @@
     [clrModalClosable]="false">
     <h3 class="modal-title">{{ 'PROFILE.CREATE_PAT' | translate }}</h3>
     <div class="modal-body">
-        <div *ngIf="createdPATSecret">
+        @if (createdPATSecret) {
+        <div>
             <clr-alert
                 clrAlertType="warning"
                 [clrCloseButtonAriaLabel]="'close'">
@@ -353,10 +428,8 @@
                 </div>
             </div>
         </div>
-        <form
-            #createPATForm="ngForm"
-            class="clr-form clr-form-horizontal"
-            *ngIf="!createdPATSecret">
+        } @if (!createdPATSecret) {
+        <form #createPATForm="ngForm" class="clr-form clr-form-horizontal">
             <clr-input-container>
                 <label for="pat-name" class="required">{{
                     'PROFILE.PAT_NAME' | translate
@@ -400,17 +473,24 @@
             </clr-number-input-container>
 
             <div class="scope-section" style="margin-top: 24px">
-                <label style="font-weight: 600; display: block; margin-bottom: 4px">
+                <label
+                    style="
+                        font-weight: 600;
+                        display: block;
+                        margin-bottom: 4px;
+                    ">
                     {{ 'PROFILE.PAT_SCOPE' | translate }}
                 </label>
                 <p style="font-size: 13px; color: #666; margin-bottom: 12px">
                     {{ 'PROFILE.PAT_SCOPE_HELP' | translate }}
                 </p>
-                <div *ngIf="scopeLoading">
+                @if (scopeLoading) {
+                <div>
                     <span class="spinner spinner-sm"></span>
                     {{ 'PROFILE.LOADING' | translate }}
                 </div>
-                <div *ngIf="!scopeLoading && scopeProjects.length > 0">
+                } @if (!scopeLoading && scopeProjects.length > 0) {
+                <div>
                     <div style="margin-bottom: 8px">
                         <button
                             type="button"
@@ -425,12 +505,14 @@
                             {{ 'PROFILE.PAT_SCOPE_DESELECT_ALL' | translate }}
                         </button>
                     </div>
-                    <table
-                        class="table table-noborder"
-                        style="width: 100%">
+                    <table class="table table-noborder" style="width: 100%">
                         <thead>
                             <tr>
-                                <th>{{ 'PROFILE.PAT_SCOPE_PROJECT' | translate }}</th>
+                                <th>
+                                    {{
+                                        'PROFILE.PAT_SCOPE_PROJECT' | translate
+                                    }}
+                                </th>
                                 <th style="width: 80px; text-align: center">
                                     {{ 'PROFILE.PAT_SCOPE_PULL' | translate }}
                                 </th>
@@ -440,7 +522,8 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let p of scopeProjects">
+                            @for (p of scopeProjects; track p) {
+                            <tr>
                                 <td>{{ p.project_name }}</td>
                                 <td style="text-align: center">
                                     <input
@@ -457,16 +540,18 @@
                                         [name]="'push_' + p.project_id" />
                                 </td>
                             </tr>
+                            }
                         </tbody>
                     </table>
                 </div>
-                <div
-                    *ngIf="!scopeLoading && scopeProjects.length === 0"
-                    style="font-size: 13px; color: #666">
+                } @if (!scopeLoading && scopeProjects.length === 0) {
+                <div style="font-size: 13px; color: #666">
                     {{ 'PROFILE.PAT_SCOPE_NO_PROJECTS' | translate }}
                 </div>
+                }
             </div>
         </form>
+        }
     </div>
     <div class="modal-footer">
         <button
@@ -478,13 +563,14 @@
                     | translate
             }}
         </button>
+        @if (!createdPATSecret) {
         <button
-            *ngIf="!createdPATSecret"
             type="button"
             class="btn btn-primary"
             [disabled]="!newPATForm?.name"
             (click)="createPAT()">
             {{ 'BUTTON.CREATE' | translate }}
         </button>
+        }
     </div>
 </clr-modal>

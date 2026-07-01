@@ -51,10 +51,6 @@ import { InlineAlertComponent } from '../../../../shared/components/inline-alert
 import { errorHandler } from '../../../../shared/units/shared.utils';
 import { PermissionSelectPanelModes } from '../../../../shared/components/robot-permissions-panel/robot-permissions-panel.component';
 import { Permissions } from '../../../../../../ng-swagger-gen/models/permissions';
-import {
-    SecretValidator,
-    SecretValidationError,
-} from '../../../../shared/entities/secret-validator';
 
 const MINI_SECONDS_ONE_DAY: number = 60 * 24 * 60 * 1000;
 
@@ -87,11 +83,13 @@ export class AddRobotComponent implements OnInit, OnDestroy {
     @Input()
     robotMetadata: Permissions;
 
-    userProvidedSecret: string = '';
-    userProvidedSecretConfirm: string = '';
-    showSecretPassword: boolean = false;
-    secretValidationErrors: SecretValidationError[] = [];
-    isSecretDirty: boolean = false;
+    secretVisible: boolean = false;
+    secretValidation: { length: boolean; uppercase: boolean; lowercase: boolean; digit: boolean } = {
+        length: false,
+        uppercase: false,
+        lowercase: false,
+        digit: false,
+    };
 
     @ViewChild('wizard') wizard: ClrWizard;
     constructor(
@@ -169,37 +167,6 @@ export class AddRobotComponent implements OnInit, OnDestroy {
     }
     inputName() {
         this._nameSubject.next(this.robot.name);
-    }
-
-    toggleSecretVisibility() {
-        this.secretVisible = !this.secretVisible;
-    }
-
-    validateSecret() {
-        const secret = this.robot.secret || '';
-        if (secret.length === 0) {
-            // Empty secret is valid; don't validate individual rules
-            this.secretValidation = {
-                length: true,
-                uppercase: true,
-                lowercase: true,
-                digit: true,
-            };
-            return;
-        }
-        this.secretValidation = {
-            length: secret.length >= 8 && secret.length <= 128,
-            uppercase: /[A-Z]/.test(secret),
-            lowercase: /[a-z]/.test(secret),
-            digit: /\d/.test(secret),
-        };
-    }
-
-    isSecretValid(): boolean {
-        if (!this.robot.secret || this.robot.secret.length === 0) {
-            return true;
-        }
-        return Object.values(this.secretValidation).every(v => v);
     }
 
     cancel() {
@@ -359,35 +326,5 @@ export class AddRobotComponent implements OnInit, OnDestroy {
         this.inlineAlertComponent.close();
     }
 
-    validateSecret() {
-        this.isSecretDirty = true;
-        if (this.userProvidedSecret) {
-            const result = SecretValidator.validate(this.userProvidedSecret);
-            this.secretValidationErrors = result.errors;
-        } else {
-            this.secretValidationErrors = [];
-        }
-    }
-
-    toggleSecretVisibility() {
-        this.showSecretPassword = !this.showSecretPassword;
-    }
-
-    isSecretInputValid(): boolean {
-        return (
-            this.userProvidedSecret &&
-            SecretValidator.validate(this.userProvidedSecret).isValid
-        );
-    }
-
-    secretsMatch(): boolean {
-        return (
-            this.userProvidedSecret &&
-            this.userProvidedSecretConfirm &&
-            this.userProvidedSecret === this.userProvidedSecretConfirm
-        );
-    }
-
     protected readonly PermissionSelectPanelModes = PermissionSelectPanelModes;
-    protected readonly SecretValidator = SecretValidator;
 }

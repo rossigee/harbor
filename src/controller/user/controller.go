@@ -17,11 +17,13 @@ package user // nolint:revive
 import (
 	"context"
 
+	"github.com/goharbor/harbor/src/common"
 	commonmodels "github.com/goharbor/harbor/src/common/models"
 	"github.com/goharbor/harbor/src/common/security"
 	"github.com/goharbor/harbor/src/common/security/local"
 	"github.com/goharbor/harbor/src/jobservice/job"
 	"github.com/goharbor/harbor/src/jobservice/job/impl/gdpr"
+	"github.com/goharbor/harbor/src/lib"
 	"github.com/goharbor/harbor/src/lib/config"
 	"github.com/goharbor/harbor/src/lib/errors"
 	"github.com/goharbor/harbor/src/lib/log"
@@ -141,62 +143,29 @@ func (c *controller) OnboardOIDCUser(ctx context.Context, u *commonmodels.User) 
 // LinkExistingUserToOIDC links an existing user to OIDC by creating the OIDC metadata record.
 // This handles the case where a user exists in harbor_user but not in oidc_user.
 func (c *controller) LinkExistingUserToOIDC(ctx context.Context, userID int, sub, iss, secret, token string) error {
-	subIss := sub + iss
-
-	// Try to get existing OIDC metadata for this (subject, issuer) pair
-	existing, err := c.oidcMetaMgr.GetBySubIss(ctx, sub, iss)
-
-	if err == nil {
-		// Record already exists - verify it belongs to the requested user
-		if existing.UserID != userID {
-			return errors.ConflictError(nil).WithMessagef(
-				"OIDC identity (subject: %s, issuer: %s) is already linked to another user (ID: %d, current: %d)",
-				sub, iss, existing.UserID, userID)
-		}
-		// Same user - update the record with new token/secret
-		existing.Secret = secret
-		existing.Token = token
-		return c.oidcMetaMgr.Update(ctx, existing, "secret", "token")
-	}
-
-	if !errors.IsNotFoundErr(err) {
-		return errors.Wrap(err, "failed to check OIDC metadata by subject/issuer")
-	}
-
-	// No record found by (subject, issuer) - check if user already has OIDC metadata from different provider
-	existingByUser, errByUser := c.oidcMetaMgr.GetByUserID(ctx, userID)
-	if errByUser == nil {
-		// User already has OIDC metadata - update it with new (subject, issuer)
-		existingByUser.SubIss = subIss
-		existingByUser.Secret = secret
-		existingByUser.Token = token
-		return c.oidcMetaMgr.Update(ctx, existingByUser, "subiss", "secret", "token")
-	}
-
-	if !errors.IsNotFoundErr(errByUser) {
-		return errors.Wrap(errByUser, "failed to check OIDC metadata by user ID")
-	}
-
-	// No existing OIDC metadata - create new record
-	newOIDCUser := &commonmodels.OIDCUser{
+	subIss := sub + ":" + iss
+	oidcUser := &commonmodels.OIDCUser{
 		UserID: userID,
 		SubIss: subIss,
 		Secret: secret,
 		Token:  token,
 	}
-
-	_, err = c.oidcMetaMgr.Create(ctx, newOIDCUser)
+	_, err := c.oidcMetaMgr.Create(ctx, oidcUser)
 	if err != nil {
-		// If creation fails with conflict, it means another request created the record
-		// in a concurrent request. Just log and treat as success since the record now exists.
 		if errors.IsConflictErr(err) {
-			log.G(ctx).Infof("OIDC record for user %d already created by concurrent request (subject: %s, issuer: %s)",
-				userID, sub, iss)
-			return nil
+			// Conflict means OIDC metadata already exists for this user.
+			// Retrieve the existing record to get its ID, then update.
+			existing, err := c.oidcMetaMgr.GetByUserID(ctx, userID)
+			if err != nil {
+				return errors.Wrap(err, "failed to retrieve existing OIDC metadata")
+			}
+			existing.SubIss = subIss
+			existing.Secret = secret
+			existing.Token = token
+			return c.oidcMetaMgr.Update(ctx, existing, "subiss", "secret", "token")
 		}
 		return errors.Wrap(err, "failed to create OIDC metadata record")
 	}
-
 	return nil
 }
 
@@ -278,8 +247,7 @@ func (c *controller) Delete(ctx context.Context, id int) error {
 		return errors.UnknownError(err).WithMessagef("delete user failed, user id: %v, cannot delete project user member, error:%v", id, err)
 	}
 	// delete oidc metadata under the user
-	setting, err := config.OIDCSetting(ctx)
-	if err == nil && setting.Endpoint != "" {
+	if lib.GetAuthMode(ctx) == common.OIDCAuth {
 		if err := c.oidcMetaMgr.DeleteByUserID(ctx, id); err != nil {
 			return errors.UnknownError(err).WithMessagef("delete user failed, user id: %v, cannot delete oidc user, error:%v", id, err)
 		}

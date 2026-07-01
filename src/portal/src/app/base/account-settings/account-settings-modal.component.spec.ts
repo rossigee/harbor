@@ -91,7 +91,12 @@ describe('AccountSettingsModalComponent', () => {
             return of([]);
         },
         CreatePersonalAccessToken(_options: any) {
-            return of({ id: 1, name: 'test', secret: 'hbr_pat_test123', expires_at: -1 });
+            return of({
+                id: 1,
+                name: 'test',
+                secret: 'hbr_pat_test123',
+                expires_at: -1,
+            });
         },
     };
 
@@ -289,6 +294,7 @@ describe('AccountSettingsModalComponent', () => {
             fixture.nativeElement.querySelector('#account_settings_email');
         expect(emailInput1).toEqual(null);
     });
+    // CLI secret test omitted - UI elements not present in this template version
 
     // Scope section
     it('should load scope projects on openCreatePATModal', async () => {
@@ -315,7 +321,9 @@ describe('AccountSettingsModalComponent', () => {
             { project_id: 2, project_name: 'b', pull: true, push: true },
         ];
         component.deselectAllScope();
-        expect(component.scopeProjects.every(p => !p.pull && !p.push)).toBeTrue();
+        expect(
+            component.scopeProjects.every(p => !p.pull && !p.push)
+        ).toBeTrue();
     });
 
     it('allScopeSelected returns true when all selected', () => {
@@ -377,7 +385,11 @@ describe('AccountSettingsModalComponent', () => {
 
     it('createPAT includes scope when scope is customized', () => {
         component.account = { user_id: 1 } as any;
-        component.newPATForm = { name: 'test', expiresInDays: 0, description: '' };
+        component.newPATForm = {
+            name: 'test',
+            expiresInDays: 0,
+            description: '',
+        };
         component.scopeProjects = [
             { project_id: 1, project_name: 'lib', pull: true, push: false },
         ];
@@ -385,14 +397,20 @@ describe('AccountSettingsModalComponent', () => {
         component.createPAT();
         expect(fakedUserService.CreatePersonalAccessToken).toHaveBeenCalledWith(
             jasmine.objectContaining({
-                request: jasmine.objectContaining({ scope: jasmine.any(String) }),
+                request: jasmine.objectContaining({
+                    scope: jasmine.any(String),
+                }),
             })
         );
     });
 
     it('createPAT omits scope when all selected (auto-compute)', () => {
         component.account = { user_id: 1 } as any;
-        component.newPATForm = { name: 'test2', expiresInDays: 0, description: '' };
+        component.newPATForm = {
+            name: 'test2',
+            expiresInDays: 0,
+            description: '',
+        };
         component.scopeProjects = [
             { project_id: 1, project_name: 'lib', pull: true, push: true },
         ];

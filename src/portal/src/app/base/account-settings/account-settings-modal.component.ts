@@ -25,11 +25,14 @@ import {
     CommonRoutes,
     ConfirmationButtons,
     ConfirmationTargets,
+    ConfirmationState,
 } from '../../shared/entities/shared.const';
 import { ConfirmationDialogComponent } from '../../shared/components/confirmation-dialog';
 import { InlineAlertComponent } from '../../shared/components/inline-alert/inline-alert.component';
 import { ConfirmationMessage } from '../global-confirmation-dialog/confirmation-message';
+import { ConfirmationAcknowledgement } from '../global-confirmation-dialog/confirmation-state-message';
 import { UserService } from 'ng-swagger-gen/services/user.service';
+import { ProjectService } from 'ng-swagger-gen/services/project.service';
 import { AppConfigService } from '../../services/app-config.service';
 
 @Component({
@@ -68,12 +71,33 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
     @ViewChild('copyInput') copyInput: CopyInputComponent;
     showInputSecret: boolean = false;
     showConfirmSecret: boolean = false;
+
+    // PAT Management
     pats: any[] = [];
     selectedPATs: any[] = [];
     patLoading: boolean = false;
     showCreatePATModal: boolean = false;
-    createdPATSecret: string;
-    newPATForm: any = { name: '', description: '' };
+    newPATForm = { name: '', expiresInDays: 0, description: '' };
+    createdPATSecret: string = '';
+
+    // PAT Scope Selection
+    scopeProjects: Array<{
+        project_id: number;
+        project_name: string;
+        pull: boolean;
+        push: boolean;
+    }> = [];
+    scopeLoading: boolean = false;
+
+    /** All projects are selected by default (full auto-computed scope) */
+    get allScopeSelected(): boolean {
+        return this.scopeProjects.every(p => p.pull && p.push);
+    }
+
+    /** No projects are selected */
+    get noScopeSelected(): boolean {
+        return this.scopeProjects.every(p => !p.pull && !p.push);
+    }
 
     constructor(
         private session: SessionService,
@@ -81,6 +105,7 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
         private router: Router,
         private searchTrigger: SearchTriggerService,
         private userService: UserService,
+        private projectService: ProjectService,
         private appConfigService: AppConfigService
     ) {}
 
@@ -91,21 +116,6 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
 
     ngOnInit(): void {
         this.refreshAccount();
-        this.loadPATs();
-    }
-
-    loadPATs(): void {
-        this.patLoading = true;
-        // TODO: Implement PAT tokens loading from API
-        // this.userService.listUserPermissions().subscribe(
-        //     (data) => {
-        //         this.pats = data;
-        //         this.patLoading = false;
-        //     },
-        //     (error) => {
-        //         this.patLoading = false;
-        //     }
-        // );
     }
 
     refreshAccount() {
@@ -305,6 +315,10 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
             account_settings_full_name: true,
         };
         this.showGenerateCli = false;
+
+        // Load PATs
+        this.loadPATs();
+
         this.opened = true;
     }
 
@@ -421,7 +435,24 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
     }
 
     confirmGenerate(): void {
-        this.resetCliSecret(null);
+        const generatedSecret = this.generateRandomSecret();
+        this.resetCliSecret(generatedSecret);
+    }
+
+    private generateRandomSecret(): string {
+        const chars =
+            'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < 16; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        // Ensure requirements: 8-128 chars, at least 1 uppercase, 1 lowercase, 1 digit
+        // Replace some random positions with required characters
+        const resultArray = result.split('');
+        resultArray[0] = 'A'; // uppercase
+        resultArray[1] = 'a'; // lowercase
+        resultArray[2] = '1'; // digit
+        return resultArray.join('');
     }
 
     resetCliSecret(secret) {
@@ -437,11 +468,15 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
             .subscribe({
                 next: res => {
                     if (secret) {
-                        this.account.oidc_user_meta.secret = secret;
+                        if (this.account.oidc_user_meta) {
+                            this.account.oidc_user_meta.secret = secret;
+                        }
                     } else {
                         this.userService.getCurrentUserInfo().subscribe(res => {
-                            this.account.oidc_user_meta.secret =
-                                res?.oidc_user_meta?.secret;
+                            if (this.account.oidc_user_meta) {
+                                this.account.oidc_user_meta.secret =
+                                    res?.oidc_user_meta?.secret;
+                            }
                         });
                     }
                     this.closeReset();
@@ -476,86 +511,275 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
         this.resetSecretInlineAlert.close();
     }
 
-<<<<<<< HEAD
-    openCreatePATModal(): void {
+    // PAT Management Methods
+    openCreatePATModal() {
         this.showCreatePATModal = true;
-        this.createdPATSecret = null;
+        this.newPATForm = { name: '', expiresInDays: 0, description: '' };
+        this.createdPATSecret = '';
+        this.loadScopeProjects();
     }
 
-    closeCreatePATModal(): void {
-        this.showCreatePATModal = false;
-        this.createdPATSecret = null;
-    }
-
-    confirmAction(event: any): void {
-        if (this.selectedPATs && this.selectedPATs.length > 0) {
-            this.patLoading = true;
-            this.pats = this.pats.filter(
-                pat => !this.selectedPATs.includes(pat)
-            );
-            this.selectedPATs = [];
-            this.patLoading = false;
+    loadScopeProjects() {
+        if (!this.account) {
+            return;
         }
-    }
-
-    createPAT(): void {
-        if (this.newPATForm.name) {
-            this.patLoading = true;
-            // Simulate PAT creation - would call API in real implementation
-            const newPAT = {
-                id: Math.random(),
-                name: this.newPATForm.name,
-                description: this.newPATForm.description,
-                creation_time: new Date(),
-                update_time: new Date(),
-                expires_at: -1,
-                disabled: false,
-                expired: false,
-                scope: [],
-            };
-            this.pats.push(newPAT);
-            this.createdPATSecret = 'token_' + Math.random().toString(36).substring(7);
-            this.patLoading = false;
-            this.newPATForm = { name: '', description: '' };
-        }
-    }
-
-    copyPATSecret(): void {
-        if (this.createdPATSecret) {
-            navigator.clipboard.writeText(this.createdPATSecret).catch(() => {
-                // Fallback if clipboard API fails
+        this.scopeLoading = true;
+        this.projectService
+            .listProjects({ pageSize: 1000, withDetail: false })
+            .subscribe({
+                next: (projects: any[]) => {
+                    this.scopeProjects = (projects || []).map(p => ({
+                        project_id: p.project_id,
+                        project_name: p.name,
+                        pull: true,
+                        push: true,
+                    }));
+                    this.scopeLoading = false;
+                },
+                error: () => {
+                    this.scopeProjects = [];
+                    this.scopeLoading = false;
+                },
             });
+    }
+
+    selectAllScope() {
+        this.scopeProjects.forEach(p => {
+            p.pull = true;
+            p.push = true;
+        });
+    }
+
+    deselectAllScope() {
+        this.scopeProjects.forEach(p => {
+            p.pull = false;
+            p.push = false;
+        });
+    }
+
+    /** Build the scope JSON string from selected project permissions.
+     *  Returns undefined (auto-compute) when all projects have full permissions. */
+    buildScopeJson(): string | undefined {
+        if (this.allScopeSelected) {
+            return undefined;
+        }
+        const selected = this.scopeProjects.filter(p => p.pull || p.push);
+        if (selected.length === 0) {
+            return undefined;
+        }
+        const projectScopes: any[] = selected.map(p => {
+            const actions: string[] = [];
+            if (p.pull) {
+                actions.push('pull');
+            }
+            if (p.push) {
+                actions.push('push');
+            }
+            return {
+                project_id: p.project_id,
+                project_name: p.project_name,
+                access: [
+                    {
+                        resource: 'repository',
+                        actions: actions,
+                    },
+                ],
+            };
+        });
+        return JSON.stringify(projectScopes);
+    }
+
+    /** Format scope JSON string for display in the datagrid */
+    formatScope(scopeJson: string): string {
+        try {
+            const scopes: any[] = JSON.parse(scopeJson);
+            if (!Array.isArray(scopes) || scopes.length === 0) {
+                return '-';
+            }
+            return scopes
+                .map((s: any) => {
+                    const projectName =
+                        s.project_name || `project #${s.project_id}`;
+                    if (
+                        !s.access ||
+                        !Array.isArray(s.access) ||
+                        s.access.length === 0
+                    ) {
+                        return projectName;
+                    }
+                    const actions = s.access
+                        .filter(
+                            (a: any) => a.actions && Array.isArray(a.actions)
+                        )
+                        .flatMap((a: any) => a.actions);
+                    if (actions.length === 0) {
+                        return projectName;
+                    }
+                    return `${projectName} (${actions.join(', ')})`;
+                })
+                .join('; ');
+        } catch {
+            return scopeJson;
         }
     }
 
-    refreshPATSecret(patId: any): void {
+    closeCreatePATModal() {
+        this.showCreatePATModal = false;
+    }
+
+    loadPATs() {
+        if (!this.account) {
+            return;
+        }
         this.patLoading = true;
-        // Simulate refresh - would call API in real implementation
-        const pat = this.pats.find(p => p.id === patId);
-        if (pat) {
-            this.createdPATSecret = 'token_' + Math.random().toString(36).substring(7);
-        }
-        this.patLoading = false;
+        this.userService
+            .ListPersonalAccessTokens({ userId: this.account.user_id })
+            .subscribe({
+                next: (res: any) => {
+                    this.pats = res || [];
+                    this.pats.forEach(pat => {
+                        pat.expired =
+                            pat.expires_at > 0 &&
+                            pat.expires_at <= Date.now() / 1000;
+                    });
+                    this.patLoading = false;
+                },
+                error: (err: any) => {
+                    this.msgHandler.handleError(err);
+                    this.patLoading = false;
+                },
+            });
     }
 
-    togglePATDisabled(pat: any): void {
-        pat.disabled = !pat.disabled;
+    copyPATSecret() {
+        if (this.createdPATSecret) {
+            navigator.clipboard.writeText(this.createdPATSecret);
+        }
     }
 
-    deletePAT(patId: any): void {
-        this.pats = this.pats.filter(p => p.id !== patId);
+    createPAT() {
+        if (!this.newPATForm.name || !this.account) {
+            return;
+        }
+        const scopeJson = this.buildScopeJson();
+        this.userService
+            .CreatePersonalAccessToken({
+                userId: this.account.user_id,
+                request: {
+                    name: this.newPATForm.name,
+                    description: this.newPATForm.description,
+                    expires_in_days: this.newPATForm.expiresInDays,
+                    scope: scopeJson,
+                },
+            })
+            .subscribe({
+                next: (res: any) => {
+                    this.createdPATSecret = res.secret;
+                    this.msgHandler.showSuccess('PROFILE.PAT_CREATE_SUCCESS');
+                    this.loadPATs();
+                },
+                error: (err: any) => {
+                    if (err && err.status === 409) {
+                        this.msgHandler.showError(
+                            'PROFILE.PAT_NAME_CONFLICT',
+                            null
+                        );
+                    } else {
+                        this.msgHandler.handleError(err);
+                    }
+                },
+            });
     }
 
-    formatScope(scope: any): string {
-        if (!scope) {
-            return '';
+    refreshPATSecret(patId: number) {
+        if (!this.account) {
+            return;
         }
-        if (typeof scope === 'string') {
-            return scope;
+        this.userService
+            .RefreshPersonalAccessTokenSecret({
+                userId: this.account.user_id,
+                tokenId: patId,
+                request: {},
+            })
+            .subscribe({
+                next: (res: any) => {
+                    this.createdPATSecret = res.secret;
+                    this.msgHandler.showSuccess('PROFILE.PAT_REFRESHED');
+                    this.loadPATs();
+                },
+                error: (err: any) => {
+                    this.msgHandler.handleError(err);
+                },
+            });
+    }
+
+    togglePATDisabled(pat: any) {
+        if (!this.account) {
+            return;
         }
-        if (Array.isArray(scope)) {
-            return scope.join(', ');
+        this.userService
+            .UpdatePersonalAccessToken({
+                userId: this.account.user_id,
+                tokenId: pat.id,
+                request: {
+                    disabled: !pat.disabled,
+                },
+            })
+            .subscribe({
+                next: () => {
+                    this.msgHandler.showSuccess('PROFILE.PAT_UPDATED');
+                    this.loadPATs();
+                },
+                error: (err: any) => {
+                    this.msgHandler.handleError(err);
+                },
+            });
+    }
+
+    deletePAT(patId: number) {
+        if (!this.account) {
+            return;
         }
-        return JSON.stringify(scope);
+        const deletePatMessage: ConfirmationMessage = new ConfirmationMessage(
+            'PROFILE.DELETE_PAT_TITLE',
+            'PROFILE.DELETE_PAT_CONFIRM',
+            'BUTTON.DELETE',
+            'BUTTON.CANCEL',
+            ConfirmationTargets.USER_PAT
+        );
+        deletePatMessage.data = patId;
+        this.confirmationDialogComponent.open(deletePatMessage);
+    }
+
+    confirmAction(message: ConfirmationAcknowledgement) {
+        if (!message || message.state !== ConfirmationState.CONFIRMED) {
+            return;
+        }
+        if (message.source === ConfirmationTargets.USER_PAT) {
+            this.confirmDeletePAT(message.data);
+        } else {
+            this.confirmGenerate();
+        }
+    }
+
+    confirmDeletePAT(patId: number) {
+        if (!this.account || !patId) {
+            return;
+        }
+        this.userService
+            .DeletePersonalAccessToken({
+                userId: this.account.user_id,
+                tokenId: patId,
+            })
+            .subscribe({
+                next: () => {
+                    this.msgHandler.showSuccess('PROFILE.PAT_DELETED');
+                    this.loadPATs();
+                    this.selectedPATs = [];
+                },
+                error: (err: any) => {
+                    this.msgHandler.handleError(err);
+                },
+            });
     }
 }

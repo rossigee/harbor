@@ -50,7 +50,9 @@
                     </ng-container>
                 </clr-dg-column>
 
-                <clr-dg-row *clrDgItems="let token of tokens" [clrDgItem]="token">
+                <clr-dg-row
+                    *clrDgItems="let token of tokens"
+                    [clrDgItem]="token">
                     <clr-dg-cell>{{ token.name }}</clr-dg-cell>
                     <clr-dg-cell>
                         {{ token.creation_time | date : 'short' }}
@@ -67,7 +69,9 @@
                         <span *ngIf="token.disabled" class="label label-light">
                             {{ 'PROFILE.DISABLED' | translate }}
                         </span>
-                        <span *ngIf="!token.disabled" class="label label-success">
+                        <span
+                            *ngIf="!token.disabled"
+                            class="label label-success">
                             {{ 'PROFILE.ACTIVE' | translate }}
                         </span>
                     </clr-dg-cell>
@@ -76,7 +80,9 @@
                             <button class="btn btn-link" clrDropdownTrigger>
                                 <clr-icon shape="ellipsis-vertical"></clr-icon>
                             </button>
-                            <clr-dropdown-menu *clrIfOpen clrPosition="top-right">
+                            <clr-dropdown-menu
+                                *clrIfOpen
+                                clrPosition="top-right">
                                 <button
                                     clrDropdownItem
                                     (click)="revokeToken(token.id)"
@@ -145,10 +151,15 @@
                 <div class="alert-items">
                     <div class="alert-item static">
                         <div class="alert-icon-wrapper">
-                            <clr-icon class="alert-icon" shape="info-circle"></clr-icon>
+                            <clr-icon
+                                class="alert-icon"
+                                shape="info-circle"></clr-icon>
                         </div>
-                        <span class="alert-text" i18n="@@PROFILE.TOKEN_SECRET_WARNING">
-                            Please copy your token now. You won't be able to see it again.
+                        <span
+                            class="alert-text"
+                            i18n="@@PROFILE.TOKEN_SECRET_WARNING">
+                            Please copy your token now. You won't be able to see
+                            it again.
                         </span>
                     </div>
                 </div>

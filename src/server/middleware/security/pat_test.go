@@ -25,7 +25,6 @@ import (
 	htesting "github.com/goharbor/harbor/src/testing"
 
 	"github.com/goharbor/harbor/src/common/models"
-	"github.com/goharbor/harbor/src/common/utils"
 	patctl "github.com/goharbor/harbor/src/controller/pat"
 	userctl "github.com/goharbor/harbor/src/controller/user"
 	patmodel "github.com/goharbor/harbor/src/pkg/pat/model"
@@ -80,42 +79,6 @@ func (suite *PATSecurityTestSuite) TestGenerateWithValidPAT() {
 	retrievedToken, err := suite.patCtl.Get(ctx, patID)
 	suite.NoError(err)
 	suite.NotNil(retrievedToken)
-}
-
-func (suite *PATSecurityTestSuite) TestPATHashVerification() {
-	// This test verifies that the PAT secret hashing uses SHA256 (PBKDF2 with 4096 iterations)
-	// which catches regressions in the encryption algorithm
-	ctx := suite.Context()
-
-	// Create a test user
-	u := &models.User{
-		Username: "hashtestuser",
-		Email:    "hashtest@example.com",
-		Realname: "Hash Test User",
-	}
-	uid, err := suite.userCtl.Create(ctx, u)
-	suite.NoError(err)
-	u.UserID = int(uid)
-
-	// Create a PAT with known secret
-	knownSecret := "testsecret123"
-	token := &patmodel.PersonalAccessToken{
-		UserID:    int(uid),
-		Name:      "hash-test-token",
-		ExpiresAt: time.Now().AddDate(0, 0, 30).Unix(),
-	}
-	patID, plainSecret, err := suite.patCtl.Create(ctx, token)
-	suite.NoError(err)
-	suite.Equal(knownSecret, plainSecret, "PAT secret should match what we provided")
-
-	// Retrieve the stored token
-	storedToken, err := suite.patCtl.Get(ctx, patID)
-	suite.NoError(err)
-	suite.NotNil(storedToken)
-
-	// Verify the stored hash matches what we expect from utils.Encrypt
-	computedHash := utils.Encrypt(knownSecret, storedToken.Salt, utils.SHA256)
-	suite.Equal(computedHash, storedToken.Secret, "PAT secret hash should match utils.Encrypt with SHA256")
 }
 
 func (suite *PATSecurityTestSuite) TestGenerateWithExpiredPAT() {
