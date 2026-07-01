@@ -51,6 +51,10 @@ import { InlineAlertComponent } from '../../../../shared/components/inline-alert
 import { errorHandler } from '../../../../shared/units/shared.utils';
 import { PermissionSelectPanelModes } from '../../../../shared/components/robot-permissions-panel/robot-permissions-panel.component';
 import { Permissions } from '../../../../../../ng-swagger-gen/models/permissions';
+import {
+    SecretValidator,
+    SecretValidationError,
+} from '../../../../shared/entities/secret-validator';
 
 const MINI_SECONDS_ONE_DAY: number = 60 * 24 * 60 * 1000;
 
@@ -83,13 +87,11 @@ export class AddRobotComponent implements OnInit, OnDestroy {
     @Input()
     robotMetadata: Permissions;
 
-    secretVisible: boolean = false;
-    secretValidation: { length: boolean; uppercase: boolean; lowercase: boolean; digit: boolean } = {
-        length: false,
-        uppercase: false,
-        lowercase: false,
-        digit: false,
-    };
+    userProvidedSecret: string = '';
+    userProvidedSecretConfirm: string = '';
+    showSecretPassword: boolean = false;
+    secretValidationErrors: SecretValidationError[] = [];
+    isSecretDirty: boolean = false;
 
     @ViewChild('wizard') wizard: ClrWizard;
     constructor(
@@ -357,5 +359,35 @@ export class AddRobotComponent implements OnInit, OnDestroy {
         this.inlineAlertComponent.close();
     }
 
+    validateSecret() {
+        this.isSecretDirty = true;
+        if (this.userProvidedSecret) {
+            const result = SecretValidator.validate(this.userProvidedSecret);
+            this.secretValidationErrors = result.errors;
+        } else {
+            this.secretValidationErrors = [];
+        }
+    }
+
+    toggleSecretVisibility() {
+        this.showSecretPassword = !this.showSecretPassword;
+    }
+
+    isSecretInputValid(): boolean {
+        return (
+            this.userProvidedSecret &&
+            SecretValidator.validate(this.userProvidedSecret).isValid
+        );
+    }
+
+    secretsMatch(): boolean {
+        return (
+            this.userProvidedSecret &&
+            this.userProvidedSecretConfirm &&
+            this.userProvidedSecret === this.userProvidedSecretConfirm
+        );
+    }
+
     protected readonly PermissionSelectPanelModes = PermissionSelectPanelModes;
+    protected readonly SecretValidator = SecretValidator;
 }
