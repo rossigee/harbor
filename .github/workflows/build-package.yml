@@ -41,7 +41,6 @@ jobs:
         with:
           format: space-delimited
           token: ${{ secrets.GITHUB_TOKEN }}
-          base: ${{ github.event.before || github.event.pull_request.base.sha || 'main' }}
       - uses: actions/checkout@v6
         with:
           path: src/github.com/goharbor/harbor
