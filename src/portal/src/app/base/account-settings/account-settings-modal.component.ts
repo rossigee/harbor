@@ -476,6 +476,7 @@ export class AccountSettingsModalComponent implements OnInit, AfterViewChecked {
         this.resetSecretInlineAlert.close();
     }
 
+<<<<<<< HEAD
     openCreatePATModal(): void {
         this.showCreatePATModal = true;
         this.createdPATSecret = null;

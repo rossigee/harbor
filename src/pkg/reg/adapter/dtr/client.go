@@ -307,7 +307,8 @@ func (c *Client) createRepository(repository string) error {
 // this operation needs admin access
 func (c *Client) createNamespace(namespace string) error {
 	ns := newDefaultDTRNamespace(namespace)
-	body, err := json.Marshal(ns) // nolint:gosec // Intentional: serializing credential for DTR API
+	// #nosec G117 - namespace struct is used for internal DTR API communication
+	body, err := json.Marshal(ns)
 	if err != nil {
 		return err
 	}

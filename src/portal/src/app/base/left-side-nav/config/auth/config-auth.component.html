@@ -438,6 +438,7 @@
             </clr-checkbox-wrapper>
         </clr-checkbox-container>
     </section>
+    }
     <clr-checkbox-container>
         <label for="selfReg"
             >{{ 'CONFIG.SELF_REGISTRATION' | translate }}
@@ -472,6 +473,7 @@
                 [disabled]="disabled(currentConfig.self_registration)" />
         </clr-checkbox-wrapper>
     </clr-checkbox-container>
+    }
     <section>
         <clr-checkbox-container>
             <label for="ldapVerifyCert"
@@ -503,6 +505,7 @@
             </clr-checkbox-wrapper>
         </clr-checkbox-container>
     </section>
+    }
     <section>
         <clr-input-container>
             <label for="http_authproxy_endpoint" class="required">{{
@@ -599,6 +602,7 @@
             </clr-checkbox-wrapper>
         </clr-checkbox-container>
     </section>
+    }
     <section>
         <clr-input-container>
             <label class="required" for="oidcName"
@@ -928,6 +932,7 @@
             <span>{{ redirectUrl }}/c/oidc/callback</span>
         </div>
     </section>
+    }
 </form>
 <div>
     <button
