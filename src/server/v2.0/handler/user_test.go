@@ -57,7 +57,7 @@ func (uts *UserTestSuite) SetupSuite() {
 	uts.Config = &restapi.Config{
 		UserAPI: &usersAPI{
 			ctl: uts.uCtl,
-			getPrimaryAuth: func(ctx context.Context) (string, error) {
+			getAuth: func(ctx context.Context) (string, error) {
 				return common.DBAuth, nil
 			},
 		},
