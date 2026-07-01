@@ -90,6 +90,10 @@ export class AddRobotComponent implements OnInit, OnDestroy {
         lowercase: false,
         digit: false,
     };
+    userProvidedSecret: string = '';
+    isSecretDirty: boolean = false;
+    secretValidationErrors: string[] = [];
+    showSecretPassword: boolean = false;
 
     @ViewChild('wizard') wizard: ClrWizard;
     constructor(
@@ -324,6 +328,37 @@ export class AddRobotComponent implements OnInit, OnDestroy {
 
     clrWizardPageOnLoad() {
         this.inlineAlertComponent.close();
+    }
+
+    validateSecret(): void {
+        this.isSecretDirty = true;
+        this.secretValidationErrors = [];
+        if (!this.userProvidedSecret) {
+            return;
+        }
+        if (this.userProvidedSecret.length < 8 || this.userProvidedSecret.length > 128) {
+            this.secretValidationErrors.push('Secret must be 8-128 characters long');
+        }
+        if (!/[A-Z]/.test(this.userProvidedSecret)) {
+            this.secretValidationErrors.push('Secret must contain uppercase letters');
+        }
+        if (!/[a-z]/.test(this.userProvidedSecret)) {
+            this.secretValidationErrors.push('Secret must contain lowercase letters');
+        }
+        if (!/\d/.test(this.userProvidedSecret)) {
+            this.secretValidationErrors.push('Secret must contain digits');
+        }
+    }
+
+    isSecretInputValid(): boolean {
+        if (!this.userProvidedSecret) {
+            return false;
+        }
+        return this.userProvidedSecret.length >= 8 &&
+            this.userProvidedSecret.length <= 128 &&
+            /[A-Z]/.test(this.userProvidedSecret) &&
+            /[a-z]/.test(this.userProvidedSecret) &&
+            /\d/.test(this.userProvidedSecret);
     }
 
     protected readonly PermissionSelectPanelModes = PermissionSelectPanelModes;
