@@ -247,7 +247,7 @@ func (c *controller) Delete(ctx context.Context, id int) error {
 		return errors.UnknownError(err).WithMessagef("delete user failed, user id: %v, cannot delete project user member, error:%v", id, err)
 	}
 	// delete oidc metadata under the user
-	if lib.GetAuthMode(ctx) == common.OIDCAuth {
+	if config.DetectAuthMode(ctx) == common.OIDCAuth {
 		if err := c.oidcMetaMgr.DeleteByUserID(ctx, id); err != nil {
 			return errors.UnknownError(err).WithMessagef("delete user failed, user id: %v, cannot delete oidc user, error:%v", id, err)
 		}
