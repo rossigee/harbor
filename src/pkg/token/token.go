@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package jwttoken
+package token // nolint:revive
 
 import (
 	"crypto/ecdsa"
@@ -67,8 +67,8 @@ func Parse(opt *Options, rawToken string, claims jwt.Claims) (*Token, error) {
 		return nil, err
 	}
 	// Allow all algorithm variants for the key type so that ECDSA (ES256/384/512)
-	// and RSA (RS256/384/512) keys are each accepted regardless of which specific
-	// variant was used when the token was issued.
+	// and RSA (RS256/384/512 and PS256/384/512) keys are each accepted regardless
+	// of which specific variant was used when the token was issued.
 	var validMethods []string
 	switch key.(type) {
 	case *rsa.PrivateKey, *rsa.PublicKey:
@@ -76,6 +76,9 @@ func Parse(opt *Options, rawToken string, claims jwt.Claims) (*Token, error) {
 			jwt.SigningMethodRS256.Alg(),
 			jwt.SigningMethodRS384.Alg(),
 			jwt.SigningMethodRS512.Alg(),
+			jwt.SigningMethodPS256.Alg(),
+			jwt.SigningMethodPS384.Alg(),
+			jwt.SigningMethodPS512.Alg(),
 		}
 	case *ecdsa.PrivateKey, *ecdsa.PublicKey:
 		validMethods = []string{

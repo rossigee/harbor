@@ -30,7 +30,7 @@ import (
 	"github.com/goharbor/harbor/src/controller/project"
 	"github.com/goharbor/harbor/src/lib/config"
 	"github.com/goharbor/harbor/src/lib/log"
-	jwttoken "github.com/goharbor/harbor/src/pkg/token"
+	tokenpkg "github.com/goharbor/harbor/src/pkg/token"
 	v2 "github.com/goharbor/harbor/src/pkg/token/claims/v2"
 )
 
@@ -107,7 +107,7 @@ func filterAccess(ctx context.Context, access []*token.ResourceActions,
 
 // MakeToken makes a valid jwt token based on parms.
 func MakeToken(ctx context.Context, username, service string, access []*token.ResourceActions) (*models.Token, error) {
-	options, err := jwttoken.NewOptions("", v2.Issuer, privateKey)
+	options, err := tokenpkg.NewOptions("", v2.Issuer, privateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func MakeToken(ctx context.Context, username, service string, access []*token.Re
 		},
 		Access: access,
 	}
-	tok, err := jwttoken.New(options, claims)
+	tok, err := tokenpkg.New(options, claims)
 	if err != nil {
 		return nil, err
 	}
