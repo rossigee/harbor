@@ -192,7 +192,6 @@ export class AddRobotComponent implements OnInit, OnDestroy {
         return Object.values(this.secretValidation).every(v => v);
     }
 
->>>>>>> 1628984ef (fix: clarify validateSecret/isSecretValid semantics for empty secrets)
     cancel() {
         this.wizard.reset();
         this.reset();
