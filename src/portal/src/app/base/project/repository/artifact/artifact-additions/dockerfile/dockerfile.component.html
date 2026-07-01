@@ -5,9 +5,8 @@
             @if (dockerfile) {
             <div
                 class="yaml-container"
-                [innerHTML]="
-                  dockerfile | language: 'dockerfile' | markdown | async
-                "
+                [innerHTML]="dockerfile
+                  | language: 'dockerfile' | markdown | async"
             ></div>
             }
         </div>
