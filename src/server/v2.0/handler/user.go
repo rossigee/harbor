@@ -60,7 +60,9 @@ func newUsersAPI() *usersAPI {
 		ctl:      user.Ctl,
 		patCtl:   pat.Ctl,
 		auditMgr: auditext.Mgr,
-		getAuth:  config.AuthMode,
+		getAuth: func(ctx context.Context) (string, error) {
+			return config.DetectAuthMode(ctx), nil
+		},
 	}
 }
 
