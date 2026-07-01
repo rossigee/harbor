@@ -265,16 +265,6 @@ func getHelper(ctx context.Context) (AuthenticateHelper, error) {
 	return h, nil
 }
 
-// canUseOIDCAuth checks if a user can use OIDC authentication by looking up the user
-// and checking if they have OIDC metadata.
-func canUseOIDCAuth(ctx context.Context, username string) bool {
-	u, err := user.Mgr.GetByName(ctx, username)
-	if err != nil || u == nil {
-		return false
-	}
-	return u.OIDCUserMeta != nil
-}
-
 // OnBoardUser will check if a user exists in user table, if not insert the user and
 // put the id in the pointer of user model, if it does exist, return the user's profile.
 func OnBoardUser(ctx context.Context, user *models.User) error {
@@ -366,4 +356,25 @@ func IsSuperUser(ctx context.Context, username string) bool {
 		return false
 	}
 	return u.UserID == 1
+}
+
+// canUseOIDCAuth checks if a user has OIDC metadata linked to their account.
+// Returns true only if the user exists and has OIDC metadata, allowing OIDC authentication.
+// Returns false if the user doesn't exist or doesn't have OIDC metadata, allowing fallback to DB auth.
+func canUseOIDCAuth(ctx context.Context, username string) bool {
+	u, err := user.Mgr.GetByName(ctx, username)
+	if err != nil {
+		log.Debugf("Could not retrieve user %s from database, will fall back to DB auth: %v", username, err)
+		return false
+	}
+	if u == nil {
+		log.Debugf("User %s not found in database, will fall back to DB auth", username)
+		return false
+	}
+	// Check if user has OIDC metadata
+	if u.OIDCUserMeta != nil {
+		return true
+	}
+	log.Debugf("User %s has no OIDC metadata, will fall back to DB auth", username)
+	return false
 }
