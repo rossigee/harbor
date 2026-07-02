@@ -330,7 +330,7 @@ export class AddRobotComponent implements OnInit, OnDestroy {
         this.inlineAlertComponent.close();
     }
 
-    validateSecret(): void {
+    public validateSecret(): void {
         this.isSecretDirty = true;
         this.secretValidationErrors = [];
         if (!this.userProvidedSecret) {
@@ -350,7 +350,7 @@ export class AddRobotComponent implements OnInit, OnDestroy {
         }
     }
 
-    isSecretInputValid(): boolean {
+    public isSecretInputValid(): boolean {
         if (!this.userProvidedSecret) {
             return false;
         }
